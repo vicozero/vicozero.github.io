@@ -90,6 +90,12 @@
       return json({error:'No disponible en modo local'},404);
     };
 
+    // Try restore session
+    try{
+      const mr=await fetch('/api/me',{cache:'no-store'});
+      if(mr.ok){ const md=await mr.json(); if(md && md.user){ return bootstrap(md); } }
+    }catch{}
+
     // Show login UI
     authState('Sierra Madre · Acceso','Ingresa con tu correo y contraseña. En este modo los datos se guardan en este navegador.',true);
     const card=document.querySelector('.access-card');
