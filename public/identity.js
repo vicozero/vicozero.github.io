@@ -133,6 +133,14 @@
     by('accessScreen').hidden=true;by('appRoot').hidden=false;themeButtons();
   }
 
+  // Sign out (local mode)
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.sign-out'); if(!a) return;
+    e.preventDefault();
+    try{localStorage.removeItem('sm-session')}catch{}
+    location.reload();
+  });
+
   async function start(){try{
     let response,data;
     try{
