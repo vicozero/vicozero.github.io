@@ -1,0 +1,327 @@
+import {initializeApp} from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
+import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,createUserWithEmailAndPassword,signOut,updateProfile,updatePassword,sendEmailVerification,sendPasswordResetEmail,setPersistence,browserLocalPersistence} from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
+
+const config={apiKey:'AIzaSyAukoVwasMxI2-uRHd7u13ycxb53h2wbeY',authDomain:'sierra-madre-seguridad.firebaseapp.com',projectId:'sierra-madre-seguridad',storageBucket:'sierra-madre-seguridad.firebasestorage.app',messagingSenderId:'260475494499',appId:'1:260475494499:web:b3ef3d6a9ca392842cd856'};
+const app=initializeApp(config);
+const auth=getAuth(app);
+setPersistence(auth,browserLocalPersistence);
+
+const by=id=>document.getElementById(id);
+const initial='admin@sierra-madre-seguridad.app';
+const bootstrapDone='sierra-madre-bootstrap-complete';
+let started=false;
+let localSessionUser=null; // for local (non-Firebase) user sessions
+
+// Theme
+const root=document.documentElement;
+root.dataset.theme=localStorage.getItem('sm-theme')||'light';
+function refreshThemeButtons(){document.querySelectorAll('[data-theme-toggle]').forEach(b=>{const dark=root.dataset.theme==='dark';b.textContent=dark?'☀ Día':'☾ Noche';b.setAttribute('aria-label',dark?'Activar modo día':'Activar modo noche');b.setAttribute('aria-pressed',String(dark));});}
+document.addEventListener('click',e=>{if(!e.target.closest('[data-theme-toggle]'))return;root.dataset.theme=root.dataset.theme==='dark'?'light':'dark';localStorage.setItem('sm-theme',root.dataset.theme);refreshThemeButtons();});
+refreshThemeButtons();
+
+const card=()=>document.querySelector('.access-card');
+function screen(html){const s=by('accessScreen'),a=by('appRoot');if(s)s.hidden=false;if(a)a.hidden=true;const c=card();if(c)c.innerHTML=html;}
+function toast(msg){const t=by('toast');if(t){t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3500);}}
+
+// --- Local users storage (shared workspace data keyed by admin workspace) ---
+const WORKSPACE_KEY='sm-workspace-v1';
+const hash=s=>{let h=0;for(let i=0;i<s.length;i++)h=((h<<5)-h)+s.charCodeAt(i)|0;return 'h'+Math.abs(h).toString(16)};
+function emptyWS(){return {reports:[],actions:[],plans:[],users:[],notices:[],reads:{}};}
+function readWS(){try{const d=JSON.parse(localStorage.getItem(WORKSPACE_KEY));if(d&&Array.isArray(d.users))return d;}catch{}return emptyWS();}
+function writeWS(d){try{localStorage.setItem(WORKSPACE_KEY,JSON.stringify(d));}catch{}}
+
+// --- Login screen ---
+function login(message=''){
+  screen(`
+    <div class="access-mark">SM</div>
+    <span class="eyebrow">ACCESO SEGURO</span>
+    <h2>Seguridad Sierra Madre</h2>
+    <p>Ingresa con tu correo y contraseña.</p>
+    ${message?`<p class="form-help" style="color:#b94a48;margin:8px 0">${message}</p>`:''}
+    <form id="loginForm" class="fields" style="display:grid;gap:10px;margin-top:10px">
+      <label>Usuario o correo<input name="login" required autocomplete="username" placeholder="Correo o Admin"></label>
+      <label>Contraseña<input name="password" type="password" required autocomplete="current-password" placeholder="Contraseña"></label>
+      <button class="primary" type="submit">Iniciar sesión</button>
+    </form>
+    <button class="text" id="forgot" type="button">Recuperar contraseña por correo</button>
+    <small>Acceso de administrador con Firebase (primer acceso único) o usuarios locales creados por el administrador.</small>
+  `);
+  by('loginForm').onsubmit=async e=>{
+    e.preventDefault();
+    const f=new FormData(e.target);
+    const raw=String(f.get('login')).trim();
+    const password=String(f.get('password'));
+    const email=raw.toLowerCase()==='admin'?initial:raw;
+
+    // 1) Try local user login first? No, try Firebase first for admin, then local
+    try{
+      await signInWithEmailAndPassword(auth,email,password);
+      // onAuthStateChanged will handle the rest
+      return;
+    }catch(firebaseErr){
+      // 2) Try local users (created in-app)
+      try{
+        const ws=readWS();
+        const user=(ws.users||[]).find(u=>(u.email||'').toLowerCase()===raw.toLowerCase() && u.active!==false);
+        if(user && user.passwordHash && user.passwordHash===hash(password)){
+          localSessionUser={...user};
+          try{localStorage.setItem('sm-local-session',user.id);}catch{}
+          await launchLocal(localSessionUser);
+          return;
+        }
+      }catch{}
+      login('Usuario o contraseña incorrectos.');
+    }
+  };
+  by('forgot').onclick=async()=>{
+    const email=prompt('Escribe tu correo de recuperación:');
+    if(!email) return;
+    try{ await sendPasswordResetEmail(auth,email); login('Si el correo está registrado en Firebase, se envió el enlace de recuperación.'); }
+    catch{ login('No se pudo enviar por Firebase. Si es un usuario local, solicita al administrador restablecer tu contraseña.'); }
+  };
+}
+
+// --- One-time admin bootstrap (Firebase) - Codex function preserved ---
+function onboarding(user){
+  screen(`
+    <div class="access-mark">SM</div>
+    <span class="eyebrow">PRIMER ACCESO · ADMINISTRADOR</span>
+    <h2>Personaliza tu acceso</h2>
+    <p>Este acceso temporal se puede usar una sola vez. Define tu cuenta personal para administrar Sierra Madre.</p>
+    <form id="setupForm" class="fields" style="display:grid;gap:10px;margin-top:10px">
+      <label>Nombre de usuario<input name="name" required minlength="3" value="Admin" autocomplete="username"></label>
+      <label>Correo de recuperación<input name="email" type="email" required autocomplete="email"></label>
+      <label>Nueva contraseña<input name="password" type="password" required minlength="8" autocomplete="new-password"></label>
+      <label>WhatsApp para recuperación (configuración manual)<input name="whatsapp" type="tel" placeholder="+52 ..."></label>
+      <button class="primary" type="submit">Crear acceso seguro</button>
+    </form>
+    <small>Se creará tu cuenta personal con el correo indicado y recibirás un enlace de verificación. La sesión se recuerda de forma segura en este navegador (Firebase). No se guardan credenciales, red o dispositivo en GitHub.</small>
+  `);
+  by('setupForm').onsubmit=async e=>{
+    e.preventDefault();
+    const f=new FormData(e.target);
+    const email=String(f.get('email')).trim();
+    const password=String(f.get('password'));
+    try{
+      const credential=await createUserWithEmailAndPassword(auth,email,password);
+      await updateProfile(credential.user,{displayName:String(f.get('name')).trim()});
+      await sendEmailVerification(credential.user);
+      await updateProfile(user,{displayName:bootstrapDone}); // mark bootstrap as used
+      localStorage.setItem('sm-recovery-'+credential.user.uid,JSON.stringify({whatsapp:String(f.get('whatsapp')).trim(),configuredAt:new Date().toISOString()}));
+      alert('Cuenta personal creada. Confirma el enlace enviado a tu correo para activar la recuperación.');
+      await launch(credential.user);
+    }catch(err){
+      alert(err.code==='auth/email-already-in-use'?'Ese correo ya está registrado. Usa otro correo o inicia sesión con él.':'No se pudo completar: '+(err.code||err.message));
+    }
+  };
+}
+
+// --- Data store & mock API (shared workspace) ---
+function installStore(currentUser, isFirebaseAdmin=false){
+  const json=(d,s=200)=>new Response(JSON.stringify(d),{status:s,headers:{'Content-Type':'application/json'}});
+  const real=window.fetch.bind(window);
+  window.fetch=async(input,init={})=>{
+    const url=typeof input==='string'?input:input.url;
+    if(!url.startsWith('/api/')) return real(input,init);
+    const u=new URL(url,location.origin);
+    const path=u.pathname.slice(5);
+    const method=(init.method||'GET').toUpperCase();
+    let body={}; try{body=init.body?JSON.parse(init.body):{}}catch{}
+    const data=readWS();
+    const me=currentUser;
+
+    if(path==='me') return json({user:publicUser(me)});
+    if(path==='directory') return json((data.users||[]).filter(x=>x.active!==false).map(x=>({id:x.id,name:x.name,unit:x.unit||'',role:x.role})));
+    if(path==='users'){
+      if(me.role!=='admin') return json({error:'Solo el administrador puede gestionar usuarios.'},403);
+      if(method==='GET') return json((data.users||[]).map(publicUser));
+      // create/update user
+      const id=body.id || (body.email ? 'u-'+hash((body.email||'').toLowerCase()) : crypto.randomUUID());
+      const existing=(data.users||[]).find(x=>x.id===id || (x.email||'').toLowerCase()===(body.email||'').toLowerCase());
+      if(existing && existing.isOwner && !isFirebaseAdmin) return json({error:'No se puede modificar la cuenta propietaria.'},403);
+      const rec={
+        id: existing?.id || id,
+        name: body.name||'',
+        email: (body.email||'').toLowerCase().trim(),
+        unit: body.unit||'',
+        role: body.role||'member',
+        active: body.active!==false,
+        isOwner: !!existing?.isOwner,
+        revision: (existing?.revision||0)+1,
+        passwordHash: body.password ? hash(body.password) : (existing?.passwordHash||''),
+        created: existing?.created || new Date().toISOString(),
+        updated: new Date().toISOString()
+      };
+      if(!rec.email) return json({error:'Correo requerido.'},400);
+      if(!existing && !rec.passwordHash) return json({error:'Asigna una contraseña para el nuevo usuario.'},400);
+      const i=(data.users=data.users||[]).findIndex(x=>x.id===rec.id);
+      if(i<0) data.users.push(rec); else data.users[i]=rec;
+      writeWS(data);
+      return json(publicUser(rec));
+    }
+    if(path==='notices'){
+      if(method==='GET'){
+        const list=(data.notices||[]).filter(n=>me.role==='admin'||n.toAccountId===me.id||n.fromAccountId===me.id);
+        return json(list.map(n=>({...n,incoming:n.toAccountId===me.id,read:!!(data.reads&&data.reads[me.id]&&data.reads[me.id][n.id])})).sort((a,b)=>(b.created||'').localeCompare(a.created||'')));
+      }
+      const ids=Array.isArray(body.toAccountIds)?body.toAccountIds:[];
+      const created=new Date().toISOString(); let count=0;
+      data.notices=data.notices||[];
+      for(const tid of ids){
+        const target=(data.users||[]).find(x=>x.id===tid);
+        if(!target) continue;
+        data.notices.push({id:crypto.randomUUID(),type:body.type||'Mensaje',severity:body.severity||'normal',text:body.text||'',fromAccountId:me.id,fromName:me.name,toAccountId:tid,toName:target.name,created,referenceId:body.referenceId,referenceCollection:body.referenceCollection,referenceLabel:body.referenceLabel});
+        count++;
+      }
+      writeWS(data); return json({ok:true,count});
+    }
+    const readMatch=path.match(/^notices\/([^/]+)\/read$/);
+    if(readMatch && method==='POST'){
+      data.reads=data.reads||{}; data.reads[me.id]=data.reads[me.id]||{}; data.reads[me.id][readMatch[1]]=true; writeWS(data); return json({ok:true});
+    }
+    if(path==='assignable'){
+      const col=u.searchParams.get('collection'); const list=(data[col]||[]);
+      return json(list.map(r=>({id:r.id,label:r.folio||r.person||r.description||r.id,detail:r.supervisor||r.owner||r.period||'',accountId:r.assignedAccountId||r.ownerAccountId||me.id})));
+    }
+    if(path==='assign' && method==='POST'){
+      if(me.role!=='admin') return json({error:'Permiso administrativo requerido.'},403);
+      const col=body.collection, list=(data[col]||[]), rec=list.find(x=>x.id===body.id);
+      if(!rec) return json({error:'Registro no encontrado'},404);
+      const target=(data.users||[]).find(x=>x.id===body.accountId);
+      if(col==='reports'){rec.ownerAccountId=body.accountId; if(target)rec.supervisor=target.name;}
+      else if(col==='plans'){rec.assignedAccountId=body.accountId; if(target)rec.person=target.name;}
+      else {rec.assignedAccountId=body.accountId; rec.ownerAccountId=body.accountId; if(target)rec.owner=target.name;}
+      rec.updated=new Date().toISOString(); writeWS(data); return json({ok:true});
+    }
+    const [collection,id]=path.split('/');
+    if(['reports','actions','plans'].includes(collection)){
+      data[collection]=data[collection]||[]; const list=data[collection];
+      // Read permission: admin sees all; others see own/assigned
+      const canReadRec=(r)=>me.role==='admin' || (collection==='plans' ? r.assignedAccountId===me.id : collection==='actions' ? (r.assignedAccountId===me.id||r.ownerAccountId===me.id) : r.ownerAccountId===me.id);
+      if(method==='GET'){
+        if(id){ const rec=list.find(x=>x.id===id); return rec && canReadRec(rec) ? json(rec) : json(null); }
+        return json(me.role==='admin' ? list : list.filter(canReadRec));
+      }
+      if(method==='PUT' || method==='POST'){
+        const recId=body.id||id||crypto.randomUUID();
+        const prev=list.find(x=>x.id===recId);
+        const rec={...body,id:recId,revision:((prev&&prev.revision)||0)+1,updated:new Date().toISOString()};
+        if(!rec.ownerAccountId) rec.ownerAccountId = prev?.ownerAccountId || me.id;
+        if(collection==='actions' && !rec.assignedAccountId) rec.assignedAccountId = prev?.assignedAccountId || me.id;
+        if(collection==='plans' && !rec.assignedAccountId) rec.assignedAccountId = prev?.assignedAccountId || me.id;
+        const idx=list.findIndex(x=>x.id===rec.id); if(idx<0) list.unshift(rec); else list[idx]=rec;
+        writeWS(data); return json(rec);
+      }
+      if(method==='DELETE'){ data[collection]=list.filter(x=>x.id!==id); writeWS(data); return json({ok:true}); }
+    }
+    return json({error:'No disponible'},404);
+  };
+}
+
+function publicUser(u){ return {id:u.id,email:u.email,name:u.name,role:u.role,active:u.active!==false,unit:u.unit||'',isOwner:!!u.isOwner,revision:u.revision||0}; }
+
+async function loadAppScripts(){
+  const srcs=['assets/pdf-lib.min.js','formats.js','extended-formats.js','progress-core.js','supervisor.js','workspace-pdf.js','report-pdf.js','workspace.js','accounts-ui.js'];
+  for(const src of srcs){
+    await new Promise((ok,no)=>{const s=document.createElement('script');s.src=src;s.async=false;s.onload=ok;s.onerror=()=>no(new Error('No se pudo cargar '+src));document.body.append(s);});
+  }
+}
+
+// --- Launch for Firebase admin ---
+async function launch(user){
+  if(started) return; started=true;
+  // Ensure admin user exists in workspace
+  const ws=readWS();
+  if(!ws.users.find(u=>u.isOwner || u.id===user.uid)){
+    ws.users.unshift({id:user.uid,name:user.displayName||'Admin',email:user.email,unit:'Sierra Madre',role:'admin',active:true,isOwner:true,revision:0,created:new Date().toISOString()});
+    writeWS(ws);
+  } else {
+    // sync basic info
+    const ou=ws.users.find(u=>u.isOwner || u.id===user.uid);
+    if(ou){ou.name=user.displayName||ou.name||'Admin';ou.email=user.email;writeWS(ws);}
+  }
+  const me={id:user.uid,name:user.displayName||'Admin',email:user.email,unit:'Sierra Madre',role:'admin',active:true,isOwner:true};
+  installStore(me,true);
+  globalThis.AUTH={user:me};
+  globalThis.smStorageKey=k=>k+'-'+user.uid;
+  globalThis.ACCOUNT_DIRECTORY=(readWS().users||[]).filter(x=>x.active!==false).map(x=>({id:x.id,name:x.name,unit:x.unit||'',role:x.role}));
+  globalThis.ACCOUNT_USERS=(readWS().users||[]).map(publicUser);
+  globalThis.SM_SCOPE_ACCOUNT='';
+  document.body.dataset.role='admin';
+  await loadAppScripts();
+  by('accessScreen').hidden=true; by('appRoot').hidden=false;
+  mountProfile(user);
+  document.querySelector('.sign-out')?.addEventListener('click',e=>{e.preventDefault(); try{localStorage.removeItem('sm-local-session');}catch{} localSessionUser=null; signOut(auth);});
+  setTimeout(()=>toast('Sesión protegida. Los datos de trabajo se guardan en este navegador.'),600);
+}
+
+// --- Launch for local (in-app created) users ---
+async function launchLocal(user){
+  if(started) return; started=true;
+  const me={...user};
+  installStore(me,false);
+  globalThis.AUTH={user:publicUser(me)};
+  globalThis.smStorageKey=k=>k+'-'+user.id;
+  const ws=readWS();
+  globalThis.ACCOUNT_DIRECTORY=(ws.users||[]).filter(x=>x.active!==false).map(x=>({id:x.id,name:x.name,unit:x.unit||'',role:x.role}));
+  globalThis.ACCOUNT_USERS = me.role==='admin' ? (ws.users||[]).map(publicUser) : [];
+  globalThis.SM_SCOPE_ACCOUNT = me.role==='admin' ? '' : me.id;
+  document.body.dataset.role=me.role||'member';
+  await loadAppScripts();
+  by('accessScreen').hidden=true; by('appRoot').hidden=false;
+  document.querySelector('.sign-out')?.addEventListener('click',e=>{e.preventDefault(); try{localStorage.removeItem('sm-local-session');}catch{} localSessionUser=null; started=false; login();});
+  setTimeout(()=>toast('Sesión iniciada. Los datos se guardan en este navegador.'),600);
+}
+
+// --- Profile (Firebase admin) ---
+function mountProfile(user){
+  if(by('profileSettings')) return;
+  const tools=document.querySelector('.header-tools'); if(!tools) return;
+  const saved=JSON.parse(localStorage.getItem('sm-profile-'+user.uid)||'{}');
+  const btn=document.createElement('button'); btn.id='profileSettings'; btn.className='theme-button'; btn.type='button'; btn.textContent='Perfil';
+  const signOutLink=tools.querySelector('.sign-out'); if(signOutLink) tools.insertBefore(btn,signOutLink); else tools.appendChild(btn);
+  const dialog=document.createElement('dialog'); dialog.id='profileDialog';
+  dialog.innerHTML=`<form method="dialog" id="profileForm"><div class="dialog-top"><div><span class="eyebrow">ADMINISTRADOR</span><h2>Mi perfil y avisos</h2></div><button class="close" value="cancel" aria-label="Cerrar">×</button></div><div class="editor-scroll"><div class="fields"><label>Nombre<input name="name" required maxlength="100" value="${(user.displayName||'Admin').replace(/&/g,'&amp;').replace(/"/g,'&quot;')}"></label><label>Correo de acceso<input name="email" type="email" value="${user.email||''}" readonly></label><label>Teléfono / WhatsApp<input name="phone" type="tel" maxlength="30" value="${saved.phone||''}"></label><label>Nueva contraseña <small>(opcional)</small><input name="password" type="password" minlength="8" autocomplete="new-password"></label></div></div><div class="editor-footer"><button class="secondary" value="cancel" type="button" id="closeProfile">Cancelar</button><button class="primary" type="submit">Guardar perfil</button></div></form>`;
+  document.body.appendChild(dialog);
+  btn.onclick=()=>dialog.showModal();
+  dialog.querySelector('#closeProfile').onclick=()=>dialog.close();
+  by('profileForm').addEventListener('submit',async event=>{
+    event.preventDefault();
+    const f=new FormData(event.currentTarget),name=String(f.get('name')).trim(),password=String(f.get('password'));
+    try{
+      if(name && name!==user.displayName) await updateProfile(user,{displayName:name});
+      if(password) await updatePassword(user,password);
+      localStorage.setItem('sm-profile-'+user.uid,JSON.stringify({phone:String(f.get('phone')).trim(),updatedAt:new Date().toISOString()}));
+      if(globalThis.AUTH&&globalThis.AUTH.user) globalThis.AUTH.user.name=name;
+      const pn=by('profileName'); if(pn) pn.textContent=name;
+      dialog.close(); toast('Perfil actualizado.');
+    }catch(error){ alert('No se pudo guardar: '+(error.code||error.message)); }
+  });
+}
+
+// --- Boot: check local session, then Firebase state ---
+(async function boot(){
+  // Restore local session if present
+  try{
+    const sid=localStorage.getItem('sm-local-session');
+    if(sid){
+      const ws=readWS();
+      const u=(ws.users||[]).find(x=>x.id===sid && x.active!==false);
+      if(u){ localSessionUser=u; await launchLocal(u); return; }
+      else { localStorage.removeItem('sm-local-session'); }
+    }
+  }catch{}
+
+  onAuthStateChanged(auth, async user=>{
+    if(localSessionUser) return; // local session takes precedence if already launched
+    if(!user){ started=false; login(); return; }
+    // Codex: one-time bootstrap - if temp admin already used, force re-login with personal account
+    if(user.email===initial && user.displayName===bootstrapDone){
+      await signOut(auth);
+      login('El acceso temporal ya se utilizó. Ingresa con tu correo personal.');
+      return;
+    }
+    if(user.email===initial){ onboarding(user); }
+    else { await launch(user); }
+  });
+})();
