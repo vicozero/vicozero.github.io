@@ -1,0 +1,1 @@
+import fs from 'node:fs';import vm from 'node:vm';const context=vm.createContext({});vm.runInContext(fs.readFileSync('public/formats.js','utf8')+'\n'+fs.readFileSync('public/extended-formats.js','utf8'),context);fs.writeFileSync('worker/report-rules.js','const FORM_META='+JSON.stringify(context.SAFETY)+';\n'+fs.readFileSync('worker/validate-report.js','utf8'));
