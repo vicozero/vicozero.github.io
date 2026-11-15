@@ -1,0 +1,20 @@
+from pathlib import Path
+p=Path('worker/app.js');s=p.read_text(encoding='utf8').replace("record.ownerAccountId=previous?.ownerAccountId||'owner';", "record.ownerAccountId=previous?(previous.ownerAccountId||'owner'):me.id;")
+s=s.replace("return collection==='reports'?json({revision:record.revision,updated:record.updated}):json(record);", "return collection==='reports'?json({revision:record.revision,updated:record.updated,ownerAccountId:record.ownerAccountId,supervisor:record.supervisor}):json(record);")
+s=s.replace("const scope=url.searchParams.get('accountId');", "const accountNames=new Map((await allUsers(env,me)).filter(u=>u.id!=='owner').map(u=>[u.id,u.name]));all=all.map(r=>{const name=accountNames.get(r.assignedAccountId||r.ownerAccountId);if(!name)return r;return {...r,...(collection==='reports'?{supervisor:name}:collection==='plans'?{person:name}:{owner:name})}});const scope=url.searchParams.get('accountId');")
+s=s.replace("if(collection==='actions'&&record.status==='Cerrado')record.verifier=me.name;", "if(collection==='actions'&&record.status==='Cerrado')record.verifier=me.name;if(record.assignedAccountId){const assigned=await resolveAccount(env,me,record.assignedAccountId);if(assigned){if(collection==='actions')record.owner=assigned.name;if(collection==='plans')record.person=assigned.name;}}")
+p.write_text(s,encoding='utf8')
+p=Path('public/supervisor.js');s=p.read_text(encoding='utf8')
+s=s.replace("if(!active)return;dirty=false;", "if(!active)return;if(!id){active.ownerAccountId=AUTH.user.id;if(AUTH.user.role!=='admin')active.supervisor=AUTH.user.name;}dirty=false;")
+s=s.replace("$('editor').showModal()", "if(AUTH.user.role!=='admin')$('reportForm').elements.supervisor.readOnly=true;$('editor').showModal()")
+s=s.replace("snapshot.pendingSync=false;snapshot.updated=saved.updated;snapshot.revision=saved.revision;", "snapshot.pendingSync=false;snapshot.updated=saved.updated;snapshot.revision=saved.revision;snapshot.ownerAccountId=saved.ownerAccountId;snapshot.supervisor=saved.supervisor||snapshot.supervisor;")
+s=s.replace("async function persist(notify=true){", "async function persist(notify=true){if(!cloud){try{const retry=await fetch('/api/me',{cache:'no-store'});if(!retry.ok)throw Error();cloud=true;}catch{toast('Sin conexión. Conserva el formulario abierto y vuelve a guardar cuando se recupere.');return false;}}")
+start=s.index('function backup(){');end=s.index('async function persist',start)
+s=s[:start]+'function backup(){return true}'+s[end:]
+s=s.replace("JSON.parse(localStorage.getItem(smStorageKey('sm-reports-backup'))||'[]')", "[]")
+p.write_text(s,encoding='utf8')
+p=Path('public/workspace.js');s=p.read_text(encoding='utf8');start=s.index('function cache(){');end=s.index('function scope()',start);s=s[:start]+'function cache(){}\n '+s[end:]
+s=s.replace("JSON.parse(localStorage.getItem(smStorageKey('sm-actions-backup'))||'[]')",'[]').replace("JSON.parse(localStorage.getItem(smStorageKey('sm-plans-backup'))||'[]')",'[]')
+s=s.replace("if(!action)return;actionForm.reset();", "if(!action)return;if(!id){action.requester=AUTH.user.name;action.updatedBy=AUTH.user.name;if(AUTH.user.role!=='admin'){action.owner=AUTH.user.name;action.unit=AUTH.user.unit||'';}}action.updatedBy=AUTH.user.name;by('actionEditor').dataset.recordId=action.id;actionForm.reset();")
+s=s.replace("drawPhotos();by('actionEditor').showModal()", "drawPhotos();const member=AUTH.user.role!=='admin';for(const key of ['owner','unit','requester','source','start','due','priority'])actionForm.elements[key].readOnly=member;for(const key of ['source','priority'])actionForm.elements[key].disabled=member;actionForm.elements.updatedBy.readOnly=true;by('saveAction').disabled=member&&action.status==='Cerrado';by('actionEditor').showModal()")
+p.write_text(s,encoding='utf8')
