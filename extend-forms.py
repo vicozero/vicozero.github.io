@@ -1,0 +1,18 @@
+from pathlib import Path
+p=Path('public/index.html');s=p.read_text(encoding='utf8').replace('<script src="/formats.js"></script>','<script src="/formats.js"></script><script src="/extended-formats.js"></script>')
+s=s.replace('<label>Solicitante *<input name="requester" required maxlength="200"></label>','<label>Solicitante *<input name="requester" required maxlength="200"></label><label>Actualización registrada por *<input name="updatedBy" required maxlength="200" placeholder="Nombre del supervisor o jefe que actualiza"></label>')
+p.write_text(s,encoding='utf8')
+p=Path('public/supervisor.js');s=p.read_text(encoding='utf8').replace("t.id==='talk'?['person']:['place','description','action','owner','status','due']", "t.id==='talk'?['person']:t.id==='critical'?['control','response']:['place','description','action','owner','status','due']")
+s=s.replace("if(t.checks==='acts'", "if(t.checks==='acts'",1)
+needle="if(t.id==='talk'&&Number(active.hours)<=0)"
+s=s.replace(needle,"if(t.id==='critical'&&(active.controls||[]).some(c=>c.response==='NC · No cumple'&&(!c.action?.trim()||!c.owner?.trim()||!c.due)))return 'Cada control no conforme requiere acción, responsable y fecha compromiso.';if(t.id==='flash'&&(active.commitments||[]).some(c=>!c.action?.trim()||!c.owner?.trim()||!c.due))return 'Completa acción, responsable y fecha de todos los compromisos.';"+needle)
+p.write_text(s,encoding='utf8')
+p=Path('worker/app.js');s=p.read_text(encoding='utf8').replace("'eppWelder','risk']", "'eppWelder','risk','critical','flash']").replace("by:record.requester,status", "by:record.updatedBy||record.requester,status");p.write_text(s,encoding='utf8')
+p=Path('public/workspace.js');s=p.read_text(encoding='utf8').replace("'requester','source'", "'requester','updatedBy','source'")
+s=s.replace("requester:'',source:", "requester:'',updatedBy:'',source:")
+s=s.replace("if(r.type==='risk'&&r.immediate)","if(r.type==='critical')candidates=(r.controls||[]).filter(c=>c.response==='NC · No cumple').map((c,i)=>({i,description:c.action,owner:c.owner,unit:r.place,source:'Controles críticos',start:r.date,due:c.due||r.date}));if(r.type==='flash')candidates=(r.commitments||[]).map((c,i)=>({i,description:c.action,owner:c.owner,unit:r.place,source:'Flash Report',start:r.date,due:c.due||r.date}));if(r.type==='risk'&&r.immediate)")
+s=s.replace("requester:r.supervisor,priority:","requester:r.supervisor,updatedBy:r.supervisor,priority:").replace("requester:r.owner,source:","requester:r.owner,updatedBy:r.owner,source:")
+p.write_text(s,encoding='utf8')
+p=Path('public/report-pdf.js');s=p.read_text(encoding='utf8').replace("section('Datos del formato');", "if(t.id==='critical'){const score=SAFETY.criticalCompliance(r.controls);fields([['Cumplimiento controles',score===null?'Sin controles aplicables':score+' %'],['Meta de referencia','100 %'],['Cálculo','C / (C + NC). Excluye NA.']],title,sub);}section('Datos del formato');")
+p.write_text(s,encoding='utf8')
+p=Path('test-dom.mjs');s=p.read_text(encoding='utf8').replace("['formats.js','progress-core.js'", "['formats.js','extended-formats.js','progress-core.js'").replace("fill(af,'requester','Jefe de ejemplo');", "fill(af,'requester','Jefe de ejemplo');fill(af,'updatedBy','Supervisor QA');");p.write_text(s,encoding='utf8')
