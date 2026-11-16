@@ -15,6 +15,9 @@ let localSessionUser=null; // for local (non-Firebase) user sessions
 // Theme
 const root=document.documentElement;
 root.dataset.theme=localStorage.getItem('sm-theme')||'light';
+const visualStyle=document.createElement('style');
+visualStyle.textContent=`.access-screen{position:relative;isolation:isolate}.access-screen::before{content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,#f4f3efed 0%,#f4f3efc9 46%,#f4f3efb5 100%),url('/assets/seguridad-acceso.png') center/cover no-repeat;border-radius:0 0 18px 18px}:root[data-theme=dark] .access-screen::before{background:linear-gradient(90deg,#161b1eed 0%,#161b1ec7 48%,#161b1ea3 100%),url('/assets/seguridad-acceso.png') center/cover no-repeat}.access-card{backdrop-filter:blur(9px)}:root[data-theme=dark] .hero{background-image:linear-gradient(90deg,#111a20eb 0%,#111a20b9 58%,#111a207a 100%),url('/assets/seguridad-panel.png');background-position:center right;background-size:cover}:root[data-theme=dark] .hero>*{position:relative;z-index:1}@media(max-width:1100px){.access-screen::before{opacity:.82}}`;
+document.head.appendChild(visualStyle);
 function refreshThemeButtons(){document.querySelectorAll('[data-theme-toggle]').forEach(b=>{const dark=root.dataset.theme==='dark';b.textContent=dark?'☀ Día':'☾ Noche';b.setAttribute('aria-label',dark?'Activar modo día':'Activar modo noche');b.setAttribute('aria-pressed',String(dark));});}
 document.addEventListener('click',e=>{if(!e.target.closest('[data-theme-toggle]'))return;root.dataset.theme=root.dataset.theme==='dark'?'light':'dark';localStorage.setItem('sm-theme',root.dataset.theme);refreshThemeButtons();});
 refreshThemeButtons();
