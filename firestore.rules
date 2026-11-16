@@ -60,6 +60,9 @@ service cloud.firestore {
       let profile = get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data;
       return activeOperator() && profile.get('permissions', {}).get('view_all', false) == true;
     }
+    function sessionOwner() {
+      return administrator() || activeOperator();
+    }
     match /{kind}/{recordId} {
       allow get: if kind in ['reports', 'actions', 'plans'] && (administrator() || canViewAll() || (activeOperator() && (!exists(/databases/$(database)/documents/$(kind)/$(recordId)) || owns(resource.data))));
       allow list: if kind in ['reports', 'actions', 'plans'] && (administrator() || canViewAll() || (activeOperator() && owns(resource.data)));
@@ -120,14 +123,14 @@ service cloud.firestore {
     }
     match /sessions/{sessionId} {
       allow read: if administrator() || (activeOperator() && resource.data.userId == request.auth.uid);
-      allow create: if activeOperator()
+      allow create: if sessionOwner()
         && request.resource.data.keys().hasOnly(['userId', 'startedAt', 'updatedAt', 'activeMs', 'closed'])
         && request.resource.data.userId == request.auth.uid
         && request.resource.data.startedAt == request.time
         && request.resource.data.updatedAt == request.time
         && request.resource.data.activeMs == 0
         && request.resource.data.closed == false;
-      allow update: if activeOperator()
+      allow update: if sessionOwner()
         && resource.data.userId == request.auth.uid
         && resource.data.closed == false
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['updatedAt', 'activeMs', 'closed'])

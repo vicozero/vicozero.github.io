@@ -22,3 +22,38 @@ body::before{content:'';position:fixed;inset:0;background-image:var(--bg-image);
 .notice-inline-attachments a{display:block;border:1px solid var(--line);border-radius:6px;overflow:hidden}
 .notice-inline-attachments img{display:block;width:100%;height:80px;object-fit:cover}
 @media(max-width:800px){.notice-attachments{grid-template-columns:repeat(auto-fill,minmax(110px,1fr))}.notice-attachment img{height:110px}}
+
+/* ---- Session timer + presence panel ---- */
+.session-timer{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border:1px solid var(--line);border-radius:999px;background:var(--surface-soft);white-space:nowrap;line-height:1}
+.session-dot{width:7px;height:7px;border-radius:50%;background:#2fbf71;box-shadow:0 0 0 3px #2fbf7126;animation:smPulse 2.4s ease-in-out infinite}
+.session-timer.is-idle .session-dot{background:#d9a441;box-shadow:0 0 0 3px #d9a44126;animation:none}
+.session-timer.is-offline .session-dot{background:#c8564f;box-shadow:0 0 0 3px #c8564f26;animation:none}
+.session-text{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.session-clock{font-family:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;font-variant-numeric:tabular-nums;font-size:13px;font-weight:700;letter-spacing:.08em;color:var(--ink);min-width:66px;text-align:center}
+@keyframes smPulse{0%,100%{box-shadow:0 0 0 3px #2fbf711f}50%{box-shadow:0 0 0 6px #2fbf7109}}
+.session-dialog{width:min(880px,94vw);padding:0;border:1px solid var(--line);border-radius:14px;background:var(--surface);color:var(--ink);box-shadow:0 30px 80px #00000038}
+.session-dialog[open]{display:flex;flex-direction:column;max-height:88vh}
+.session-dialog .dialog-top{padding:18px 22px 10px;margin:0}
+.session-dialog h2{margin:4px 0 0}
+.session-summary{display:flex;align-items:center;gap:18px;padding:0 22px 12px;font-size:11px;color:var(--muted)}
+.session-live{display:inline-flex;gap:7px;align-items:center;font-weight:600;color:var(--ink)}
+.session-live i{width:8px;height:8px;border-radius:50%;background:#2fbf71;box-shadow:0 0 0 3px #2fbf7126;animation:smPulse 2.4s ease-in-out infinite}
+.session-updated{margin-left:auto;font-variant-numeric:tabular-nums}
+.session-table-wrap{overflow:auto;padding:0 12px;flex:1}
+.session-table{width:100%;border-collapse:collapse;font-size:12px}
+.session-table th{position:sticky;top:0;z-index:1;background:var(--surface);text-align:left;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:10px;border-bottom:1px solid var(--line);white-space:nowrap}
+.session-table td{padding:11px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+.session-table td small{display:block;font-size:10px;color:var(--muted);margin-top:2px}
+.session-duration{font-family:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;font-variant-numeric:tabular-nums;font-weight:600;letter-spacing:.04em;white-space:nowrap}
+.session-state{display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border-radius:999px;font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
+.session-state:before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor}
+.session-state--online{background:#2fbf7118;color:#1d8350}
+.session-state--stale{background:#d9a44118;color:#9a6f12}
+.session-state--closed{background:#8a949914;color:var(--muted)}
+html[data-theme=dark] .session-state--online{background:#2fbf7122;color:#69d9a2}
+html[data-theme=dark] .session-state--stale{background:#d9a44122;color:#e5bd6a}
+.session-empty{text-align:center;color:var(--muted);padding:30px 10px!important}
+.session-note{padding:12px 22px;font-size:10px;color:var(--muted);margin:0}
+.session-dialog .editor-footer{padding:12px 22px 18px;margin:0;display:flex;gap:10px;justify-content:flex-end}
+@media(max-width:1200px){.session-text{display:none}}
+@media(max-width:800px){.session-timer{padding:5px 8px;gap:6px}.session-clock{font-size:11px;min-width:58px}.session-dialog{width:96vw}.session-table th,.session-table td{padding:8px 7px;font-size:11px}}
