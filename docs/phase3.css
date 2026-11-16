@@ -104,3 +104,52 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 *{transition-timing-function:var(--ease);}
 EOF
 echo written
+/* --- Mobile / PWA usability improvements --- */
+@media (max-width: 800px){
+  html, body { -webkit-text-size-adjust: 100%; }
+  body { overflow-x: hidden; }
+  /* unify sidebar toggle classes */
+  body.nav-open aside { transform: translateX(0) !important; }
+  body.nav-open .mobile-backdrop { opacity: 1; pointer-events: auto; }
+  .menu-toggle { display: inline-flex !important; align-items: center; justify-content: center; min-width: 38px; min-height: 38px; }
+  header { height: auto; min-height: 56px; padding: 8px 12px; gap: 8px; flex-wrap: wrap; }
+  header > div:first-of-type { flex: 1 1 100%; order: 3; font-size: 11px; }
+  .header-tools { flex: 1 1 auto; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
+  .header-tools .sync { width: 100%; order: 3; font-size: 10px; }
+  .header-tools .theme-button, .header-tools .notice-button, .header-tools .sign-out { padding: 8px 10px; font-size: 11px; }
+  main { padding: 16px 12px calc(24px + env(safe-area-inset-bottom)); }
+  .heading { flex-direction: column; align-items: stretch; gap: 10px; }
+  .heading .primary, .heading button { width: 100%; justify-content: center; }
+  h1, #pageTitle { font-size: 22px !important; line-height: 1.25; }
+  .period-bar, .scope-bar, .filter-bar, .action-filters, .work-toolbar, .toolbar { flex-direction: column; align-items: stretch; }
+  .period-bar label, .scope-bar label { width: 100%; }
+  .period-bar input, .period-bar select, .scope-bar select, .filter-bar input, .filter-bar select { width: 100%; max-width: 100%; }
+  .metrics, .kpi-grid, .action-metrics, .template-grid, .permission-cards { grid-template-columns: 1fr !important; }
+  .hero { flex-direction: column; padding: 18px; min-height: 0; }
+  .hero-mark { display: none; }
+  .report-card, .card-controls { flex-direction: column; align-items: stretch; }
+  .card-controls { width: 100%; }
+  .card-controls button, .card-controls .status { width: 100%; text-align: center; }
+  .work-table-wrap, .table-wrap, #programTable, #progressTable, .matrix-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  table { min-width: 640px; }
+  .matrix-table { min-width: 900px; }
+  dialog { width: 100vw !important; max-width: 100vw !important; height: 100dvh; max-height: 100dvh; margin: 0; border-radius: 0; padding: 12px; }
+  dialog .dialog-top { padding: 8px 4px 12px; position: sticky; top: 0; background: var(--surface, #fff); z-index: 2; }
+  .editor-scroll { padding: 0 4px 16px; max-height: none; }
+  .editor-footer, .dialog-footer { flex-wrap: wrap; gap: 8px; position: sticky; bottom: 0; background: var(--surface, #fff); padding: 10px 4px calc(10px + env(safe-area-inset-bottom)); }
+  .editor-footer button, .dialog-footer button, .editor-footer .primary, .editor-footer .secondary { flex: 1 1 140px; min-height: 44px; }
+  .fields, .form-grid, .grid-2, .grid-3 { grid-template-columns: 1fr !important; }
+  .action-editor-grid { grid-template-columns: 1fr; }
+  input, select, textarea, button { font-size: 16px; }
+  button, .primary, .secondary, .row-edit { min-height: 44px; }
+  .photo-grid { grid-template-columns: repeat(2, 1fr); }
+  .notice-card, .work-panel, .panel { padding: 14px; }
+  #appRoot { min-height: 100dvh; }
+}
+@media (max-width: 480px){
+  .photo-grid { grid-template-columns: 1fr; }
+  .action-metrics { grid-template-columns: 1fr !important; }
+  .notice-tabs { flex-wrap: wrap; }
+  .notice-tabs button { flex: 1 1 45%; }
+  table { min-width: 560px; }
+}
