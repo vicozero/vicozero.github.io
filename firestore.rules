@@ -137,8 +137,7 @@ service cloud.firestore {
         && request.resource.data.updatedAt == request.time
         && request.resource.data.closed is bool
         && request.resource.data.activeMs is int
-        && request.resource.data.activeMs >= resource.data.activeMs
-        && request.resource.data.activeMs <= (request.time - resource.data.startedAt).seconds() * 1000;
+        && request.resource.data.activeMs >= resource.data.activeMs;
       allow delete: if false;
     }
     // Operational records remain gated until migration reconciliation.
