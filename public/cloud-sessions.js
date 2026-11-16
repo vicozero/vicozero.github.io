@@ -22,10 +22,10 @@ function dateText(value){
 
 function mountInHeader(el,before){
   const tools=document.querySelector('.header-tools');
-  if(!tools)return;
+  if(!tools){ (document.querySelector('header')||document.body).append(el); return; }
   const anchor=tools.querySelector(before)||tools.querySelector('.sign-out');
   if(anchor)anchor.insertAdjacentElement('beforebegin',el);
-  else tools.append(el);
+  else tools.prepend(el);
 }
 
 export async function startCloudSession(db,me){
@@ -35,7 +35,7 @@ export async function startCloudSession(db,me){
   const clock=createSessionClock();
   const el=document.createElement('span');
   el.className='session-timer';
-  el.innerHTML='<span class="session-dot" aria-hidden="true"></span><span class="session-text">En línea</span><span class="session-clock">00:00:00</span>';
+  el.innerHTML='<span class="session-dot" aria-hidden="true"></span><span class="session-text">Sesión</span><span class="session-clock">00:00:00</span>';
   el.title='Tiempo de sesión conectado.';
   el.setAttribute('role','timer');
   el.setAttribute('aria-live','off');

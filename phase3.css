@@ -117,6 +117,7 @@ echo written
   .header-tools { flex: 1 1 auto; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
   .header-tools .sync { width: 100%; order: 3; font-size: 10px; }
   .header-tools .theme-button, .header-tools .notice-button, .header-tools .sign-out { padding: 8px 10px; font-size: 11px; }
+  .header-tools .session-timer { order: 2; }
   main { padding: 16px 12px calc(24px + env(safe-area-inset-bottom)); }
   .heading { flex-direction: column; align-items: stretch; gap: 10px; }
   .heading .primary, .heading button { width: 100%; justify-content: center; }
