@@ -75,8 +75,11 @@
         '<dt>Identificador</dt><dd>'+n.id+'</dd>'+
         '<dt>Palabras clave</dt><dd>'+(n.palabras||[]).join(', ')+'</dd>'+
       '</dl>'+
-      '<div class="nom-source">Fuente oficial: <a href="'+n.fuente+'" target="_blank" rel="noopener">Consultar en STPS</a><br>'+
-      '<small>Verificar versión, vigencia y contenido contra la fuente oficial antes de considerar vigente.</small></div>';
+      '<div class="nom-source">'+
+        '<a href="/assets/nom-pdfs/'+n.id.replace(/[^A-Za-z0-9-]/g,'')+'.pdf" target="_blank" rel="noopener" style="display:inline-block;margin-bottom:6px;">📄 Consultar PDF (copia local, sin red)</a><br>'+
+        'Fuente oficial: <a href="'+n.fuente+'" target="_blank" rel="noopener">Consultar en STPS ↗</a><br>'+
+        '<small>Verificar versión, vigencia y contenido contra la fuente oficial antes de considerar vigente.</small>'+
+      '</div>';
     renderList(searchEl.value);
   }
 

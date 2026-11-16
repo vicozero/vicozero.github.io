@@ -7,26 +7,60 @@
       "week": 1,
       "month": "ENERO",
       "title": "Inducción general de seguridad minera",
-      "status": "Propuesta",
+      "status": "Borrador",
       "suggestedMinutes": [
         5,
         10,
         15,
         30
       ],
-      "objective": "",
-      "audience": [],
-      "department": "",
-      "risks": [],
-      "introduction": "",
-      "development": "",
-      "criticalPoints": [],
-      "practicalExamples": [],
-      "reviewQuestions": [],
-      "recommendations": [],
-      "normativeReferences": [],
-      "internalProcedures": [],
-      "materials": [],
+      "objective": "Conocer los riesgos generales de la operacion minera y las medidas preventivas basicas para un inicio seguro.",
+      "audience": [
+        "Todo el personal de mina y planta"
+      ],
+      "department": "Seguridad",
+      "risks": [
+        "Caída de roca",
+        "Atropellamiento",
+        "Exposición a polvo",
+        "Contacto con maquinaria"
+      ],
+      "introduction": "La seguridad en la mineria subterranea comienza con la conciencia de los riesgos y el compromiso de cada persona. Esta platica establece las bases para una operacion segura.",
+      "development": "Se revisan los riesgos principales de la operacion minera: caida de roca, atropellamiento por maquinaria, exposicion a polvo y ruido, y contacto con equipos. Se enfatiza el uso de EPP, la observacion de senalizacion y el reporte de condiciones inseguras.",
+      "criticalPoints": [
+        "Uso correcto del EPP en todo momento",
+        "Respeto a la senalizacion y barricados",
+        "Reporte inmediato de condiciones inseguras",
+        "No ingresar a areas no autorizadas"
+      ],
+      "practicalExamples": [
+        "Un trabajador que omite el casco en una zona de caida de roca",
+        "Un peaton que cruza sin verificar maquinaria en movimiento",
+        "Un operador que no reporta una fuga de aceite"
+      ],
+      "reviewQuestions": [
+        "¿Cuales son los riesgos principales en mina subterránea?",
+        "¿Que debes hacer ante una condicion insegura?",
+        "¿Es obligatorio el EPP en toda la mina?"
+      ],
+      "recommendations": [
+        "Usa siempre tu EPP completo",
+        "Reporta cualquier condicion insegura de inmediato",
+        "Respeta las senales y barricados",
+        "No ingreses a zonas no autorizadas"
+      ],
+      "normativeReferences": [
+        "NOM-023-STPS-2012",
+        "NOM-017-STPS-2024"
+      ],
+      "internalProcedures": [
+        "Procedimiento de induccion general",
+        "Reglamento de seguridad minera"
+      ],
+      "materials": [
+        "Presentacion de induccion",
+        "Lista de asistencia"
+      ],
       "reviewedAt": null,
       "author": null,
       "approver": null,
@@ -37,26 +71,56 @@
       "week": 2,
       "month": "ENERO",
       "title": "Identificación de actos y condiciones inseguras",
-      "status": "Propuesta",
+      "status": "Borrador",
       "suggestedMinutes": [
         5,
         10,
         15,
         30
       ],
-      "objective": "",
-      "audience": [],
-      "department": "",
-      "risks": [],
-      "introduction": "",
-      "development": "",
-      "criticalPoints": [],
-      "practicalExamples": [],
-      "reviewQuestions": [],
-      "recommendations": [],
-      "normativeReferences": [],
-      "internalProcedures": [],
-      "materials": [],
+      "objective": "Identificar actos y condiciones inseguras para prevenir incidentes.",
+      "audience": [
+        "Supervisores y trabajadores"
+      ],
+      "department": "Seguridad",
+      "risks": [
+        "Actos inseguros",
+        "Condiciones inseguras",
+        "Casi accidentes"
+      ],
+      "introduction": "Los actos y condiciones inseguras son la causa principal de los incidentes. Aprender a identificarlos es el primer paso para prevenirlos.",
+      "development": "Se define la diferencia entre acto inseguro (comportamiento) y condicion insegura (entorno). Se revisan ejemplos comunes en mina y planta. Se practica la observacion preventiva.",
+      "criticalPoints": [
+        "Un acto inseguro es una accion que aumenta el riesgo",
+        "Una condicion insegura es un estado del entorno",
+        "Ambos deben reportarse",
+        "La observacion preventiva salva vidas"
+      ],
+      "practicalExamples": [
+        "Operar equipo sin autorizacion (acto inseguro)",
+        "Piso con derrame de aceite (condicion insegura)",
+        "Herramienta en mal estado (condicion insegura)"
+      ],
+      "reviewQuestions": [
+        "¿Que es un acto inseguro?",
+        "¿Que es una condicion insegura?",
+        "¿Debes reportar ambas?"
+      ],
+      "recommendations": [
+        "Observa tu entorno antes de iniciar",
+        "Reporta actos y condiciones inseguras",
+        "No normalices el riesgo",
+        "Participa en observaciones preventivas"
+      ],
+      "normativeReferences": [
+        "NOM-019-STPS-2011"
+      ],
+      "internalProcedures": [
+        "Procedimiento de observaciones preventivas"
+      ],
+      "materials": [
+        "Lista de verificacion de actos y condiciones"
+      ],
       "reviewedAt": null,
       "author": null,
       "approver": null,
@@ -67,26 +131,57 @@
       "week": 3,
       "month": "ENERO",
       "title": "Responsabilidades del trabajador y supervisor",
-      "status": "Propuesta",
+      "status": "Borrador",
       "suggestedMinutes": [
         5,
         10,
         15,
         30
       ],
-      "objective": "",
-      "audience": [],
-      "department": "",
-      "risks": [],
-      "introduction": "",
-      "development": "",
-      "criticalPoints": [],
-      "practicalExamples": [],
-      "reviewQuestions": [],
-      "recommendations": [],
-      "normativeReferences": [],
-      "internalProcedures": [],
-      "materials": [],
+      "objective": "Conocer las responsabilidades del trabajador y del supervisor en materia de seguridad.",
+      "audience": [
+        "Trabajadores y supervisores"
+      ],
+      "department": "Seguridad",
+      "risks": [
+        "Incumplimiento de normas",
+        "Falta de supervision",
+        "Responsabilidad compartida"
+      ],
+      "introduction": "La seguridad es responsabilidad de todos. Cada rol tiene obligaciones especificas que deben cumplirse para proteger la vida.",
+      "development": "Se revisan las responsabilidades del trabajador (usar EPP, seguir procedimientos, reportar riesgos) y del supervisor (capacitar, verificar, corregir, documentar). Se enfatiza que la seguridad es una obligacion compartida.",
+      "criticalPoints": [
+        "El trabajador debe usar EPP y seguir procedimientos",
+        "El supervisor debe verificar y corregir",
+        "Ambos deben reportar riesgos",
+        "La responsabilidad es compartida"
+      ],
+      "practicalExamples": [
+        "Un supervisor que no verifica el EPP antes de iniciar",
+        "Un trabajador que omite el checklist preoperacional",
+        "Un area sin supervision adecuada"
+      ],
+      "reviewQuestions": [
+        "¿Cuales son las responsabilidades del trabajador?",
+        "¿Que debe verificar el supervisor?",
+        "¿Quien es responsable de la seguridad?"
+      ],
+      "recommendations": [
+        "Cumple tus responsabilidades de seguridad",
+        "Verifica y corrige como supervisor",
+        "Reporta incumplimientos",
+        "Trabaja en equipo por la seguridad"
+      ],
+      "normativeReferences": [
+        "NOM-019-STPS-2011",
+        "NOM-030-STPS-2009"
+      ],
+      "internalProcedures": [
+        "Reglamento interno de seguridad"
+      ],
+      "materials": [
+        "Reglamento de seguridad"
+      ],
       "reviewedAt": null,
       "author": null,
       "approver": null,
@@ -97,26 +192,56 @@
       "week": 4,
       "month": "ENERO",
       "title": "Reporte oportuno de riesgos y casi accidentes",
-      "status": "Propuesta",
+      "status": "Borrador",
       "suggestedMinutes": [
         5,
         10,
         15,
         30
       ],
-      "objective": "",
-      "audience": [],
-      "department": "",
-      "risks": [],
-      "introduction": "",
-      "development": "",
-      "criticalPoints": [],
-      "practicalExamples": [],
-      "reviewQuestions": [],
-      "recommendations": [],
-      "normativeReferences": [],
-      "internalProcedures": [],
-      "materials": [],
+      "objective": "Fomentar el reporte oportuno de riesgos y casi accidentes para prevenir incidentes.",
+      "audience": [
+        "Todo el personal"
+      ],
+      "department": "Seguridad",
+      "risks": [
+        "Casi accidentes no reportados",
+        "Riesgos latentes",
+        "Recurrencia de incidentes"
+      ],
+      "introduction": "Los casi accidentes son advertencias. Reportarlos a tiempo permite corregir antes de que ocurra un accidente.",
+      "development": "Se define que es un casi accidente. Se explican las consecuencias de no reportar. Se practica el llenado del formato de aviso de riesgo.",
+      "criticalPoints": [
+        "Un casi accidente es un evento sin lesion pero con potencial de daño",
+        "Reportar a tiempo previene accidentes",
+        "No ocultar ni minimizar incidentes",
+        "El reporte no es castigo, es prevencion"
+      ],
+      "practicalExamples": [
+        "Una roca que cae cerca de un trabajador",
+        "Un equipo que falla pero no causa lesion",
+        "Un derrame que se limpia sin reportar"
+      ],
+      "reviewQuestions": [
+        "¿Que es un casi accidente?",
+        "¿Por que es importante reportarlo?",
+        "¿A quien debes reportar?"
+      ],
+      "recommendations": [
+        "Reporta todo casi accidente",
+        "No minimices los riesgos",
+        "Participa en la investigacion",
+        "Ayuda a prevenir recurrencias"
+      ],
+      "normativeReferences": [
+        "NOM-023-STPS-2012"
+      ],
+      "internalProcedures": [
+        "Procedimiento de aviso de riesgo"
+      ],
+      "materials": [
+        "Formato de aviso de riesgo"
+      ],
       "reviewedAt": null,
       "author": null,
       "approver": null,
@@ -127,26 +252,45 @@
       "week": 5,
       "month": "FEBRERO",
       "title": "Selección y uso correcto del EPP",
-      "status": "Propuesta",
+      "status": "Borrador",
       "suggestedMinutes": [
         5,
         10,
         15,
         30
       ],
-      "objective": "",
-      "audience": [],
-      "department": "",
-      "risks": [],
-      "introduction": "",
-      "development": "",
-      "criticalPoints": [],
-      "practicalExamples": [],
-      "reviewQuestions": [],
-      "recommendations": [],
+      "objective": "Conocer los riesgos asociados a selección y uso correcto del epp y las medidas preventivas aplicables.",
+      "audience": [
+        "Trabajadores y supervisores"
+      ],
+      "department": "Seguridad",
+      "risks": [
+        "Riesgos asociados a la actividad"
+      ],
+      "introduction": "La seguridad en selección y uso correcto del epp es fundamental para prevenir incidentes y proteger la vida.",
+      "development": "Se revisan los riesgos, medidas preventivas y procedimientos aplicables a selección y uso correcto del epp.",
+      "criticalPoints": [
+        "Uso correcto del EPP",
+        "Seguir procedimientos",
+        "Reportar condiciones inseguras"
+      ],
+      "practicalExamples": [
+        "Ejemplo practico de la actividad"
+      ],
+      "reviewQuestions": [
+        "¿Cuales son los riesgos principales?",
+        "¿Que medidas preventivas aplicas?"
+      ],
+      "recommendations": [
+        "Aplicar las medidas preventivas",
+        "Reportar riesgos",
+        "Usar EPP"
+      ],
       "normativeReferences": [],
       "internalProcedures": [],
-      "materials": [],
+      "materials": [
+        "Presentacion de la platica"
+      ],
       "reviewedAt": null,
       "author": null,
       "approver": null,
@@ -157,26 +301,45 @@
       "week": 6,
       "month": "FEBRERO",
       "title": "Protección respiratoria",
-      "status": "Propuesta",
+      "status": "Borrador",
       "suggestedMinutes": [
         5,
         10,
         15,
         30
       ],
-      "objective": "",
-      "audience": [],
-      "department": "",
-      "risks": [],
-      "introduction": "",
-      "development": "",
-      "criticalPoints": [],
-      "practicalExamples": [],
-      "reviewQuestions": [],
-      "recommendations": [],
+      "objective": "Conocer los riesgos asociados a protección respiratoria y las medidas preventivas aplicables.",
+      "audience": [
+        "Trabajadores y supervisores"
+      ],
+      "department": "Seguridad",
+      "risks": [
+        "Riesgos asociados a la actividad"
+      ],
+      "introduction": "La seguridad en protección respiratoria es fundamental para prevenir incidentes y proteger la vida.",
+      "development": "Se revisan los riesgos, medidas preventivas y procedimientos aplicables a protección respiratoria.",
+      "criticalPoints": [
+        "Uso correcto del EPP",
+        "Seguir procedimientos",
+        "Reportar condiciones inseguras"
+      ],
+      "practicalExamples": [
+        "Ejemplo practico de la actividad"
+      ],
+      "reviewQuestions": [
+        "¿Cuales son los riesgos principales?",
+        "¿Que medidas preventivas aplicas?"
+      ],
+      "recommendations": [
+        "Aplicar las medidas preventivas",
+        "Reportar riesgos",
+        "Usar EPP"
+      ],
       "normativeReferences": [],
       "internalProcedures": [],
-      "materials": [],
+      "materials": [
+        "Presentacion de la platica"
+      ],
       "reviewedAt": null,
       "author": null,
       "approver": null,
@@ -187,26 +350,45 @@
       "week": 7,
       "month": "FEBRERO",
       "title": "Protección auditiva y visual",
-      "status": "Propuesta",
+      "status": "Borrador",
       "suggestedMinutes": [
         5,
         10,
         15,
         30
       ],
-      "objective": "",
-      "audience": [],
-      "department": "",
-      "risks": [],
-      "introduction": "",
-      "development": "",
-      "criticalPoints": [],
-      "practicalExamples": [],
-      "reviewQuestions": [],
-      "recommendations": [],
+      "objective": "Conocer los riesgos asociados a protección auditiva y visual y las medidas preventivas aplicables.",
+      "audience": [
+        "Trabajadores y supervisores"
+      ],
+      "department": "Seguridad",
+      "risks": [
+        "Riesgos asociados a la actividad"
+      ],
+      "introduction": "La seguridad en protección auditiva y visual es fundamental para prevenir incidentes y proteger la vida.",
+      "development": "Se revisan los riesgos, medidas preventivas y procedimientos aplicables a protección auditiva y visual.",
+      "criticalPoints": [
+        "Uso correcto del EPP",
+        "Seguir procedimientos",
+        "Reportar condiciones inseguras"
+      ],
+      "practicalExamples": [
+        "Ejemplo practico de la actividad"
+      ],
+      "reviewQuestions": [
+        "¿Cuales son los riesgos principales?",
+        "¿Que medidas preventivas aplicas?"
+      ],
+      "recommendations": [
+        "Aplicar las medidas preventivas",
+        "Reportar riesgos",
+        "Usar EPP"
+      ],
       "normativeReferences": [],
       "internalProcedures": [],
-      "materials": [],
+      "materials": [
+        "Presentacion de la platica"
+      ],
       "reviewedAt": null,
       "author": null,
       "approver": null,
@@ -217,26 +399,45 @@
       "week": 8,
       "month": "FEBRERO",
       "title": "Inspección, conservación y reposición del EPP",
-      "status": "Propuesta",
+      "status": "Borrador",
       "suggestedMinutes": [
         5,
         10,
         15,
         30
       ],
-      "objective": "",
-      "audience": [],
-      "department": "",
-      "risks": [],
-      "introduction": "",
-      "development": "",
-      "criticalPoints": [],
-      "practicalExamples": [],
-      "reviewQuestions": [],
-      "recommendations": [],
+      "objective": "Conocer los riesgos asociados a inspección, conservación y reposición del epp y las medidas preventivas aplicables.",
+      "audience": [
+        "Trabajadores y supervisores"
+      ],
+      "department": "Seguridad",
+      "risks": [
+        "Riesgos asociados a la actividad"
+      ],
+      "introduction": "La seguridad en inspección, conservación y reposición del epp es fundamental para prevenir incidentes y proteger la vida.",
+      "development": "Se revisan los riesgos, medidas preventivas y procedimientos aplicables a inspección, conservación y reposición del epp.",
+      "criticalPoints": [
+        "Uso correcto del EPP",
+        "Seguir procedimientos",
+        "Reportar condiciones inseguras"
+      ],
+      "practicalExamples": [
+        "Ejemplo practico de la actividad"
+      ],
+      "reviewQuestions": [
+        "¿Cuales son los riesgos principales?",
+        "¿Que medidas preventivas aplicas?"
+      ],
+      "recommendations": [
+        "Aplicar las medidas preventivas",
+        "Reportar riesgos",
+        "Usar EPP"
+      ],
       "normativeReferences": [],
       "internalProcedures": [],
-      "materials": [],
+      "materials": [
+        "Presentacion de la platica"
+      ],
       "reviewedAt": null,
       "author": null,
       "approver": null,
@@ -247,26 +448,45 @@
       "week": 9,
       "month": "MARZO",
       "title": "Riesgos generales de trabajos subterráneos",
-      "status": "Propuesta",
+      "status": "Borrador",
       "suggestedMinutes": [
         5,
         10,
         15,
         30
       ],
-      "objective": "",
-      "audience": [],
-      "department": "",
-      "risks": [],
-      "introduction": "",
-      "development": "",
-      "criticalPoints": [],
-      "practicalExamples": [],
-      "reviewQuestions": [],
-      "recommendations": [],
+      "objective": "Conocer los riesgos asociados a riesgos generales de trabajos subterráneos y las medidas preventivas aplicables.",
+      "audience": [
+        "Trabajadores y supervisores"
+      ],
+      "department": "Seguridad",
+      "risks": [
+        "Riesgos asociados a la actividad"
+      ],
+      "introduction": "La seguridad en riesgos generales de trabajos subterráneos es fundamental para prevenir incidentes y proteger la vida.",
+      "development": "Se revisan los riesgos, medidas preventivas y procedimientos aplicables a riesgos generales de trabajos subterráneos.",
+      "criticalPoints": [
+        "Uso correcto del EPP",
+        "Seguir procedimientos",
+        "Reportar condiciones inseguras"
+      ],
+      "practicalExamples": [
+        "Ejemplo practico de la actividad"
+      ],
+      "reviewQuestions": [
+        "¿Cuales son los riesgos principales?",
+        "¿Que medidas preventivas aplicas?"
+      ],
+      "recommendations": [
+        "Aplicar las medidas preventivas",
+        "Reportar riesgos",
+        "Usar EPP"
+      ],
       "normativeReferences": [],
       "internalProcedures": [],
-      "materials": [],
+      "materials": [
+        "Presentacion de la platica"
+      ],
       "reviewedAt": null,
       "author": null,
       "approver": null,
@@ -277,26 +497,45 @@
       "week": 10,
       "month": "MARZO",
       "title": "Caída de roca y control del terreno",
-      "status": "Propuesta",
+      "status": "Borrador",
       "suggestedMinutes": [
         5,
         10,
         15,
         30
       ],
-      "objective": "",
-      "audience": [],
-      "department": "",
-      "risks": [],
-      "introduction": "",
-      "development": "",
-      "criticalPoints": [],
-      "practicalExamples": [],
-      "reviewQuestions": [],
-      "recommendations": [],
+      "objective": "Conocer los riesgos asociados a caída de roca y control del terreno y las medidas preventivas aplicables.",
+      "audience": [
+        "Trabajadores y supervisores"
+      ],
+      "department": "Seguridad",
+      "risks": [
+        "Riesgos asociados a la actividad"
+      ],
+      "introduction": "La seguridad en caída de roca y control del terreno es fundamental para prevenir incidentes y proteger la vida.",
+      "development": "Se revisan los riesgos, medidas preventivas y procedimientos aplicables a caída de roca y control del terreno.",
+      "criticalPoints": [
+        "Uso correcto del EPP",
+        "Seguir procedimientos",
+        "Reportar condiciones inseguras"
+      ],
+      "practicalExamples": [
+        "Ejemplo practico de la actividad"
+      ],
+      "reviewQuestions": [
+        "¿Cuales son los riesgos principales?",
+        "¿Que medidas preventivas aplicas?"
+      ],
+      "recommendations": [
+        "Aplicar las medidas preventivas",
+        "Reportar riesgos",
+        "Usar EPP"
+      ],
       "normativeReferences": [],
       "internalProcedures": [],
-      "materials": [],
+      "materials": [
+        "Presentacion de la platica"
+      ],
       "reviewedAt": null,
       "author": null,
       "approver": null,
@@ -307,26 +546,45 @@
       "week": 11,
       "month": "MARZO",
       "title": "Fortificación y condiciones del frente",
-      "status": "Propuesta",
+      "status": "Borrador",
       "suggestedMinutes": [
         5,
         10,
         15,
         30
       ],
-      "objective": "",
-      "audience": [],
-      "department": "",
-      "risks": [],
-      "introduction": "",
-      "development": "",
-      "criticalPoints": [],
-      "practicalExamples": [],
-      "reviewQuestions": [],
-      "recommendations": [],
+      "objective": "Conocer los riesgos asociados a fortificación y condiciones del frente y las medidas preventivas aplicables.",
+      "audience": [
+        "Trabajadores y supervisores"
+      ],
+      "department": "Seguridad",
+      "risks": [
+        "Riesgos asociados a la actividad"
+      ],
+      "introduction": "La seguridad en fortificación y condiciones del frente es fundamental para prevenir incidentes y proteger la vida.",
+      "development": "Se revisan los riesgos, medidas preventivas y procedimientos aplicables a fortificación y condiciones del frente.",
+      "criticalPoints": [
+        "Uso correcto del EPP",
+        "Seguir procedimientos",
+        "Reportar condiciones inseguras"
+      ],
+      "practicalExamples": [
+        "Ejemplo practico de la actividad"
+      ],
+      "reviewQuestions": [
+        "¿Cuales son los riesgos principales?",
+        "¿Que medidas preventivas aplicas?"
+      ],
+      "recommendations": [
+        "Aplicar las medidas preventivas",
+        "Reportar riesgos",
+        "Usar EPP"
+      ],
       "normativeReferences": [],
       "internalProcedures": [],
-      "materials": [],
+      "materials": [
+        "Presentacion de la platica"
+      ],
       "reviewedAt": null,
       "author": null,
       "approver": null,
@@ -337,26 +595,45 @@
       "week": 12,
       "month": "MARZO",
       "title": "Ventilación y atmósferas peligrosas",
-      "status": "Propuesta",
+      "status": "Borrador",
       "suggestedMinutes": [
         5,
         10,
         15,
         30
       ],
-      "objective": "",
-      "audience": [],
-      "department": "",
-      "risks": [],
-      "introduction": "",
-      "development": "",
-      "criticalPoints": [],
-      "practicalExamples": [],
-      "reviewQuestions": [],
-      "recommendations": [],
+      "objective": "Conocer los riesgos asociados a ventilación y atmósferas peligrosas y las medidas preventivas aplicables.",
+      "audience": [
+        "Trabajadores y supervisores"
+      ],
+      "department": "Seguridad",
+      "risks": [
+        "Riesgos asociados a la actividad"
+      ],
+      "introduction": "La seguridad en ventilación y atmósferas peligrosas es fundamental para prevenir incidentes y proteger la vida.",
+      "development": "Se revisan los riesgos, medidas preventivas y procedimientos aplicables a ventilación y atmósferas peligrosas.",
+      "criticalPoints": [
+        "Uso correcto del EPP",
+        "Seguir procedimientos",
+        "Reportar condiciones inseguras"
+      ],
+      "practicalExamples": [
+        "Ejemplo practico de la actividad"
+      ],
+      "reviewQuestions": [
+        "¿Cuales son los riesgos principales?",
+        "¿Que medidas preventivas aplicas?"
+      ],
+      "recommendations": [
+        "Aplicar las medidas preventivas",
+        "Reportar riesgos",
+        "Usar EPP"
+      ],
       "normativeReferences": [],
       "internalProcedures": [],
-      "materials": [],
+      "materials": [
+        "Presentacion de la platica"
+      ],
       "reviewedAt": null,
       "author": null,
       "approver": null,
@@ -367,26 +644,45 @@
       "week": 13,
       "month": "MARZO",
       "title": "Rutas de escape y refugios mineros",
-      "status": "Propuesta",
+      "status": "Borrador",
       "suggestedMinutes": [
         5,
         10,
         15,
         30
       ],
-      "objective": "",
-      "audience": [],
-      "department": "",
-      "risks": [],
-      "introduction": "",
-      "development": "",
-      "criticalPoints": [],
-      "practicalExamples": [],
-      "reviewQuestions": [],
-      "recommendations": [],
+      "objective": "Conocer los riesgos asociados a rutas de escape y refugios mineros y las medidas preventivas aplicables.",
+      "audience": [
+        "Trabajadores y supervisores"
+      ],
+      "department": "Seguridad",
+      "risks": [
+        "Riesgos asociados a la actividad"
+      ],
+      "introduction": "La seguridad en rutas de escape y refugios mineros es fundamental para prevenir incidentes y proteger la vida.",
+      "development": "Se revisan los riesgos, medidas preventivas y procedimientos aplicables a rutas de escape y refugios mineros.",
+      "criticalPoints": [
+        "Uso correcto del EPP",
+        "Seguir procedimientos",
+        "Reportar condiciones inseguras"
+      ],
+      "practicalExamples": [
+        "Ejemplo practico de la actividad"
+      ],
+      "reviewQuestions": [
+        "¿Cuales son los riesgos principales?",
+        "¿Que medidas preventivas aplicas?"
+      ],
+      "recommendations": [
+        "Aplicar las medidas preventivas",
+        "Reportar riesgos",
+        "Usar EPP"
+      ],
       "normativeReferences": [],
       "internalProcedures": [],
-      "materials": [],
+      "materials": [
+        "Presentacion de la platica"
+      ],
       "reviewedAt": null,
       "author": null,
       "approver": null,
@@ -397,26 +693,45 @@
       "week": 14,
       "month": "ABRIL",
       "title": "Tránsito de maquinaria pesada",
-      "status": "Propuesta",
+      "status": "Borrador",
       "suggestedMinutes": [
         5,
         10,
         15,
         30
       ],
-      "objective": "",
-      "audience": [],
-      "department": "",
-      "risks": [],
-      "introduction": "",
-      "development": "",
-      "criticalPoints": [],
-      "practicalExamples": [],
-      "reviewQuestions": [],
-      "recommendations": [],
+      "objective": "Conocer los riesgos asociados a tránsito de maquinaria pesada y las medidas preventivas aplicables.",
+      "audience": [
+        "Trabajadores y supervisores"
+      ],
+      "department": "Seguridad",
+      "risks": [
+        "Riesgos asociados a la actividad"
+      ],
+      "introduction": "La seguridad en tránsito de maquinaria pesada es fundamental para prevenir incidentes y proteger la vida.",
+      "development": "Se revisan los riesgos, medidas preventivas y procedimientos aplicables a tránsito de maquinaria pesada.",
+      "criticalPoints": [
+        "Uso correcto del EPP",
+        "Seguir procedimientos",
+        "Reportar condiciones inseguras"
+      ],
+      "practicalExamples": [
+        "Ejemplo practico de la actividad"
+      ],
+      "reviewQuestions": [
+        "¿Cuales son los riesgos principales?",
+        "¿Que medidas preventivas aplicas?"
+      ],
+      "recommendations": [
+        "Aplicar las medidas preventivas",
+        "Reportar riesgos",
+        "Usar EPP"
+      ],
       "normativeReferences": [],
       "internalProcedures": [],
-      "materials": [],
+      "materials": [
+        "Presentacion de la platica"
+      ],
       "reviewedAt": null,
       "author": null,
       "approver": null,
@@ -427,26 +742,45 @@
       "week": 15,
       "month": "ABRIL",
       "title": "Interacción entre peatones y equipos",
-      "status": "Propuesta",
+      "status": "Borrador",
       "suggestedMinutes": [
         5,
         10,
         15,
         30
       ],
-      "objective": "",
-      "audience": [],
-      "department": "",
-      "risks": [],
-      "introduction": "",
-      "development": "",
-      "criticalPoints": [],
-      "practicalExamples": [],
-      "reviewQuestions": [],
-      "recommendations": [],
+      "objective": "Conocer los riesgos asociados a interacción entre peatones y equipos y las medidas preventivas aplicables.",
+      "audience": [
+        "Trabajadores y supervisores"
+      ],
+      "department": "Seguridad",
+      "risks": [
+        "Riesgos asociados a la actividad"
+      ],
+      "introduction": "La seguridad en interacción entre peatones y equipos es fundamental para prevenir incidentes y proteger la vida.",
+      "development": "Se revisan los riesgos, medidas preventivas y procedimientos aplicables a interacción entre peatones y equipos.",
+      "criticalPoints": [
+        "Uso correcto del EPP",
+        "Seguir procedimientos",
+        "Reportar condiciones inseguras"
+      ],
+      "practicalExamples": [
+        "Ejemplo practico de la actividad"
+      ],
+      "reviewQuestions": [
+        "¿Cuales son los riesgos principales?",
+        "¿Que medidas preventivas aplicas?"
+      ],
+      "recommendations": [
+        "Aplicar las medidas preventivas",
+        "Reportar riesgos",
+        "Usar EPP"
+      ],
       "normativeReferences": [],
       "internalProcedures": [],
-      "materials": [],
+      "materials": [
+        "Presentacion de la platica"
+      ],
       "reviewedAt": null,
       "author": null,
       "approver": null,
@@ -457,26 +791,45 @@
       "week": 16,
       "month": "ABRIL",
       "title": "Inspección preoperacional",
-      "status": "Propuesta",
+      "status": "Borrador",
       "suggestedMinutes": [
         5,
         10,
         15,
         30
       ],
-      "objective": "",
-      "audience": [],
-      "department": "",
-      "risks": [],
-      "introduction": "",
-      "development": "",
-      "criticalPoints": [],
-      "practicalExamples": [],
-      "reviewQuestions": [],
-      "recommendations": [],
+      "objective": "Conocer los riesgos asociados a inspección preoperacional y las medidas preventivas aplicables.",
+      "audience": [
+        "Trabajadores y supervisores"
+      ],
+      "department": "Seguridad",
+      "risks": [
+        "Riesgos asociados a la actividad"
+      ],
+      "introduction": "La seguridad en inspección preoperacional es fundamental para prevenir incidentes y proteger la vida.",
+      "development": "Se revisan los riesgos, medidas preventivas y procedimientos aplicables a inspección preoperacional.",
+      "criticalPoints": [
+        "Uso correcto del EPP",
+        "Seguir procedimientos",
+        "Reportar condiciones inseguras"
+      ],
+      "practicalExamples": [
+        "Ejemplo practico de la actividad"
+      ],
+      "reviewQuestions": [
+        "¿Cuales son los riesgos principales?",
+        "¿Que medidas preventivas aplicas?"
+      ],
+      "recommendations": [
+        "Aplicar las medidas preventivas",
+        "Reportar riesgos",
+        "Usar EPP"
+      ],
       "normativeReferences": [],
       "internalProcedures": [],
-      "materials": [],
+      "materials": [
+        "Presentacion de la platica"
+      ],
       "reviewedAt": null,
       "author": null,
       "approver": null,
@@ -487,26 +840,45 @@
       "week": 17,
       "month": "ABRIL",
       "title": "Maniobras, reversa y puntos ciegos",
-      "status": "Propuesta",
+      "status": "Borrador",
       "suggestedMinutes": [
         5,
         10,
         15,
         30
       ],
-      "objective": "",
-      "audience": [],
-      "department": "",
-      "risks": [],
-      "introduction": "",
-      "development": "",
-      "criticalPoints": [],
-      "practicalExamples": [],
-      "reviewQuestions": [],
-      "recommendations": [],
+      "objective": "Conocer los riesgos asociados a maniobras, reversa y puntos ciegos y las medidas preventivas aplicables.",
+      "audience": [
+        "Trabajadores y supervisores"
+      ],
+      "department": "Seguridad",
+      "risks": [
+        "Riesgos asociados a la actividad"
+      ],
+      "introduction": "La seguridad en maniobras, reversa y puntos ciegos es fundamental para prevenir incidentes y proteger la vida.",
+      "development": "Se revisan los riesgos, medidas preventivas y procedimientos aplicables a maniobras, reversa y puntos ciegos.",
+      "criticalPoints": [
+        "Uso correcto del EPP",
+        "Seguir procedimientos",
+        "Reportar condiciones inseguras"
+      ],
+      "practicalExamples": [
+        "Ejemplo practico de la actividad"
+      ],
+      "reviewQuestions": [
+        "¿Cuales son los riesgos principales?",
+        "¿Que medidas preventivas aplicas?"
+      ],
+      "recommendations": [
+        "Aplicar las medidas preventivas",
+        "Reportar riesgos",
+        "Usar EPP"
+      ],
       "normativeReferences": [],
       "internalProcedures": [],
-      "materials": [],
+      "materials": [
+        "Presentacion de la platica"
+      ],
       "reviewedAt": null,
       "author": null,
       "approver": null,
@@ -517,26 +889,45 @@
       "week": 18,
       "month": "MAYO",
       "title": "Bloqueo, etiquetado y control de energías",
-      "status": "Propuesta",
+      "status": "Borrador",
       "suggestedMinutes": [
         5,
         10,
         15,
         30
       ],
-      "objective": "",
-      "audience": [],
-      "department": "",
-      "risks": [],
-      "introduction": "",
-      "development": "",
-      "criticalPoints": [],
-      "practicalExamples": [],
-      "reviewQuestions": [],
-      "recommendations": [],
+      "objective": "Conocer los riesgos asociados a bloqueo, etiquetado y control de energías y las medidas preventivas aplicables.",
+      "audience": [
+        "Trabajadores y supervisores"
+      ],
+      "department": "Seguridad",
+      "risks": [
+        "Riesgos asociados a la actividad"
+      ],
+      "introduction": "La seguridad en bloqueo, etiquetado y control de energías es fundamental para prevenir incidentes y proteger la vida.",
+      "development": "Se revisan los riesgos, medidas preventivas y procedimientos aplicables a bloqueo, etiquetado y control de energías.",
+      "criticalPoints": [
+        "Uso correcto del EPP",
+        "Seguir procedimientos",
+        "Reportar condiciones inseguras"
+      ],
+      "practicalExamples": [
+        "Ejemplo practico de la actividad"
+      ],
+      "reviewQuestions": [
+        "¿Cuales son los riesgos principales?",
+        "¿Que medidas preventivas aplicas?"
+      ],
+      "recommendations": [
+        "Aplicar las medidas preventivas",
+        "Reportar riesgos",
+        "Usar EPP"
+      ],
       "normativeReferences": [],
       "internalProcedures": [],
-      "materials": [],
+      "materials": [
+        "Presentacion de la platica"
+      ],
       "reviewedAt": null,
       "author": null,
       "approver": null,
@@ -547,26 +938,45 @@
       "week": 19,
       "month": "MAYO",
       "title": "Herramientas manuales y eléctricas",
-      "status": "Propuesta",
+      "status": "Borrador",
       "suggestedMinutes": [
         5,
         10,
         15,
         30
       ],
-      "objective": "",
-      "audience": [],
-      "department": "",
-      "risks": [],
-      "introduction": "",
-      "development": "",
-      "criticalPoints": [],
-      "practicalExamples": [],
-      "reviewQuestions": [],
-      "recommendations": [],
+      "objective": "Conocer los riesgos asociados a herramientas manuales y eléctricas y las medidas preventivas aplicables.",
+      "audience": [
+        "Trabajadores y supervisores"
+      ],
+      "department": "Seguridad",
+      "risks": [
+        "Riesgos asociados a la actividad"
+      ],
+      "introduction": "La seguridad en herramientas manuales y eléctricas es fundamental para prevenir incidentes y proteger la vida.",
+      "development": "Se revisan los riesgos, medidas preventivas y procedimientos aplicables a herramientas manuales y eléctricas.",
+      "criticalPoints": [
+        "Uso correcto del EPP",
+        "Seguir procedimientos",
+        "Reportar condiciones inseguras"
+      ],
+      "practicalExamples": [
+        "Ejemplo practico de la actividad"
+      ],
+      "reviewQuestions": [
+        "¿Cuales son los riesgos principales?",
+        "¿Que medidas preventivas aplicas?"
+      ],
+      "recommendations": [
+        "Aplicar las medidas preventivas",
+        "Reportar riesgos",
+        "Usar EPP"
+      ],
       "normativeReferences": [],
       "internalProcedures": [],
-      "materials": [],
+      "materials": [
+        "Presentacion de la platica"
+      ],
       "reviewedAt": null,
       "author": null,
       "approver": null,
@@ -577,26 +987,45 @@
       "week": 20,
       "month": "MAYO",
       "title": "Trabajos de soldadura y corte",
-      "status": "Propuesta",
+      "status": "Borrador",
       "suggestedMinutes": [
         5,
         10,
         15,
         30
       ],
-      "objective": "",
-      "audience": [],
-      "department": "",
-      "risks": [],
-      "introduction": "",
-      "development": "",
-      "criticalPoints": [],
-      "practicalExamples": [],
-      "reviewQuestions": [],
-      "recommendations": [],
+      "objective": "Conocer los riesgos asociados a trabajos de soldadura y corte y las medidas preventivas aplicables.",
+      "audience": [
+        "Trabajadores y supervisores"
+      ],
+      "department": "Seguridad",
+      "risks": [
+        "Riesgos asociados a la actividad"
+      ],
+      "introduction": "La seguridad en trabajos de soldadura y corte es fundamental para prevenir incidentes y proteger la vida.",
+      "development": "Se revisan los riesgos, medidas preventivas y procedimientos aplicables a trabajos de soldadura y corte.",
+      "criticalPoints": [
+        "Uso correcto del EPP",
+        "Seguir procedimientos",
+        "Reportar condiciones inseguras"
+      ],
+      "practicalExamples": [
+        "Ejemplo practico de la actividad"
+      ],
+      "reviewQuestions": [
+        "¿Cuales son los riesgos principales?",
+        "¿Que medidas preventivas aplicas?"
+      ],
+      "recommendations": [
+        "Aplicar las medidas preventivas",
+        "Reportar riesgos",
+        "Usar EPP"
+      ],
       "normativeReferences": [],
       "internalProcedures": [],
-      "materials": [],
+      "materials": [
+        "Presentacion de la platica"
+      ],
       "reviewedAt": null,
       "author": null,
       "approver": null,
@@ -607,26 +1036,45 @@
       "week": 21,
       "month": "MAYO",
       "title": "Manejo seguro de lubricantes y combustibles",
-      "status": "Propuesta",
+      "status": "Borrador",
       "suggestedMinutes": [
         5,
         10,
         15,
         30
       ],
-      "objective": "",
-      "audience": [],
-      "department": "",
-      "risks": [],
-      "introduction": "",
-      "development": "",
-      "criticalPoints": [],
-      "practicalExamples": [],
-      "reviewQuestions": [],
-      "recommendations": [],
+      "objective": "Conocer los riesgos asociados a manejo seguro de lubricantes y combustibles y las medidas preventivas aplicables.",
+      "audience": [
+        "Trabajadores y supervisores"
+      ],
+      "department": "Seguridad",
+      "risks": [
+        "Riesgos asociados a la actividad"
+      ],
+      "introduction": "La seguridad en manejo seguro de lubricantes y combustibles es fundamental para prevenir incidentes y proteger la vida.",
+      "development": "Se revisan los riesgos, medidas preventivas y procedimientos aplicables a manejo seguro de lubricantes y combustibles.",
+      "criticalPoints": [
+        "Uso correcto del EPP",
+        "Seguir procedimientos",
+        "Reportar condiciones inseguras"
+      ],
+      "practicalExamples": [
+        "Ejemplo practico de la actividad"
+      ],
+      "reviewQuestions": [
+        "¿Cuales son los riesgos principales?",
+        "¿Que medidas preventivas aplicas?"
+      ],
+      "recommendations": [
+        "Aplicar las medidas preventivas",
+        "Reportar riesgos",
+        "Usar EPP"
+      ],
       "normativeReferences": [],
       "internalProcedures": [],
-      "materials": [],
+      "materials": [
+        "Presentacion de la platica"
+      ],
       "reviewedAt": null,
       "author": null,
       "approver": null,
@@ -637,26 +1085,45 @@
       "week": 22,
       "month": "JUNIO",
       "title": "Trabajos en altura",
-      "status": "Propuesta",
+      "status": "Borrador",
       "suggestedMinutes": [
         5,
         10,
         15,
         30
       ],
-      "objective": "",
-      "audience": [],
-      "department": "",
-      "risks": [],
-      "introduction": "",
-      "development": "",
-      "criticalPoints": [],
-      "practicalExamples": [],
-      "reviewQuestions": [],
-      "recommendations": [],
+      "objective": "Conocer los riesgos asociados a trabajos en altura y las medidas preventivas aplicables.",
+      "audience": [
+        "Trabajadores y supervisores"
+      ],
+      "department": "Seguridad",
+      "risks": [
+        "Riesgos asociados a la actividad"
+      ],
+      "introduction": "La seguridad en trabajos en altura es fundamental para prevenir incidentes y proteger la vida.",
+      "development": "Se revisan los riesgos, medidas preventivas y procedimientos aplicables a trabajos en altura.",
+      "criticalPoints": [
+        "Uso correcto del EPP",
+        "Seguir procedimientos",
+        "Reportar condiciones inseguras"
+      ],
+      "practicalExamples": [
+        "Ejemplo practico de la actividad"
+      ],
+      "reviewQuestions": [
+        "¿Cuales son los riesgos principales?",
+        "¿Que medidas preventivas aplicas?"
+      ],
+      "recommendations": [
+        "Aplicar las medidas preventivas",
+        "Reportar riesgos",
+        "Usar EPP"
+      ],
       "normativeReferences": [],
       "internalProcedures": [],
-      "materials": [],
+      "materials": [
+        "Presentacion de la platica"
+      ],
       "reviewedAt": null,
       "author": null,
       "approver": null,
@@ -667,26 +1134,45 @@
       "week": 23,
       "month": "JUNIO",
       "title": "Trabajos en espacios confinados",
-      "status": "Propuesta",
+      "status": "Borrador",
       "suggestedMinutes": [
         5,
         10,
         15,
         30
       ],
-      "objective": "",
-      "audience": [],
-      "department": "",
-      "risks": [],
-      "introduction": "",
-      "development": "",
-      "criticalPoints": [],
-      "practicalExamples": [],
-      "reviewQuestions": [],
-      "recommendations": [],
+      "objective": "Conocer los riesgos asociados a trabajos en espacios confinados y las medidas preventivas aplicables.",
+      "audience": [
+        "Trabajadores y supervisores"
+      ],
+      "department": "Seguridad",
+      "risks": [
+        "Riesgos asociados a la actividad"
+      ],
+      "introduction": "La seguridad en trabajos en espacios confinados es fundamental para prevenir incidentes y proteger la vida.",
+      "development": "Se revisan los riesgos, medidas preventivas y procedimientos aplicables a trabajos en espacios confinados.",
+      "criticalPoints": [
+        "Uso correcto del EPP",
+        "Seguir procedimientos",
+        "Reportar condiciones inseguras"
+      ],
+      "practicalExamples": [
+        "Ejemplo practico de la actividad"
+      ],
+      "reviewQuestions": [
+        "¿Cuales son los riesgos principales?",
+        "¿Que medidas preventivas aplicas?"
+      ],
+      "recommendations": [
+        "Aplicar las medidas preventivas",
+        "Reportar riesgos",
+        "Usar EPP"
+      ],
       "normativeReferences": [],
       "internalProcedures": [],
-      "materials": [],
+      "materials": [
+        "Presentacion de la platica"
+      ],
       "reviewedAt": null,
       "author": null,
       "approver": null,
@@ -697,26 +1183,45 @@
       "week": 24,
       "month": "JUNIO",
       "title": "Izaje y manejo de cargas",
-      "status": "Propuesta",
+      "status": "Borrador",
       "suggestedMinutes": [
         5,
         10,
         15,
         30
       ],
-      "objective": "",
-      "audience": [],
-      "department": "",
-      "risks": [],
-      "introduction": "",
-      "development": "",
-      "criticalPoints": [],
-      "practicalExamples": [],
-      "reviewQuestions": [],
-      "recommendations": [],
+      "objective": "Conocer los riesgos asociados a izaje y manejo de cargas y las medidas preventivas aplicables.",
+      "audience": [
+        "Trabajadores y supervisores"
+      ],
+      "department": "Seguridad",
+      "risks": [
+        "Riesgos asociados a la actividad"
+      ],
+      "introduction": "La seguridad en izaje y manejo de cargas es fundamental para prevenir incidentes y proteger la vida.",
+      "development": "Se revisan los riesgos, medidas preventivas y procedimientos aplicables a izaje y manejo de cargas.",
+      "criticalPoints": [
+        "Uso correcto del EPP",
+        "Seguir procedimientos",
+        "Reportar condiciones inseguras"
+      ],
+      "practicalExamples": [
+        "Ejemplo practico de la actividad"
+      ],
+      "reviewQuestions": [
+        "¿Cuales son los riesgos principales?",
+        "¿Que medidas preventivas aplicas?"
+      ],
+      "recommendations": [
+        "Aplicar las medidas preventivas",
+        "Reportar riesgos",
+        "Usar EPP"
+      ],
       "normativeReferences": [],
       "internalProcedures": [],
-      "materials": [],
+      "materials": [
+        "Presentacion de la platica"
+      ],
       "reviewedAt": null,
       "author": null,
       "approver": null,
@@ -727,26 +1232,45 @@
       "week": 25,
       "month": "JUNIO",
       "title": "Trabajos eléctricos",
-      "status": "Propuesta",
+      "status": "Borrador",
       "suggestedMinutes": [
         5,
         10,
         15,
         30
       ],
-      "objective": "",
-      "audience": [],
-      "department": "",
-      "risks": [],
-      "introduction": "",
-      "development": "",
-      "criticalPoints": [],
-      "practicalExamples": [],
-      "reviewQuestions": [],
-      "recommendations": [],
+      "objective": "Conocer los riesgos asociados a trabajos eléctricos y las medidas preventivas aplicables.",
+      "audience": [
+        "Trabajadores y supervisores"
+      ],
+      "department": "Seguridad",
+      "risks": [
+        "Riesgos asociados a la actividad"
+      ],
+      "introduction": "La seguridad en trabajos eléctricos es fundamental para prevenir incidentes y proteger la vida.",
+      "development": "Se revisan los riesgos, medidas preventivas y procedimientos aplicables a trabajos eléctricos.",
+      "criticalPoints": [
+        "Uso correcto del EPP",
+        "Seguir procedimientos",
+        "Reportar condiciones inseguras"
+      ],
+      "practicalExamples": [
+        "Ejemplo practico de la actividad"
+      ],
+      "reviewQuestions": [
+        "¿Cuales son los riesgos principales?",
+        "¿Que medidas preventivas aplicas?"
+      ],
+      "recommendations": [
+        "Aplicar las medidas preventivas",
+        "Reportar riesgos",
+        "Usar EPP"
+      ],
       "normativeReferences": [],
       "internalProcedures": [],
-      "materials": [],
+      "materials": [
+        "Presentacion de la platica"
+      ],
       "reviewedAt": null,
       "author": null,
       "approver": null,
@@ -757,26 +1281,45 @@
       "week": 26,
       "month": "JUNIO",
       "title": "Autorizaciones y permisos de alto riesgo",
-      "status": "Propuesta",
+      "status": "Borrador",
       "suggestedMinutes": [
         5,
         10,
         15,
         30
       ],
-      "objective": "",
-      "audience": [],
-      "department": "",
-      "risks": [],
-      "introduction": "",
-      "development": "",
-      "criticalPoints": [],
-      "practicalExamples": [],
-      "reviewQuestions": [],
-      "recommendations": [],
+      "objective": "Conocer los riesgos asociados a autorizaciones y permisos de alto riesgo y las medidas preventivas aplicables.",
+      "audience": [
+        "Trabajadores y supervisores"
+      ],
+      "department": "Seguridad",
+      "risks": [
+        "Riesgos asociados a la actividad"
+      ],
+      "introduction": "La seguridad en autorizaciones y permisos de alto riesgo es fundamental para prevenir incidentes y proteger la vida.",
+      "development": "Se revisan los riesgos, medidas preventivas y procedimientos aplicables a autorizaciones y permisos de alto riesgo.",
+      "criticalPoints": [
+        "Uso correcto del EPP",
+        "Seguir procedimientos",
+        "Reportar condiciones inseguras"
+      ],
+      "practicalExamples": [
+        "Ejemplo practico de la actividad"
+      ],
+      "reviewQuestions": [
+        "¿Cuales son los riesgos principales?",
+        "¿Que medidas preventivas aplicas?"
+      ],
+      "recommendations": [
+        "Aplicar las medidas preventivas",
+        "Reportar riesgos",
+        "Usar EPP"
+      ],
       "normativeReferences": [],
       "internalProcedures": [],
-      "materials": [],
+      "materials": [
+        "Presentacion de la platica"
+      ],
       "reviewedAt": null,
       "author": null,
       "approver": null,
@@ -787,26 +1330,45 @@
       "week": 27,
       "month": "JULIO",
       "title": "Investigación de incidentes y accidentes",
-      "status": "Propuesta",
+      "status": "Borrador",
       "suggestedMinutes": [
         5,
         10,
         15,
         30
       ],
-      "objective": "",
-      "audience": [],
-      "department": "",
-      "risks": [],
-      "introduction": "",
-      "development": "",
-      "criticalPoints": [],
-      "practicalExamples": [],
-      "reviewQuestions": [],
-      "recommendations": [],
+      "objective": "Conocer los riesgos asociados a investigación de incidentes y accidentes y las medidas preventivas aplicables.",
+      "audience": [
+        "Trabajadores y supervisores"
+      ],
+      "department": "Seguridad",
+      "risks": [
+        "Riesgos asociados a la actividad"
+      ],
+      "introduction": "La seguridad en investigación de incidentes y accidentes es fundamental para prevenir incidentes y proteger la vida.",
+      "development": "Se revisan los riesgos, medidas preventivas y procedimientos aplicables a investigación de incidentes y accidentes.",
+      "criticalPoints": [
+        "Uso correcto del EPP",
+        "Seguir procedimientos",
+        "Reportar condiciones inseguras"
+      ],
+      "practicalExamples": [
+        "Ejemplo practico de la actividad"
+      ],
+      "reviewQuestions": [
+        "¿Cuales son los riesgos principales?",
+        "¿Que medidas preventivas aplicas?"
+      ],
+      "recommendations": [
+        "Aplicar las medidas preventivas",
+        "Reportar riesgos",
+        "Usar EPP"
+      ],
       "normativeReferences": [],
       "internalProcedures": [],
-      "materials": [],
+      "materials": [
+        "Presentacion de la platica"
+      ],
       "reviewedAt": null,
       "author": null,
       "approver": null,
@@ -817,26 +1379,45 @@
       "week": 28,
       "month": "JULIO",
       "title": "Reporte de casi accidentes",
-      "status": "Propuesta",
+      "status": "Borrador",
       "suggestedMinutes": [
         5,
         10,
         15,
         30
       ],
-      "objective": "",
-      "audience": [],
-      "department": "",
-      "risks": [],
-      "introduction": "",
-      "development": "",
-      "criticalPoints": [],
-      "practicalExamples": [],
-      "reviewQuestions": [],
-      "recommendations": [],
+      "objective": "Conocer los riesgos asociados a reporte de casi accidentes y las medidas preventivas aplicables.",
+      "audience": [
+        "Trabajadores y supervisores"
+      ],
+      "department": "Seguridad",
+      "risks": [
+        "Riesgos asociados a la actividad"
+      ],
+      "introduction": "La seguridad en reporte de casi accidentes es fundamental para prevenir incidentes y proteger la vida.",
+      "development": "Se revisan los riesgos, medidas preventivas y procedimientos aplicables a reporte de casi accidentes.",
+      "criticalPoints": [
+        "Uso correcto del EPP",
+        "Seguir procedimientos",
+        "Reportar condiciones inseguras"
+      ],
+      "practicalExamples": [
+        "Ejemplo practico de la actividad"
+      ],
+      "reviewQuestions": [
+        "¿Cuales son los riesgos principales?",
+        "¿Que medidas preventivas aplicas?"
+      ],
+      "recommendations": [
+        "Aplicar las medidas preventivas",
+        "Reportar riesgos",
+        "Usar EPP"
+      ],
       "normativeReferences": [],
       "internalProcedures": [],
-      "materials": [],
+      "materials": [
+        "Presentacion de la platica"
+      ],
       "reviewedAt": null,
       "author": null,
       "approver": null,
@@ -847,26 +1428,45 @@
       "week": 29,
       "month": "JULIO",
       "title": "Identificación de causas y factores contribuyentes",
-      "status": "Propuesta",
+      "status": "Borrador",
       "suggestedMinutes": [
         5,
         10,
         15,
         30
       ],
-      "objective": "",
-      "audience": [],
-      "department": "",
-      "risks": [],
-      "introduction": "",
-      "development": "",
-      "criticalPoints": [],
-      "practicalExamples": [],
-      "reviewQuestions": [],
-      "recommendations": [],
+      "objective": "Conocer los riesgos asociados a identificación de causas y factores contribuyentes y las medidas preventivas aplicables.",
+      "audience": [
+        "Trabajadores y supervisores"
+      ],
+      "department": "Seguridad",
+      "risks": [
+        "Riesgos asociados a la actividad"
+      ],
+      "introduction": "La seguridad en identificación de causas y factores contribuyentes es fundamental para prevenir incidentes y proteger la vida.",
+      "development": "Se revisan los riesgos, medidas preventivas y procedimientos aplicables a identificación de causas y factores contribuyentes.",
+      "criticalPoints": [
+        "Uso correcto del EPP",
+        "Seguir procedimientos",
+        "Reportar condiciones inseguras"
+      ],
+      "practicalExamples": [
+        "Ejemplo practico de la actividad"
+      ],
+      "reviewQuestions": [
+        "¿Cuales son los riesgos principales?",
+        "¿Que medidas preventivas aplicas?"
+      ],
+      "recommendations": [
+        "Aplicar las medidas preventivas",
+        "Reportar riesgos",
+        "Usar EPP"
+      ],
       "normativeReferences": [],
       "internalProcedures": [],
-      "materials": [],
+      "materials": [
+        "Presentacion de la platica"
+      ],
       "reviewedAt": null,
       "author": null,
       "approver": null,
@@ -877,26 +1477,45 @@
       "week": 30,
       "month": "JULIO",
       "title": "Acciones correctivas y prevención de recurrencias",
-      "status": "Propuesta",
+      "status": "Borrador",
       "suggestedMinutes": [
         5,
         10,
         15,
         30
       ],
-      "objective": "",
-      "audience": [],
-      "department": "",
-      "risks": [],
-      "introduction": "",
-      "development": "",
-      "criticalPoints": [],
-      "practicalExamples": [],
-      "reviewQuestions": [],
-      "recommendations": [],
+      "objective": "Conocer los riesgos asociados a acciones correctivas y prevención de recurrencias y las medidas preventivas aplicables.",
+      "audience": [
+        "Trabajadores y supervisores"
+      ],
+      "department": "Seguridad",
+      "risks": [
+        "Riesgos asociados a la actividad"
+      ],
+      "introduction": "La seguridad en acciones correctivas y prevención de recurrencias es fundamental para prevenir incidentes y proteger la vida.",
+      "development": "Se revisan los riesgos, medidas preventivas y procedimientos aplicables a acciones correctivas y prevención de recurrencias.",
+      "criticalPoints": [
+        "Uso correcto del EPP",
+        "Seguir procedimientos",
+        "Reportar condiciones inseguras"
+      ],
+      "practicalExamples": [
+        "Ejemplo practico de la actividad"
+      ],
+      "reviewQuestions": [
+        "¿Cuales son los riesgos principales?",
+        "¿Que medidas preventivas aplicas?"
+      ],
+      "recommendations": [
+        "Aplicar las medidas preventivas",
+        "Reportar riesgos",
+        "Usar EPP"
+      ],
       "normativeReferences": [],
       "internalProcedures": [],
-      "materials": [],
+      "materials": [
+        "Presentacion de la platica"
+      ],
       "reviewedAt": null,
       "author": null,
       "approver": null,
@@ -907,26 +1526,45 @@
       "week": 31,
       "month": "AGOSTO",
       "title": "Exposición a ruido",
-      "status": "Propuesta",
+      "status": "Borrador",
       "suggestedMinutes": [
         5,
         10,
         15,
         30
       ],
-      "objective": "",
-      "audience": [],
-      "department": "",
-      "risks": [],
-      "introduction": "",
-      "development": "",
-      "criticalPoints": [],
-      "practicalExamples": [],
-      "reviewQuestions": [],
-      "recommendations": [],
+      "objective": "Conocer los riesgos asociados a exposición a ruido y las medidas preventivas aplicables.",
+      "audience": [
+        "Trabajadores y supervisores"
+      ],
+      "department": "Seguridad",
+      "risks": [
+        "Riesgos asociados a la actividad"
+      ],
+      "introduction": "La seguridad en exposición a ruido es fundamental para prevenir incidentes y proteger la vida.",
+      "development": "Se revisan los riesgos, medidas preventivas y procedimientos aplicables a exposición a ruido.",
+      "criticalPoints": [
+        "Uso correcto del EPP",
+        "Seguir procedimientos",
+        "Reportar condiciones inseguras"
+      ],
+      "practicalExamples": [
+        "Ejemplo practico de la actividad"
+      ],
+      "reviewQuestions": [
+        "¿Cuales son los riesgos principales?",
+        "¿Que medidas preventivas aplicas?"
+      ],
+      "recommendations": [
+        "Aplicar las medidas preventivas",
+        "Reportar riesgos",
+        "Usar EPP"
+      ],
       "normativeReferences": [],
       "internalProcedures": [],
-      "materials": [],
+      "materials": [
+        "Presentacion de la platica"
+      ],
       "reviewedAt": null,
       "author": null,
       "approver": null,
@@ -937,26 +1575,45 @@
       "week": 32,
       "month": "AGOSTO",
       "title": "Polvos y agentes químicos",
-      "status": "Propuesta",
+      "status": "Borrador",
       "suggestedMinutes": [
         5,
         10,
         15,
         30
       ],
-      "objective": "",
-      "audience": [],
-      "department": "",
-      "risks": [],
-      "introduction": "",
-      "development": "",
-      "criticalPoints": [],
-      "practicalExamples": [],
-      "reviewQuestions": [],
-      "recommendations": [],
+      "objective": "Conocer los riesgos asociados a polvos y agentes químicos y las medidas preventivas aplicables.",
+      "audience": [
+        "Trabajadores y supervisores"
+      ],
+      "department": "Seguridad",
+      "risks": [
+        "Riesgos asociados a la actividad"
+      ],
+      "introduction": "La seguridad en polvos y agentes químicos es fundamental para prevenir incidentes y proteger la vida.",
+      "development": "Se revisan los riesgos, medidas preventivas y procedimientos aplicables a polvos y agentes químicos.",
+      "criticalPoints": [
+        "Uso correcto del EPP",
+        "Seguir procedimientos",
+        "Reportar condiciones inseguras"
+      ],
+      "practicalExamples": [
+        "Ejemplo practico de la actividad"
+      ],
+      "reviewQuestions": [
+        "¿Cuales son los riesgos principales?",
+        "¿Que medidas preventivas aplicas?"
+      ],
+      "recommendations": [
+        "Aplicar las medidas preventivas",
+        "Reportar riesgos",
+        "Usar EPP"
+      ],
       "normativeReferences": [],
       "internalProcedures": [],
-      "materials": [],
+      "materials": [
+        "Presentacion de la platica"
+      ],
       "reviewedAt": null,
       "author": null,
       "approver": null,
@@ -967,26 +1624,45 @@
       "week": 33,
       "month": "AGOSTO",
       "title": "Vibraciones y ergonomía",
-      "status": "Propuesta",
+      "status": "Borrador",
       "suggestedMinutes": [
         5,
         10,
         15,
         30
       ],
-      "objective": "",
-      "audience": [],
-      "department": "",
-      "risks": [],
-      "introduction": "",
-      "development": "",
-      "criticalPoints": [],
-      "practicalExamples": [],
-      "reviewQuestions": [],
-      "recommendations": [],
+      "objective": "Conocer los riesgos asociados a vibraciones y ergonomía y las medidas preventivas aplicables.",
+      "audience": [
+        "Trabajadores y supervisores"
+      ],
+      "department": "Seguridad",
+      "risks": [
+        "Riesgos asociados a la actividad"
+      ],
+      "introduction": "La seguridad en vibraciones y ergonomía es fundamental para prevenir incidentes y proteger la vida.",
+      "development": "Se revisan los riesgos, medidas preventivas y procedimientos aplicables a vibraciones y ergonomía.",
+      "criticalPoints": [
+        "Uso correcto del EPP",
+        "Seguir procedimientos",
+        "Reportar condiciones inseguras"
+      ],
+      "practicalExamples": [
+        "Ejemplo practico de la actividad"
+      ],
+      "reviewQuestions": [
+        "¿Cuales son los riesgos principales?",
+        "¿Que medidas preventivas aplicas?"
+      ],
+      "recommendations": [
+        "Aplicar las medidas preventivas",
+        "Reportar riesgos",
+        "Usar EPP"
+      ],
       "normativeReferences": [],
       "internalProcedures": [],
-      "materials": [],
+      "materials": [
+        "Presentacion de la platica"
+      ],
       "reviewedAt": null,
       "author": null,
       "approver": null,
@@ -997,26 +1673,45 @@
       "week": 34,
       "month": "AGOSTO",
       "title": "Fatiga, hidratación y condiciones térmicas",
-      "status": "Propuesta",
+      "status": "Borrador",
       "suggestedMinutes": [
         5,
         10,
         15,
         30
       ],
-      "objective": "",
-      "audience": [],
-      "department": "",
-      "risks": [],
-      "introduction": "",
-      "development": "",
-      "criticalPoints": [],
-      "practicalExamples": [],
-      "reviewQuestions": [],
-      "recommendations": [],
+      "objective": "Conocer los riesgos asociados a fatiga, hidratación y condiciones térmicas y las medidas preventivas aplicables.",
+      "audience": [
+        "Trabajadores y supervisores"
+      ],
+      "department": "Seguridad",
+      "risks": [
+        "Riesgos asociados a la actividad"
+      ],
+      "introduction": "La seguridad en fatiga, hidratación y condiciones térmicas es fundamental para prevenir incidentes y proteger la vida.",
+      "development": "Se revisan los riesgos, medidas preventivas y procedimientos aplicables a fatiga, hidratación y condiciones térmicas.",
+      "criticalPoints": [
+        "Uso correcto del EPP",
+        "Seguir procedimientos",
+        "Reportar condiciones inseguras"
+      ],
+      "practicalExamples": [
+        "Ejemplo practico de la actividad"
+      ],
+      "reviewQuestions": [
+        "¿Cuales son los riesgos principales?",
+        "¿Que medidas preventivas aplicas?"
+      ],
+      "recommendations": [
+        "Aplicar las medidas preventivas",
+        "Reportar riesgos",
+        "Usar EPP"
+      ],
       "normativeReferences": [],
       "internalProcedures": [],
-      "materials": [],
+      "materials": [
+        "Presentacion de la platica"
+      ],
       "reviewedAt": null,
       "author": null,
       "approver": null,
@@ -1027,26 +1722,45 @@
       "week": 35,
       "month": "SEPTIEMBRE",
       "title": "Prevención y combate inicial de incendios",
-      "status": "Propuesta",
+      "status": "Borrador",
       "suggestedMinutes": [
         5,
         10,
         15,
         30
       ],
-      "objective": "",
-      "audience": [],
-      "department": "",
-      "risks": [],
-      "introduction": "",
-      "development": "",
-      "criticalPoints": [],
-      "practicalExamples": [],
-      "reviewQuestions": [],
-      "recommendations": [],
+      "objective": "Conocer los riesgos asociados a prevención y combate inicial de incendios y las medidas preventivas aplicables.",
+      "audience": [
+        "Trabajadores y supervisores"
+      ],
+      "department": "Seguridad",
+      "risks": [
+        "Riesgos asociados a la actividad"
+      ],
+      "introduction": "La seguridad en prevención y combate inicial de incendios es fundamental para prevenir incidentes y proteger la vida.",
+      "development": "Se revisan los riesgos, medidas preventivas y procedimientos aplicables a prevención y combate inicial de incendios.",
+      "criticalPoints": [
+        "Uso correcto del EPP",
+        "Seguir procedimientos",
+        "Reportar condiciones inseguras"
+      ],
+      "practicalExamples": [
+        "Ejemplo practico de la actividad"
+      ],
+      "reviewQuestions": [
+        "¿Cuales son los riesgos principales?",
+        "¿Que medidas preventivas aplicas?"
+      ],
+      "recommendations": [
+        "Aplicar las medidas preventivas",
+        "Reportar riesgos",
+        "Usar EPP"
+      ],
       "normativeReferences": [],
       "internalProcedures": [],
-      "materials": [],
+      "materials": [
+        "Presentacion de la platica"
+      ],
       "reviewedAt": null,
       "author": null,
       "approver": null,
@@ -1057,26 +1771,45 @@
       "week": 36,
       "month": "SEPTIEMBRE",
       "title": "Evacuación y puntos de reunión",
-      "status": "Propuesta",
+      "status": "Borrador",
       "suggestedMinutes": [
         5,
         10,
         15,
         30
       ],
-      "objective": "",
-      "audience": [],
-      "department": "",
-      "risks": [],
-      "introduction": "",
-      "development": "",
-      "criticalPoints": [],
-      "practicalExamples": [],
-      "reviewQuestions": [],
-      "recommendations": [],
+      "objective": "Conocer los riesgos asociados a evacuación y puntos de reunión y las medidas preventivas aplicables.",
+      "audience": [
+        "Trabajadores y supervisores"
+      ],
+      "department": "Seguridad",
+      "risks": [
+        "Riesgos asociados a la actividad"
+      ],
+      "introduction": "La seguridad en evacuación y puntos de reunión es fundamental para prevenir incidentes y proteger la vida.",
+      "development": "Se revisan los riesgos, medidas preventivas y procedimientos aplicables a evacuación y puntos de reunión.",
+      "criticalPoints": [
+        "Uso correcto del EPP",
+        "Seguir procedimientos",
+        "Reportar condiciones inseguras"
+      ],
+      "practicalExamples": [
+        "Ejemplo practico de la actividad"
+      ],
+      "reviewQuestions": [
+        "¿Cuales son los riesgos principales?",
+        "¿Que medidas preventivas aplicas?"
+      ],
+      "recommendations": [
+        "Aplicar las medidas preventivas",
+        "Reportar riesgos",
+        "Usar EPP"
+      ],
       "normativeReferences": [],
       "internalProcedures": [],
-      "materials": [],
+      "materials": [
+        "Presentacion de la platica"
+      ],
       "reviewedAt": null,
       "author": null,
       "approver": null,
@@ -1087,26 +1820,45 @@
       "week": 37,
       "month": "SEPTIEMBRE",
       "title": "Respuesta inicial ante emergencias",
-      "status": "Propuesta",
+      "status": "Borrador",
       "suggestedMinutes": [
         5,
         10,
         15,
         30
       ],
-      "objective": "",
-      "audience": [],
-      "department": "",
-      "risks": [],
-      "introduction": "",
-      "development": "",
-      "criticalPoints": [],
-      "practicalExamples": [],
-      "reviewQuestions": [],
-      "recommendations": [],
+      "objective": "Conocer los riesgos asociados a respuesta inicial ante emergencias y las medidas preventivas aplicables.",
+      "audience": [
+        "Trabajadores y supervisores"
+      ],
+      "department": "Seguridad",
+      "risks": [
+        "Riesgos asociados a la actividad"
+      ],
+      "introduction": "La seguridad en respuesta inicial ante emergencias es fundamental para prevenir incidentes y proteger la vida.",
+      "development": "Se revisan los riesgos, medidas preventivas y procedimientos aplicables a respuesta inicial ante emergencias.",
+      "criticalPoints": [
+        "Uso correcto del EPP",
+        "Seguir procedimientos",
+        "Reportar condiciones inseguras"
+      ],
+      "practicalExamples": [
+        "Ejemplo practico de la actividad"
+      ],
+      "reviewQuestions": [
+        "¿Cuales son los riesgos principales?",
+        "¿Que medidas preventivas aplicas?"
+      ],
+      "recommendations": [
+        "Aplicar las medidas preventivas",
+        "Reportar riesgos",
+        "Usar EPP"
+      ],
       "normativeReferences": [],
       "internalProcedures": [],
-      "materials": [],
+      "materials": [
+        "Presentacion de la platica"
+      ],
       "reviewedAt": null,
       "author": null,
       "approver": null,
@@ -1117,26 +1869,45 @@
       "week": 38,
       "month": "SEPTIEMBRE",
       "title": "Primeros auxilios y activación de ayuda especializada",
-      "status": "Propuesta",
+      "status": "Borrador",
       "suggestedMinutes": [
         5,
         10,
         15,
         30
       ],
-      "objective": "",
-      "audience": [],
-      "department": "",
-      "risks": [],
-      "introduction": "",
-      "development": "",
-      "criticalPoints": [],
-      "practicalExamples": [],
-      "reviewQuestions": [],
-      "recommendations": [],
+      "objective": "Conocer los riesgos asociados a primeros auxilios y activación de ayuda especializada y las medidas preventivas aplicables.",
+      "audience": [
+        "Trabajadores y supervisores"
+      ],
+      "department": "Seguridad",
+      "risks": [
+        "Riesgos asociados a la actividad"
+      ],
+      "introduction": "La seguridad en primeros auxilios y activación de ayuda especializada es fundamental para prevenir incidentes y proteger la vida.",
+      "development": "Se revisan los riesgos, medidas preventivas y procedimientos aplicables a primeros auxilios y activación de ayuda especializada.",
+      "criticalPoints": [
+        "Uso correcto del EPP",
+        "Seguir procedimientos",
+        "Reportar condiciones inseguras"
+      ],
+      "practicalExamples": [
+        "Ejemplo practico de la actividad"
+      ],
+      "reviewQuestions": [
+        "¿Cuales son los riesgos principales?",
+        "¿Que medidas preventivas aplicas?"
+      ],
+      "recommendations": [
+        "Aplicar las medidas preventivas",
+        "Reportar riesgos",
+        "Usar EPP"
+      ],
       "normativeReferences": [],
       "internalProcedures": [],
-      "materials": [],
+      "materials": [
+        "Presentacion de la platica"
+      ],
       "reviewedAt": null,
       "author": null,
       "approver": null,
@@ -1147,26 +1918,45 @@
       "week": 39,
       "month": "SEPTIEMBRE",
       "title": "Comunicación de emergencias",
-      "status": "Propuesta",
+      "status": "Borrador",
       "suggestedMinutes": [
         5,
         10,
         15,
         30
       ],
-      "objective": "",
-      "audience": [],
-      "department": "",
-      "risks": [],
-      "introduction": "",
-      "development": "",
-      "criticalPoints": [],
-      "practicalExamples": [],
-      "reviewQuestions": [],
-      "recommendations": [],
+      "objective": "Conocer los riesgos asociados a comunicación de emergencias y las medidas preventivas aplicables.",
+      "audience": [
+        "Trabajadores y supervisores"
+      ],
+      "department": "Seguridad",
+      "risks": [
+        "Riesgos asociados a la actividad"
+      ],
+      "introduction": "La seguridad en comunicación de emergencias es fundamental para prevenir incidentes y proteger la vida.",
+      "development": "Se revisan los riesgos, medidas preventivas y procedimientos aplicables a comunicación de emergencias.",
+      "criticalPoints": [
+        "Uso correcto del EPP",
+        "Seguir procedimientos",
+        "Reportar condiciones inseguras"
+      ],
+      "practicalExamples": [
+        "Ejemplo practico de la actividad"
+      ],
+      "reviewQuestions": [
+        "¿Cuales son los riesgos principales?",
+        "¿Que medidas preventivas aplicas?"
+      ],
+      "recommendations": [
+        "Aplicar las medidas preventivas",
+        "Reportar riesgos",
+        "Usar EPP"
+      ],
       "normativeReferences": [],
       "internalProcedures": [],
-      "materials": [],
+      "materials": [
+        "Presentacion de la platica"
+      ],
       "reviewedAt": null,
       "author": null,
       "approver": null,
@@ -1177,26 +1967,45 @@
       "week": 40,
       "month": "OCTUBRE",
       "title": "Análisis Seguro de Trabajo",
-      "status": "Propuesta",
+      "status": "Borrador",
       "suggestedMinutes": [
         5,
         10,
         15,
         30
       ],
-      "objective": "",
-      "audience": [],
-      "department": "",
-      "risks": [],
-      "introduction": "",
-      "development": "",
-      "criticalPoints": [],
-      "practicalExamples": [],
-      "reviewQuestions": [],
-      "recommendations": [],
+      "objective": "Conocer los riesgos asociados a análisis seguro de trabajo y las medidas preventivas aplicables.",
+      "audience": [
+        "Trabajadores y supervisores"
+      ],
+      "department": "Seguridad",
+      "risks": [
+        "Riesgos asociados a la actividad"
+      ],
+      "introduction": "La seguridad en análisis seguro de trabajo es fundamental para prevenir incidentes y proteger la vida.",
+      "development": "Se revisan los riesgos, medidas preventivas y procedimientos aplicables a análisis seguro de trabajo.",
+      "criticalPoints": [
+        "Uso correcto del EPP",
+        "Seguir procedimientos",
+        "Reportar condiciones inseguras"
+      ],
+      "practicalExamples": [
+        "Ejemplo practico de la actividad"
+      ],
+      "reviewQuestions": [
+        "¿Cuales son los riesgos principales?",
+        "¿Que medidas preventivas aplicas?"
+      ],
+      "recommendations": [
+        "Aplicar las medidas preventivas",
+        "Reportar riesgos",
+        "Usar EPP"
+      ],
       "normativeReferences": [],
       "internalProcedures": [],
-      "materials": [],
+      "materials": [
+        "Presentacion de la platica"
+      ],
       "reviewedAt": null,
       "author": null,
       "approver": null,
@@ -1207,26 +2016,45 @@
       "week": 41,
       "month": "OCTUBRE",
       "title": "Verificación de Estándares Operacionales",
-      "status": "Propuesta",
+      "status": "Borrador",
       "suggestedMinutes": [
         5,
         10,
         15,
         30
       ],
-      "objective": "",
-      "audience": [],
-      "department": "",
-      "risks": [],
-      "introduction": "",
-      "development": "",
-      "criticalPoints": [],
-      "practicalExamples": [],
-      "reviewQuestions": [],
-      "recommendations": [],
+      "objective": "Conocer los riesgos asociados a verificación de estándares operacionales y las medidas preventivas aplicables.",
+      "audience": [
+        "Trabajadores y supervisores"
+      ],
+      "department": "Seguridad",
+      "risks": [
+        "Riesgos asociados a la actividad"
+      ],
+      "introduction": "La seguridad en verificación de estándares operacionales es fundamental para prevenir incidentes y proteger la vida.",
+      "development": "Se revisan los riesgos, medidas preventivas y procedimientos aplicables a verificación de estándares operacionales.",
+      "criticalPoints": [
+        "Uso correcto del EPP",
+        "Seguir procedimientos",
+        "Reportar condiciones inseguras"
+      ],
+      "practicalExamples": [
+        "Ejemplo practico de la actividad"
+      ],
+      "reviewQuestions": [
+        "¿Cuales son los riesgos principales?",
+        "¿Que medidas preventivas aplicas?"
+      ],
+      "recommendations": [
+        "Aplicar las medidas preventivas",
+        "Reportar riesgos",
+        "Usar EPP"
+      ],
       "normativeReferences": [],
       "internalProcedures": [],
-      "materials": [],
+      "materials": [
+        "Presentacion de la platica"
+      ],
       "reviewedAt": null,
       "author": null,
       "approver": null,
@@ -1237,26 +2065,45 @@
       "week": 42,
       "month": "OCTUBRE",
       "title": "Inspecciones planeadas",
-      "status": "Propuesta",
+      "status": "Borrador",
       "suggestedMinutes": [
         5,
         10,
         15,
         30
       ],
-      "objective": "",
-      "audience": [],
-      "department": "",
-      "risks": [],
-      "introduction": "",
-      "development": "",
-      "criticalPoints": [],
-      "practicalExamples": [],
-      "reviewQuestions": [],
-      "recommendations": [],
+      "objective": "Conocer los riesgos asociados a inspecciones planeadas y las medidas preventivas aplicables.",
+      "audience": [
+        "Trabajadores y supervisores"
+      ],
+      "department": "Seguridad",
+      "risks": [
+        "Riesgos asociados a la actividad"
+      ],
+      "introduction": "La seguridad en inspecciones planeadas es fundamental para prevenir incidentes y proteger la vida.",
+      "development": "Se revisan los riesgos, medidas preventivas y procedimientos aplicables a inspecciones planeadas.",
+      "criticalPoints": [
+        "Uso correcto del EPP",
+        "Seguir procedimientos",
+        "Reportar condiciones inseguras"
+      ],
+      "practicalExamples": [
+        "Ejemplo practico de la actividad"
+      ],
+      "reviewQuestions": [
+        "¿Cuales son los riesgos principales?",
+        "¿Que medidas preventivas aplicas?"
+      ],
+      "recommendations": [
+        "Aplicar las medidas preventivas",
+        "Reportar riesgos",
+        "Usar EPP"
+      ],
       "normativeReferences": [],
       "internalProcedures": [],
-      "materials": [],
+      "materials": [
+        "Presentacion de la platica"
+      ],
       "reviewedAt": null,
       "author": null,
       "approver": null,
@@ -1267,26 +2114,45 @@
       "week": 43,
       "month": "OCTUBRE",
       "title": "Comunicación efectiva de riesgos",
-      "status": "Propuesta",
+      "status": "Borrador",
       "suggestedMinutes": [
         5,
         10,
         15,
         30
       ],
-      "objective": "",
-      "audience": [],
-      "department": "",
-      "risks": [],
-      "introduction": "",
-      "development": "",
-      "criticalPoints": [],
-      "practicalExamples": [],
-      "reviewQuestions": [],
-      "recommendations": [],
+      "objective": "Conocer los riesgos asociados a comunicación efectiva de riesgos y las medidas preventivas aplicables.",
+      "audience": [
+        "Trabajadores y supervisores"
+      ],
+      "department": "Seguridad",
+      "risks": [
+        "Riesgos asociados a la actividad"
+      ],
+      "introduction": "La seguridad en comunicación efectiva de riesgos es fundamental para prevenir incidentes y proteger la vida.",
+      "development": "Se revisan los riesgos, medidas preventivas y procedimientos aplicables a comunicación efectiva de riesgos.",
+      "criticalPoints": [
+        "Uso correcto del EPP",
+        "Seguir procedimientos",
+        "Reportar condiciones inseguras"
+      ],
+      "practicalExamples": [
+        "Ejemplo practico de la actividad"
+      ],
+      "reviewQuestions": [
+        "¿Cuales son los riesgos principales?",
+        "¿Que medidas preventivas aplicas?"
+      ],
+      "recommendations": [
+        "Aplicar las medidas preventivas",
+        "Reportar riesgos",
+        "Usar EPP"
+      ],
       "normativeReferences": [],
       "internalProcedures": [],
-      "materials": [],
+      "materials": [
+        "Presentacion de la platica"
+      ],
       "reviewedAt": null,
       "author": null,
       "approver": null,
@@ -1297,26 +2163,45 @@
       "week": 44,
       "month": "NOVIEMBRE",
       "title": "Seguridad en jumbos y perforadoras",
-      "status": "Propuesta",
+      "status": "Borrador",
       "suggestedMinutes": [
         5,
         10,
         15,
         30
       ],
-      "objective": "",
-      "audience": [],
-      "department": "",
-      "risks": [],
-      "introduction": "",
-      "development": "",
-      "criticalPoints": [],
-      "practicalExamples": [],
-      "reviewQuestions": [],
-      "recommendations": [],
+      "objective": "Conocer los riesgos asociados a seguridad en jumbos y perforadoras y las medidas preventivas aplicables.",
+      "audience": [
+        "Trabajadores y supervisores"
+      ],
+      "department": "Seguridad",
+      "risks": [
+        "Riesgos asociados a la actividad"
+      ],
+      "introduction": "La seguridad en seguridad en jumbos y perforadoras es fundamental para prevenir incidentes y proteger la vida.",
+      "development": "Se revisan los riesgos, medidas preventivas y procedimientos aplicables a seguridad en jumbos y perforadoras.",
+      "criticalPoints": [
+        "Uso correcto del EPP",
+        "Seguir procedimientos",
+        "Reportar condiciones inseguras"
+      ],
+      "practicalExamples": [
+        "Ejemplo practico de la actividad"
+      ],
+      "reviewQuestions": [
+        "¿Cuales son los riesgos principales?",
+        "¿Que medidas preventivas aplicas?"
+      ],
+      "recommendations": [
+        "Aplicar las medidas preventivas",
+        "Reportar riesgos",
+        "Usar EPP"
+      ],
       "normativeReferences": [],
       "internalProcedures": [],
-      "materials": [],
+      "materials": [
+        "Presentacion de la platica"
+      ],
       "reviewedAt": null,
       "author": null,
       "approver": null,
@@ -1327,26 +2212,45 @@
       "week": 45,
       "month": "NOVIEMBRE",
       "title": "Seguridad en scooptrams",
-      "status": "Propuesta",
+      "status": "Borrador",
       "suggestedMinutes": [
         5,
         10,
         15,
         30
       ],
-      "objective": "",
-      "audience": [],
-      "department": "",
-      "risks": [],
-      "introduction": "",
-      "development": "",
-      "criticalPoints": [],
-      "practicalExamples": [],
-      "reviewQuestions": [],
-      "recommendations": [],
+      "objective": "Conocer los riesgos asociados a seguridad en scooptrams y las medidas preventivas aplicables.",
+      "audience": [
+        "Trabajadores y supervisores"
+      ],
+      "department": "Seguridad",
+      "risks": [
+        "Riesgos asociados a la actividad"
+      ],
+      "introduction": "La seguridad en seguridad en scooptrams es fundamental para prevenir incidentes y proteger la vida.",
+      "development": "Se revisan los riesgos, medidas preventivas y procedimientos aplicables a seguridad en scooptrams.",
+      "criticalPoints": [
+        "Uso correcto del EPP",
+        "Seguir procedimientos",
+        "Reportar condiciones inseguras"
+      ],
+      "practicalExamples": [
+        "Ejemplo practico de la actividad"
+      ],
+      "reviewQuestions": [
+        "¿Cuales son los riesgos principales?",
+        "¿Que medidas preventivas aplicas?"
+      ],
+      "recommendations": [
+        "Aplicar las medidas preventivas",
+        "Reportar riesgos",
+        "Usar EPP"
+      ],
       "normativeReferences": [],
       "internalProcedures": [],
-      "materials": [],
+      "materials": [
+        "Presentacion de la platica"
+      ],
       "reviewedAt": null,
       "author": null,
       "approver": null,
@@ -1357,26 +2261,45 @@
       "week": 46,
       "month": "NOVIEMBRE",
       "title": "Camiones bajo perfil y volteo",
-      "status": "Propuesta",
+      "status": "Borrador",
       "suggestedMinutes": [
         5,
         10,
         15,
         30
       ],
-      "objective": "",
-      "audience": [],
-      "department": "",
-      "risks": [],
-      "introduction": "",
-      "development": "",
-      "criticalPoints": [],
-      "practicalExamples": [],
-      "reviewQuestions": [],
-      "recommendations": [],
+      "objective": "Conocer los riesgos asociados a camiones bajo perfil y volteo y las medidas preventivas aplicables.",
+      "audience": [
+        "Trabajadores y supervisores"
+      ],
+      "department": "Seguridad",
+      "risks": [
+        "Riesgos asociados a la actividad"
+      ],
+      "introduction": "La seguridad en camiones bajo perfil y volteo es fundamental para prevenir incidentes y proteger la vida.",
+      "development": "Se revisan los riesgos, medidas preventivas y procedimientos aplicables a camiones bajo perfil y volteo.",
+      "criticalPoints": [
+        "Uso correcto del EPP",
+        "Seguir procedimientos",
+        "Reportar condiciones inseguras"
+      ],
+      "practicalExamples": [
+        "Ejemplo practico de la actividad"
+      ],
+      "reviewQuestions": [
+        "¿Cuales son los riesgos principales?",
+        "¿Que medidas preventivas aplicas?"
+      ],
+      "recommendations": [
+        "Aplicar las medidas preventivas",
+        "Reportar riesgos",
+        "Usar EPP"
+      ],
       "normativeReferences": [],
       "internalProcedures": [],
-      "materials": [],
+      "materials": [
+        "Presentacion de la platica"
+      ],
       "reviewedAt": null,
       "author": null,
       "approver": null,
@@ -1387,26 +2310,45 @@
       "week": 47,
       "month": "NOVIEMBRE",
       "title": "Riesgos en talleres y mantenimiento",
-      "status": "Propuesta",
+      "status": "Borrador",
       "suggestedMinutes": [
         5,
         10,
         15,
         30
       ],
-      "objective": "",
-      "audience": [],
-      "department": "",
-      "risks": [],
-      "introduction": "",
-      "development": "",
-      "criticalPoints": [],
-      "practicalExamples": [],
-      "reviewQuestions": [],
-      "recommendations": [],
+      "objective": "Conocer los riesgos asociados a riesgos en talleres y mantenimiento y las medidas preventivas aplicables.",
+      "audience": [
+        "Trabajadores y supervisores"
+      ],
+      "department": "Seguridad",
+      "risks": [
+        "Riesgos asociados a la actividad"
+      ],
+      "introduction": "La seguridad en riesgos en talleres y mantenimiento es fundamental para prevenir incidentes y proteger la vida.",
+      "development": "Se revisan los riesgos, medidas preventivas y procedimientos aplicables a riesgos en talleres y mantenimiento.",
+      "criticalPoints": [
+        "Uso correcto del EPP",
+        "Seguir procedimientos",
+        "Reportar condiciones inseguras"
+      ],
+      "practicalExamples": [
+        "Ejemplo practico de la actividad"
+      ],
+      "reviewQuestions": [
+        "¿Cuales son los riesgos principales?",
+        "¿Que medidas preventivas aplicas?"
+      ],
+      "recommendations": [
+        "Aplicar las medidas preventivas",
+        "Reportar riesgos",
+        "Usar EPP"
+      ],
       "normativeReferences": [],
       "internalProcedures": [],
-      "materials": [],
+      "materials": [
+        "Presentacion de la platica"
+      ],
       "reviewedAt": null,
       "author": null,
       "approver": null,
@@ -1417,26 +2359,45 @@
       "week": 48,
       "month": "DICIEMBRE",
       "title": "Lecciones aprendidas de incidentes",
-      "status": "Propuesta",
+      "status": "Borrador",
       "suggestedMinutes": [
         5,
         10,
         15,
         30
       ],
-      "objective": "",
-      "audience": [],
-      "department": "",
-      "risks": [],
-      "introduction": "",
-      "development": "",
-      "criticalPoints": [],
-      "practicalExamples": [],
-      "reviewQuestions": [],
-      "recommendations": [],
+      "objective": "Conocer los riesgos asociados a lecciones aprendidas de incidentes y las medidas preventivas aplicables.",
+      "audience": [
+        "Trabajadores y supervisores"
+      ],
+      "department": "Seguridad",
+      "risks": [
+        "Riesgos asociados a la actividad"
+      ],
+      "introduction": "La seguridad en lecciones aprendidas de incidentes es fundamental para prevenir incidentes y proteger la vida.",
+      "development": "Se revisan los riesgos, medidas preventivas y procedimientos aplicables a lecciones aprendidas de incidentes.",
+      "criticalPoints": [
+        "Uso correcto del EPP",
+        "Seguir procedimientos",
+        "Reportar condiciones inseguras"
+      ],
+      "practicalExamples": [
+        "Ejemplo practico de la actividad"
+      ],
+      "reviewQuestions": [
+        "¿Cuales son los riesgos principales?",
+        "¿Que medidas preventivas aplicas?"
+      ],
+      "recommendations": [
+        "Aplicar las medidas preventivas",
+        "Reportar riesgos",
+        "Usar EPP"
+      ],
       "normativeReferences": [],
       "internalProcedures": [],
-      "materials": [],
+      "materials": [
+        "Presentacion de la platica"
+      ],
       "reviewedAt": null,
       "author": null,
       "approver": null,
@@ -1447,26 +2408,45 @@
       "week": 49,
       "month": "DICIEMBRE",
       "title": "Riesgos recurrentes del año",
-      "status": "Propuesta",
+      "status": "Borrador",
       "suggestedMinutes": [
         5,
         10,
         15,
         30
       ],
-      "objective": "",
-      "audience": [],
-      "department": "",
-      "risks": [],
-      "introduction": "",
-      "development": "",
-      "criticalPoints": [],
-      "practicalExamples": [],
-      "reviewQuestions": [],
-      "recommendations": [],
+      "objective": "Conocer los riesgos asociados a riesgos recurrentes del año y las medidas preventivas aplicables.",
+      "audience": [
+        "Trabajadores y supervisores"
+      ],
+      "department": "Seguridad",
+      "risks": [
+        "Riesgos asociados a la actividad"
+      ],
+      "introduction": "La seguridad en riesgos recurrentes del año es fundamental para prevenir incidentes y proteger la vida.",
+      "development": "Se revisan los riesgos, medidas preventivas y procedimientos aplicables a riesgos recurrentes del año.",
+      "criticalPoints": [
+        "Uso correcto del EPP",
+        "Seguir procedimientos",
+        "Reportar condiciones inseguras"
+      ],
+      "practicalExamples": [
+        "Ejemplo practico de la actividad"
+      ],
+      "reviewQuestions": [
+        "¿Cuales son los riesgos principales?",
+        "¿Que medidas preventivas aplicas?"
+      ],
+      "recommendations": [
+        "Aplicar las medidas preventivas",
+        "Reportar riesgos",
+        "Usar EPP"
+      ],
       "normativeReferences": [],
       "internalProcedures": [],
-      "materials": [],
+      "materials": [
+        "Presentacion de la platica"
+      ],
       "reviewedAt": null,
       "author": null,
       "approver": null,
@@ -1477,26 +2457,45 @@
       "week": 50,
       "month": "DICIEMBRE",
       "title": "Cultura de autocuidado",
-      "status": "Propuesta",
+      "status": "Borrador",
       "suggestedMinutes": [
         5,
         10,
         15,
         30
       ],
-      "objective": "",
-      "audience": [],
-      "department": "",
-      "risks": [],
-      "introduction": "",
-      "development": "",
-      "criticalPoints": [],
-      "practicalExamples": [],
-      "reviewQuestions": [],
-      "recommendations": [],
+      "objective": "Conocer los riesgos asociados a cultura de autocuidado y las medidas preventivas aplicables.",
+      "audience": [
+        "Trabajadores y supervisores"
+      ],
+      "department": "Seguridad",
+      "risks": [
+        "Riesgos asociados a la actividad"
+      ],
+      "introduction": "La seguridad en cultura de autocuidado es fundamental para prevenir incidentes y proteger la vida.",
+      "development": "Se revisan los riesgos, medidas preventivas y procedimientos aplicables a cultura de autocuidado.",
+      "criticalPoints": [
+        "Uso correcto del EPP",
+        "Seguir procedimientos",
+        "Reportar condiciones inseguras"
+      ],
+      "practicalExamples": [
+        "Ejemplo practico de la actividad"
+      ],
+      "reviewQuestions": [
+        "¿Cuales son los riesgos principales?",
+        "¿Que medidas preventivas aplicas?"
+      ],
+      "recommendations": [
+        "Aplicar las medidas preventivas",
+        "Reportar riesgos",
+        "Usar EPP"
+      ],
       "normativeReferences": [],
       "internalProcedures": [],
-      "materials": [],
+      "materials": [
+        "Presentacion de la platica"
+      ],
       "reviewedAt": null,
       "author": null,
       "approver": null,
@@ -1507,26 +2506,45 @@
       "week": 51,
       "month": "DICIEMBRE",
       "title": "Preparación del programa preventivo siguiente",
-      "status": "Propuesta",
+      "status": "Borrador",
       "suggestedMinutes": [
         5,
         10,
         15,
         30
       ],
-      "objective": "",
-      "audience": [],
-      "department": "",
-      "risks": [],
-      "introduction": "",
-      "development": "",
-      "criticalPoints": [],
-      "practicalExamples": [],
-      "reviewQuestions": [],
-      "recommendations": [],
+      "objective": "Conocer los riesgos asociados a preparación del programa preventivo siguiente y las medidas preventivas aplicables.",
+      "audience": [
+        "Trabajadores y supervisores"
+      ],
+      "department": "Seguridad",
+      "risks": [
+        "Riesgos asociados a la actividad"
+      ],
+      "introduction": "La seguridad en preparación del programa preventivo siguiente es fundamental para prevenir incidentes y proteger la vida.",
+      "development": "Se revisan los riesgos, medidas preventivas y procedimientos aplicables a preparación del programa preventivo siguiente.",
+      "criticalPoints": [
+        "Uso correcto del EPP",
+        "Seguir procedimientos",
+        "Reportar condiciones inseguras"
+      ],
+      "practicalExamples": [
+        "Ejemplo practico de la actividad"
+      ],
+      "reviewQuestions": [
+        "¿Cuales son los riesgos principales?",
+        "¿Que medidas preventivas aplicas?"
+      ],
+      "recommendations": [
+        "Aplicar las medidas preventivas",
+        "Reportar riesgos",
+        "Usar EPP"
+      ],
       "normativeReferences": [],
       "internalProcedures": [],
-      "materials": [],
+      "materials": [
+        "Presentacion de la platica"
+      ],
       "reviewedAt": null,
       "author": null,
       "approver": null,
@@ -1537,26 +2555,45 @@
       "week": 52,
       "month": "DICIEMBRE",
       "title": "Repaso general y evaluación anual",
-      "status": "Propuesta",
+      "status": "Borrador",
       "suggestedMinutes": [
         5,
         10,
         15,
         30
       ],
-      "objective": "",
-      "audience": [],
-      "department": "",
-      "risks": [],
-      "introduction": "",
-      "development": "",
-      "criticalPoints": [],
-      "practicalExamples": [],
-      "reviewQuestions": [],
-      "recommendations": [],
+      "objective": "Conocer los riesgos asociados a repaso general y evaluación anual y las medidas preventivas aplicables.",
+      "audience": [
+        "Trabajadores y supervisores"
+      ],
+      "department": "Seguridad",
+      "risks": [
+        "Riesgos asociados a la actividad"
+      ],
+      "introduction": "La seguridad en repaso general y evaluación anual es fundamental para prevenir incidentes y proteger la vida.",
+      "development": "Se revisan los riesgos, medidas preventivas y procedimientos aplicables a repaso general y evaluación anual.",
+      "criticalPoints": [
+        "Uso correcto del EPP",
+        "Seguir procedimientos",
+        "Reportar condiciones inseguras"
+      ],
+      "practicalExamples": [
+        "Ejemplo practico de la actividad"
+      ],
+      "reviewQuestions": [
+        "¿Cuales son los riesgos principales?",
+        "¿Que medidas preventivas aplicas?"
+      ],
+      "recommendations": [
+        "Aplicar las medidas preventivas",
+        "Reportar riesgos",
+        "Usar EPP"
+      ],
       "normativeReferences": [],
       "internalProcedures": [],
-      "materials": [],
+      "materials": [
+        "Presentacion de la platica"
+      ],
       "reviewedAt": null,
       "author": null,
       "approver": null,
