@@ -1,7 +1,7 @@
 # Validación final — Sierra Madre · Seguridad Operativa
 
 Fecha: 16 de noviembre de 2026
-Commit de referencia: `df0df07` (rama `main` → `public-pages`)
+Commit de referencia: `bd3c422` (rama `main` → `public-pages`)
 Respaldo verificable: `backups/sierra-madre-backup-20261116-101229.bundle`
 
 ## 1. Pruebas ejecutadas
