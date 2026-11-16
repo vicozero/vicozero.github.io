@@ -55,5 +55,3 @@ exports.auditReportCreate = onDocumentCreated('reports/{reportId}', async (event
 
 // Verificación de salud
 exports.health = onCall(async () => ({ ok: true, service: 'sierra-madre-functions', ts: Date.now() }));
-EOF
-echo created
