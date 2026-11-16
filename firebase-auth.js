@@ -290,6 +290,8 @@ async function launch(user){
     const {startCloudSession,installSessionReport}=await import('./cloud-sessions.js');
     const closeSession=await startCloudSession(cloud.db,cloud.me);
     installSessionReport(cloud.db,cloud.me);
+    try{const {startLiveSync}=await import('./cloud-live.js');startLiveSync(cloud.db,cloud.me);}
+    catch(error){console.warn('Sincronización en tiempo real no disponible.',error);}
     by('accessScreen').hidden=true;by('appRoot').hidden=false;
     if(cloud.me.role==='admin')mountProfile(user);
     document.querySelector('.sign-out').onclick=async e=>{

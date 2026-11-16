@@ -215,5 +215,6 @@ export function installSessionReport(db,me){
   for(const el of dialog.querySelectorAll('[data-session-close]'))el.onclick=()=>dialog.close();
 
   setInterval(()=>{if(dialog.open)paint();},1000);
-  setInterval(()=>{if(dialog.open)refresh();},15000);
+  setInterval(()=>{if(dialog.open)refresh();},30000);
+  window.addEventListener('sm:live',event=>{if(event.detail&&event.detail.collection==='sessions'&&dialog.open)refresh();});
 }
