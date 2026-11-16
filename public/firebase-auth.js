@@ -292,17 +292,6 @@ async function launch(user){
     installSessionReport(cloud.db,cloud.me);
     by('accessScreen').hidden=true;by('appRoot').hidden=false;
     if(cloud.me.role==='admin')mountProfile(user);
-    if(localStorage.getItem('sm-cloud-import-pending-'+user.uid)==='1'){
-      localStorage.removeItem('sm-cloud-import-pending-'+user.uid);
-      setTimeout(async()=>{
-        try{
-          const summary=await importLocalWorkspace(cloud.me);
-          const missing=summary.notImported.length?` Recrea ${summary.notImported.length} usuarios locales en Usuarios y permisos.`:'';
-          toast(`Datos locales importados: ${summary.reports} formatos, ${summary.actions} acciones, ${summary.plans} programas, ${summary.notices} avisos.${missing}`);
-          setTimeout(()=>location.reload(),4000);
-        }catch(error){toast('No se pudieron importar todos los datos locales: '+error.message);}
-      },1800);
-    }
     document.querySelector('.sign-out').onclick=async e=>{
       e.preventDefault();
       try{await closeSession();await signOut(auth);localStorage.removeItem('sm-local-session');location.reload();}
@@ -439,8 +428,7 @@ function mountProfile(user){
       const {initializeAuthority}=await import('./firebase-cloud.js');
       await initializeAuthority(app,user);
       if(!cloudActive){
-        localStorage.setItem('sm-cloud-import-pending-'+user.uid,'1');
-        toast('Nube activada. Recargando e importando los datos locales…');
+        toast('Nube activada. Recargando…');
         setTimeout(()=>location.reload(),1000);
         return;
       }
@@ -458,7 +446,7 @@ function mountProfile(user){
     importBtn.type='button';importBtn.className='secondary';importBtn.textContent='Importar datos locales a la nube';
     dialog.querySelector('.report-note').appendChild(importBtn);
     importBtn.onclick=async()=>{
-      if(!window.confirm('Se copiarán a la nube los formatos, acciones, programas y avisos guardados en este navegador. ¿Continuar?'))return;
+      if(!window.confirm('Antes de importar, crea en Usuarios y permisos las mismas cuentas (con su correo) para conservar la propiedad de los registros. Los usuarios que no existan en la nube se asignarán a tu cuenta.\n\nSe copiarán a la nube los formatos, acciones, programas y avisos guardados en este navegador. ¿Continuar?'))return;
       importBtn.disabled=true;
       try{
         const summary=await importLocalWorkspace(globalThis.SM_CLOUD.me);
