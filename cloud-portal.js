@@ -104,6 +104,13 @@ export async function connectPortal(app,user,perms,database=null){
        if(!isAdmin&&col==='reports'&&!me.permissions.edit_reports)throw Error('No tienes permiso para editar formatos.');
        if(!isAdmin&&col==='actions'&&!me.permissions.edit_actions)throw Error('No tienes permiso para editar acciones.');
        if(!isAdmin&&col==='plans')throw Error('El programa mensual solo lo administra la cuenta principal.');
+       if(col==='reports'&&['veo','incident','training'].includes(body.type)){
+         if(!['Borrador','Finalizado'].includes(body.status))throw Error('Estado de formato inválido.');
+         if(body.status==='Finalizado'){
+           if(!globalThis.SAFETY?.validateOperationalReport)throw Error('Recarga la página para validar el formato.');
+           const error=globalThis.SAFETY.validateOperationalReport(body);if(error)throw Error(error);
+         }
+       }
        const reference=doc(db,col,id);
        const photoChunkIds=[];
        if(body.photos?.length){

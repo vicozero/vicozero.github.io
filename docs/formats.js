@@ -37,3 +37,44 @@ globalThis.SAFETY={
  equipment:['Oxicorte: mariposas','Oxicorte: conexiones','Oxicorte: mangueras','Oxicorte: manómetros','Oxicorte: soplete','Oxicorte: extintor','Cilindros: sujeción','Cilindros: capuchón','Cilindros: almacenamiento','Soldadura: zapatas','Soldadura: cable positivo','Soldadura: porta electrodo','Soldadura: cable de tierra','Soldadura: pinza de tierra','Soldadura: carcasa'],
  groups:[['inspection','Inspección de áreas',5],['leadership','Liderazgo visible',6],['pst','Evaluación de PST',3],['unsafe','Actos y condiciones',6],['talk','Plática de 5 minutos',5],['epp','Inspección de EPP',5],['veo','Verificación de Estándares Operacionales',5],['observation','Observaciones preventivas',6],['incident','Incidentes y accidentes',3],['training','Capacitacion',4]]
 };
+
+// Keep workflow fields (date, department, shift, status) separate from form data.
+for(const id of ['veo','incident','training']){
+ const definition=SAFETY.types.find(t=>t.id===id);
+ definition.fields=definition.fields.filter(([key])=>!['date','department','shift','folio'].includes(key)).map(field=>{
+   const [key,label,kind,required,options]=field;
+   if(key==='status')return ['eventStatus',label,kind,0,Array.isArray(required)?required:options];
+   if(id==='incident'&&['eventType','severity'].includes(key))return [key,label,kind,1,Array.isArray(required)?required:options];
+   if(kind==='select'&&Array.isArray(required))return [key,label,kind,0,required];
+   return field;
+ });
+ if(id!=='training')definition.table.optional=true;
+}
+const incidentDefinition=SAFETY.types.find(t=>t.id==='incident');
+incidentDefinition.table.columns.push(['due','Fecha compromiso','date']);
+SAFETY.types.find(t=>t.id==='training').name='Capacitación';
+SAFETY.operationalTypes=['veo','incident','training'];
+SAFETY.validateOperationalReport=function(r){
+ if(!this.operationalTypes.includes(r.type))return '';
+ const definition=this.types.find(t=>t.id===r.type);
+ for(const key of ['date','shift','supervisor','department','place','kpi'])if(!String(r[key]||'').trim())return 'Completa: '+key;
+ for(const [key,label,,required] of definition.fields)if(required&&!String(r[key]??'').trim())return 'Completa: '+label;
+ for(const [key,label,kind,,options] of definition.fields)if(kind==='select'&&r[key]&&!options.includes(r[key]))return 'Valor inválido: '+label;
+ const rows=r[definition.table.key]||[];
+ if(r.type==='training'){
+   if(!Number.isFinite(Number(r.hours))||Number(r.hours)<=0)return 'Indica horas de capacitación mayores que cero.';
+   if(!rows.length||rows.some(row=>!row.person?.trim()))return 'Agrega el nombre de cada participante.';
+   if(r.evaluation==='Si'&&rows.some(row=>String(row.score??'').trim()===''||!Number.isFinite(Number(row.score))||Number(row.score)<0||Number(row.score)>100))return 'Cada evaluación requiere una calificación entre 0 y 100.';
+ }
+ if(r.type==='veo'){
+   const expected=r.checkLabels?.length||this.areaTemplates?.[r.areaTemplate]?.length||this.veoChecks.length;
+   if(!r.checks||r.checks.length!==expected||r.checks.some(c=>!['Cumple','No cumple','No aplica'].includes(c.answer)))return 'Evalúa todos los estándares operacionales.';
+   if(r.checks.some(c=>c.answer==='No cumple')&&!rows.length&&!(r.finding?.trim()&&r.immediate?.trim()&&r.responsible?.trim()&&r.dueDate))return 'Documenta la acción, responsable y fecha de los estándares que no cumplen.';
+ }
+ if(r.type!=='training'&&rows.some(row=>!row.description?.trim()||!row.action?.trim()||!row.responsible?.trim()||!row.due))return 'Completa hallazgo, acción, responsable y fecha compromiso.';
+ if(r.type==='incident'){
+   if(r.reportDate<r.eventDate?.slice(0,10))return 'La fecha del reporte no puede ser anterior al evento.';
+   if(r.eventStatus==='Cerrado'&&(!r.investigation?.trim()||!r.responsible?.trim()||!r.closeDate||r.closeDate<r.eventDate?.slice(0,10)))return 'El cierre requiere investigación, responsable y fecha válida.';
+ }
+ return '';
+};

@@ -5,6 +5,7 @@
     "sync": "node sync-copies.mjs",
     "check": "node --check firebase-auth.js && node --check cloud-portal.js && node --check cloud-sessions.js && node --check cloud-live.js && node --check supervisor.js && node --check workspace.js && node --check accounts-ui.js && node --check formats.js && node --check progress-core.js && node --check session-clock.js && node --check session-tracker.js && node --check identity.js",
     "test:migration": "node test-migration-backup.mjs",
+    "test:operational": "node test-operational-forms.mjs && node test-operational-pdf.mjs",
     "test:rules": "firebase emulators:exec --only firestore --project demo-sierra-madre \"node test-firestore-rules.mjs\""
   },
   "devDependencies": {

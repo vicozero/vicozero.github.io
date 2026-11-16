@@ -13,3 +13,38 @@ async function refreshReportsLive(){
 window.addEventListener('sm:live',event=>{if(event.detail&&event.detail.collection==='reports')refreshReportsLive();});
 $('editor').addEventListener('close',refreshReportsLive);
 $('chooser').addEventListener('close',refreshReportsLive);
+
+// Operational modules have their own schemas, not the inspection row schema.
+const captureOtherFormat=capture;
+capture=function(){
+ if(!active||!S.operationalTypes.includes(active.type))return captureOtherFormat();
+ if(active.status==='Finalizado')return;
+ const definition=type(active.type),form=$('reportForm');
+ for(const [key] of [...common,...definition.fields,['observations'],['reviewer']]){
+   const control=form.elements[key];if(control)active[key]=key==='kpi'?control.value.slice(0,1):control.value;
+ }
+ if(definition.checks){
+   const controls=Array.from($('specificFields').querySelectorAll('select[name^="check-"]'));
+   active.checkLabels=controls.map(el=>el.closest('.question').querySelector('span').textContent.replace(/^\d+\.\s*/,''));
+   active.checks=controls.map((el,i)=>({answer:el.value,reason:form.elements['reason-'+i]?.value||''}));
+ }
+ active[definition.table.key]=Array.from($('repeatTable').querySelectorAll('[data-row]')).map(row=>Object.fromEntries(Array.from(row.querySelectorAll('[data-key]')).map(el=>[el.dataset.key,el.value])));
+ document.querySelectorAll('[data-caption]').forEach(el=>active.photos[+el.dataset.caption].caption=el.value);
+ globalThis.SM_ACTIVE=active;
+};
+const validateOtherFormat=validate;
+validate=function(){return active&&S.operationalTypes.includes(active.type)?S.validateOperationalReport(active):validateOtherFormat();};
+const openOtherFormat=openReport;
+openReport=function(...args){openOtherFormat(...args);globalThis.SM_ACTIVE=active;};
+const checksOtherFormat=checks;
+checks=function(definition){
+ if(definition.id!=='veo')return checksOtherFormat(definition);
+ const labels=active.checkLabels?.length?active.checkLabels:(S.areaTemplates[active.areaTemplate]||S.veoChecks);
+ return '<div class="field-section veo-checklist"><h3>Estándares operacionales</h3>'+labels.map((label,i)=>`<div class="question"><span>${i+1}. ${esc(label)}</span><select name="check-${i}" aria-label="Respuesta ${i+1}"><option value="">Sin evaluar</option>${['Cumple','No cumple','No aplica'].map(value=>`<option ${active.checks?.[i]?.answer===value?'selected':''}>${value}</option>`).join('')}</select><input name="reason-${i}" aria-label="Observación ${i+1}" value="${esc(active.checks?.[i]?.reason||'')}" maxlength="2000"></div>`).join('')+'</div>';
+};
+document.addEventListener('change',event=>{
+ if(active?.type!=='veo'||event.target.name!=='areaTemplate')return;
+ active.areaTemplate=event.target.value;active.checks=[];active.checkLabels=[];
+ const checklist=$('specificFields').querySelector('.veo-checklist');
+ if(checklist)checklist.outerHTML=checks(type('veo'));
+});

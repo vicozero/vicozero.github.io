@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
+import vm from 'node:vm';
 import {initializeTestEnvironment} from '@firebase/rules-unit-testing';
 import {doc,setDoc} from 'firebase/firestore';
 fs.mkdirSync('.qa',{recursive:true});
@@ -10,6 +11,8 @@ const env=await initializeTestEnvironment({projectId:'demo-sierra-madre',firesto
 globalThis.window={fetch:globalThis.fetch};globalThis.location={origin:'http://app.test'};
 const own='Kgwk4gK0yxYJQMZZaggIyl2xtnh2';
 try{
+ await env.clearFirestore();
+ vm.runInThisContext(fs.readFileSync('formats.js','utf8'));
  await env.withSecurityRulesDisabled(async ctx=>{
   const db=ctx.firestore();
   await setDoc(doc(db,'security/authority'),{administratorUid:own});
@@ -29,5 +32,15 @@ try{
  result=await window.fetch('/api/notices',{method:'POST',body:JSON.stringify({toAccountIds:[own],text:'Integration test',type:'Mensaje'})});assert.equal(result.status,200);
  result=await window.fetch('/api/notices');assert.equal(result.status,200);assert.equal((await result.json()).length,1);
  await assert.rejects(()=>connectPortal({}, {uid:'unknown'},perms,env.authenticatedContext('unknown').firestore()));
+ const operational=JSON.parse(fs.readFileSync('.qa/operational/records.json','utf8'));
+ for(const record of operational){
+  const body={...record,id:'module-'+record.type,revision:0,ownerAccountId:'operator'};
+  let r=await window.fetch('/api/reports/'+body.id,{method:'PUT',body:JSON.stringify(body)});
+  assert.equal(r.status,200,JSON.stringify(await r.clone().json()));
+  const saved=await r.json();assert.equal(saved.status,'Finalizado');
+  r=await window.fetch('/api/reports/'+body.id,{method:'PUT',body:JSON.stringify({...saved,status:'Borrador'})});assert.equal(r.status,200);
+ }
+ const invalid={...operational.find(r=>r.type==='training'),id:'invalid-training',revision:0,hours:'0',ownerAccountId:'operator'};
+ const rejected=await window.fetch('/api/reports/invalid-training',{method:'PUT',body:JSON.stringify(invalid)});assert.equal(rejected.status,403);
  console.log('Portal/Firestore: guardado, consulta, conflicto, avisos y cuenta no autorizada: OK');
 }finally{await env.cleanup();}
