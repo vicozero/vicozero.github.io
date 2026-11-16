@@ -32,6 +32,19 @@ const hash=s=>{let h=0;for(let i=0;i<s.length;i++)h=((h<<5)-h)+s.charCodeAt(i)|0
 function emptyWS(){return {reports:[],actions:[],plans:[],users:[],notices:[],reads:{}};}
 function readWS(){try{const d=JSON.parse(localStorage.getItem(WORKSPACE_KEY));if(d&&Array.isArray(d.users))return d;}catch{}return emptyWS();}
 function writeWS(d){try{localStorage.setItem(WORKSPACE_KEY,JSON.stringify(d));}catch{}}
+async function exportWorkspaceBackup(){
+  const workspace=readWS();
+  const clean={...workspace,users:(workspace.users||[]).map(({passwordHash,...user})=>user)};
+  const serialized=JSON.stringify(clean);
+  const bytes=new TextEncoder().encode(serialized);
+  const digest=await crypto.subtle.digest('SHA-256',bytes);
+  const sha256=Array.from(new Uint8Array(digest)).map(b=>b.toString(16).padStart(2,'0')).join('');
+  const backup={format:'sierra-madre-local-workspace',version:1,generatedAt:new Date().toISOString(),sha256,data:clean};
+  const url=URL.createObjectURL(new Blob([JSON.stringify(backup,null,2)],{type:'application/json'}));
+  const a=document.createElement('a');a.href=url;a.download='Sierra-Madre-respaldo-local-'+new Date().toISOString().slice(0,10)+'.json';a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),1500);
+  return {sha256,records:(clean.reports||[]).length+(clean.actions||[]).length+(clean.plans||[]).length,users:(clean.users||[]).length};
+}
 
 // --- Login screen ---
 function login(message=''){
@@ -314,10 +327,11 @@ function mountProfile(user){
   const btn=document.createElement('button'); btn.id='profileSettings'; btn.className='theme-button'; btn.type='button'; btn.textContent='Perfil';
   const signOutLink=tools.querySelector('.sign-out'); if(signOutLink) tools.insertBefore(btn,signOutLink); else tools.appendChild(btn);
   const dialog=document.createElement('dialog'); dialog.id='profileDialog';
-  dialog.innerHTML=`<form method="dialog" id="profileForm"><div class="dialog-top"><div><span class="eyebrow">ADMINISTRADOR</span><h2>Mi perfil y avisos</h2></div><button class="close" value="cancel" aria-label="Cerrar">×</button></div><div class="editor-scroll"><div class="fields"><label>Nombre<input name="name" required maxlength="100" value="${(user.displayName||'Admin').replace(/&/g,'&amp;').replace(/"/g,'&quot;')}"></label><label>Correo de acceso<input name="email" type="email" value="${user.email||''}" readonly></label><label>Teléfono / WhatsApp<input name="phone" type="tel" maxlength="30" value="${saved.phone||''}"></label><label>Nueva contraseña <small>(opcional)</small><input name="password" type="password" minlength="8" autocomplete="new-password"></label></div></div><div class="editor-footer"><button class="secondary" value="cancel" type="button" id="closeProfile">Cancelar</button><button class="primary" type="submit">Guardar perfil</button></div></form>`;
+  dialog.innerHTML=`<form method="dialog" id="profileForm"><div class="dialog-top"><div><span class="eyebrow">ADMINISTRADOR</span><h2>Mi perfil y avisos</h2></div><button class="close" value="cancel" aria-label="Cerrar">×</button></div><div class="editor-scroll"><div class="fields"><label>Nombre<input name="name" required maxlength="100" value="${(user.displayName||'Admin').replace(/&/g,'&amp;').replace(/"/g,'&quot;')}"></label><label>Correo de acceso<input name="email" type="email" value="${user.email||''}" readonly></label><label>Teléfono / WhatsApp<input name="phone" type="tel" maxlength="30" value="${saved.phone||''}"></label><label>Nueva contraseña <small>(opcional)</small><input name="password" type="password" minlength="8" autocomplete="new-password"></label></div><div class="report-note"><strong>Respaldo antes de migración</strong><p>Descarga una copia de formatos, acciones, evidencias, permisos, avisos e historiales almacenados en este navegador. Las contraseñas nunca se incluyen.</p><button class="secondary" type="button" id="exportWorkspace">Descargar respaldo local</button></div></div><div class="editor-footer"><button class="secondary" value="cancel" type="button" id="closeProfile">Cancelar</button><button class="primary" type="submit">Guardar perfil</button></div></form>`;
   document.body.appendChild(dialog);
   btn.onclick=()=>dialog.showModal();
   dialog.querySelector('#closeProfile').onclick=()=>dialog.close();
+  dialog.querySelector('#exportWorkspace').onclick=async()=>{try{const result=await exportWorkspaceBackup();toast(`Respaldo descargado: ${result.records} registros y ${result.users} usuarios.`)}catch{toast('No se pudo crear el respaldo local. Verifica el espacio disponible e inténtalo de nuevo.')}};
   by('profileForm').addEventListener('submit',async event=>{
     event.preventDefault();
     const f=new FormData(event.currentTarget),name=String(f.get('name')).trim(),password=String(f.get('password'));
