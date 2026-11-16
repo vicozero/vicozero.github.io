@@ -31,9 +31,7 @@ function mountInHeader(el,before){
 export async function startCloudSession(db,me){
   if(!['member','operator','admin'].includes(me.role))return async()=>{};
   const ref=doc(collection(db,'sessions'));
-  let synced=true;
-  try{await setDoc(ref,{userId:me.id,startedAt:serverTimestamp(),updatedAt:serverTimestamp(),activeMs:0,closed:false});}
-  catch(error){synced=false;console.warn('No se pudo registrar la sesión en la nube; el contador seguirá funcionando en este equipo.',error);}
+  let synced=false,lastSaveOk=false,syncError=null;
   const clock=createSessionClock();
   const el=document.createElement('span');
   el.className='session-timer';
@@ -43,25 +41,40 @@ export async function startCloudSession(db,me){
   el.setAttribute('aria-live','off');
   mountInHeader(el,'#noticeBell');
   const clockEl=el.querySelector('.session-clock');
-  let stopped=false,pending=Promise.resolve(),lastSaveOk=true;
+  let stopped=false,pending=Promise.resolve();
   function paint(){
     const state=clock.snapshot();
     clockEl.textContent=fmtClock(Date.now()-state.startedAt);
     const idle=Date.now()-state.lastActivityAt>IDLE_MS;
     el.classList.toggle('is-idle',idle&&!stopped);
     el.classList.toggle('is-offline',!lastSaveOk);
-    el.title='Sesión iniciada a las '+new Date(state.startedAt).toLocaleTimeString('es-MX')+'.'+
-      (idle?' Sin actividad en los últimos 5 minutos (el tiempo activo está en pausa).':'')+
-      (lastSaveOk?'':' Sin conexión con el servidor; se reintentará automáticamente.');
+    let tip='Sesión iniciada a las '+new Date(state.startedAt).toLocaleTimeString('es-MX')+'.';
+    if(idle) tip+=' Sin actividad en los últimos 5 minutos (el tiempo activo está en pausa).';
+    if(!lastSaveOk) tip+=' No se pudo conectar con el servidor para registrar tu presencia; se reintentará automáticamente.';
+    if(syncError) tip+=' ('+(syncError.code||syncError.message||'error')+')';
+    el.title=tip;
   }
+  async function ensureSession(){
+    if(synced||stopped)return synced;
+    try{
+      await setDoc(ref,{userId:me.id,startedAt:serverTimestamp(),updatedAt:serverTimestamp(),activeMs:0,closed:false});
+      synced=true;lastSaveOk=true;syncError=null;if(!stopped)paint();return true;
+    }catch(error){
+      syncError=error;lastSaveOk=false;if(!stopped)paint();
+      console.warn('No se pudo registrar la sesión en la nube; se reintentará.',error);
+      return false;
+    }
+  }
+  await ensureSession();
   function touch(){if(!stopped){clock.activity();paint();}}
   for(const event of ['pointerdown','keydown','touchstart'])document.addEventListener(event,touch,{passive:true});
-  function save(closed=false){
+  async function save(closed=false){
     const state=closed?clock.close():clock.snapshot();
-    if(!synced)return Promise.resolve();
+    if(!synced) await ensureSession();
+    if(!synced){ if(closed) clock.close(); return Promise.resolve(); }
     pending=pending.catch(()=>{}).then(()=>updateDoc(ref,{activeMs:Math.floor(state.activeMs),updatedAt:serverTimestamp(),closed}))
-      .then(()=>{lastSaveOk=true;if(!stopped)paint();})
-      .catch(error=>{lastSaveOk=false;if(!stopped)paint();throw error;});
+      .then(()=>{lastSaveOk=true;syncError=null;if(!stopped)paint();})
+      .catch(error=>{syncError=error;lastSaveOk=false;if(!stopped)paint();throw error;});
     return pending;
   }
   const ticker=setInterval(paint,1000);
