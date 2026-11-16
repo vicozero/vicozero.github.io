@@ -97,3 +97,68 @@ export function createSafetySuiteStore(db,me){
   }
  };
 }
+
+
+
+export function createLocalSafetySuiteStore(me,{directory=[]}={}){
+ const admin=me.role==='admin',permission=key=>admin||me.permissions?.[key]===true;
+ const KEY='sm-suite-workspace-v1';
+ const read=()=>{try{const v=JSON.parse(localStorage.getItem(KEY)||'{}');return v&&typeof v==='object'?v:{};}catch{return {};}};
+ const write=data=>localStorage.setItem(KEY,JSON.stringify(data));
+ const ensure=(db,name)=>{db[name]=Array.isArray(db[name])?db[name]:[];return db[name];};
+ const clean=value=>JSON.parse(JSON.stringify(value));
+ async function list(name){const db=read();return ensure(db,name).map(x=>({...x}));}
+ async function save(name,data){
+  const db=read(),list=ensure(db,name),idx=list.findIndex(x=>x.id===data.id);
+  const old=idx>=0?list[idx]:null;
+  if((data.revision||0)!==(old?.revision||0))throw Error('El registro cambió en otra sesión. Recarga antes de guardar.');
+  const record={...clean(data),revision:(old?.revision||0)+1,ownerAccountId:old?.ownerAccountId||me.id,createdBy:old?.createdBy||me.id,createdAt:old?.createdAt||new Date().toISOString(),updatedAt:new Date().toISOString()};
+  if(idx>=0)list[idx]=record;else list.push(record);
+  write(db);return record;
+ }
+ return {
+  list,permission,
+  async saveTopic(topic){
+   if(!permission('training_manage'))throw Error('Permiso de gestión de pláticas requerido.');
+   if(!topic.title?.trim())throw Error('Indica el título del tema.');
+   if(!['Propuesta','Borrador','En revisión','Aprobado','Archivado'].includes(topic.status))throw Error('Estado del material inválido.');
+   if(topic.status==='Aprobado'){
+    if(!permission('training_approve'))throw Error('Permiso de aprobación de materiales requerido.');
+    if(!topic.objective?.trim()||!topic.introduction?.trim()||!topic.development?.trim()||!topic.criticalPoints?.length||!topic.reviewQuestions?.length)throw Error('Completa objetivo, introducción, desarrollo, puntos críticos y preguntas antes de aprobar.');
+    topic={...topic,approver:me.id,reviewedAt:new Date().toISOString().slice(0,10)};
+   }
+   return save('talk_topics',topic);
+  },
+  async saveSchedule(schedule,topicIds){
+   if(!permission('training_schedule'))throw Error('Permiso de programación requerido.');
+   validateSchedule(schedule,topicIds);return save('talk_schedules',schedule);
+  },
+  async saveSession(session){
+   if(!permission('training_attendance'))throw Error('Permiso de captura de asistencia requerido.');
+   validateAttendance(session.attendees);
+   sessionToOriginalTalkReport(session);
+   const topics=await list('talk_topics');
+   const topic=topics.find(t=>t.id===session.topicId);
+   if(!topic||topic.status!=='Aprobado')throw Error('La ejecución requiere un material aprobado.');
+   const schedules=await list('talk_schedules');
+   const schedule=schedules.find(s=>s.id===session.scheduleId);
+   if(!schedule||schedule.topicId!==session.topicId)throw Error('La sesión no corresponde al tema programado.');
+   return save('talk_sessions',session);
+  },
+  async createOriginalTalkDraft(session){
+   if(!permission('training_attendance'))throw Error('Permiso de captura requerido.');
+   const sessions=await list('talk_sessions');
+   const stored=sessions.find(s=>s.id===session.id);
+   if(!stored)throw Error('La ejecución no está guardada.');
+   const report=sessionToOriginalTalkReport({...stored,id:stored.id});
+   const WS='sm-workspace';
+   let ws={};try{ws=JSON.parse(localStorage.getItem(WS)||'{}')||{};}catch{ws={}}
+   ws.reports=Array.isArray(ws.reports)?ws.reports:[];
+   if(ws.reports.some(r=>r.id===report.id))return {id:report.id,created:false};
+   ws.reports.push({...report,ownerAccountId:me.id,folio:'SM-PL-'+session.id,revision:1,updated:new Date().toISOString()});
+   localStorage.setItem(WS,JSON.stringify(ws));
+   return {id:report.id,created:true};
+  }
+ };
+}
+
