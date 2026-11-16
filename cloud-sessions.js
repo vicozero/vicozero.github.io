@@ -1,4 +1,4 @@
-import {doc,collection,setDoc,updateDoc,serverTimestamp,getDocs} from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
+import {doc,collection,setDoc,updateDoc,serverTimestamp,getDocs,deleteDoc} from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
 import {createSessionClock} from './session-clock.js';
 
 const ONLINE_MS=90000;
@@ -130,7 +130,7 @@ export function installSessionReport(db,me){
     </div>
     <div class="session-table-wrap">
       <table class="work-table session-table">
-        <thead><tr><th>Usuario</th><th>Inicio</th><th>Conectado</th><th>Activo</th><th>Última señal</th><th>Estado</th></tr></thead>
+        <thead><tr><th>Usuario</th><th>Inicio</th><th>Conectado</th><th>Activo</th><th>Última señal</th><th>Estado</th><th>Acción</th></tr></thead>
         <tbody data-session-body></tbody>
       </table>
     </div>
@@ -182,12 +182,15 @@ export function installSessionReport(db,me){
       const seen=document.createElement('td');seen.textContent=timeText(row.updatedAt);tr.append(seen);
       const state=document.createElement('td');
       const badge=document.createElement('span');badge.className='session-state';state.append(badge);tr.append(state);
+      const action=document.createElement('td');
+      const del=document.createElement('button');del.type='button';del.className='secondary';del.textContent='Eliminar';del.dataset.sessionDelete=row.id;
+      action.append(del);tr.append(action);
       body.append(tr);
       return{row,connected,active,badge};
     });
     if(!view.length){
       const tr=document.createElement('tr'),td=document.createElement('td');
-      td.colSpan=6;td.className='session-empty';td.textContent='Todavía no hay sesiones registradas.';
+      td.colSpan=7;td.className='session-empty';td.textContent='Todavía no hay sesiones registradas.';
       tr.append(td);body.append(tr);
     }
     paint();
@@ -227,6 +230,12 @@ export function installSessionReport(db,me){
     historyBtn.textContent=history?'Ver sesiones actuales':'Ver historial';
     build();
   };
+  dialog.addEventListener('click',async event=>{
+    const del=event.target.closest('[data-session-delete]');
+    if(!del)return;
+    if(!confirm('¿Eliminar este registro de sesión?'))return;
+    try{await deleteDoc(doc(db,'sessions',del.dataset.sessionDelete));await refresh();}catch(error){alert('No se pudo eliminar la sesión: '+error.message);}
+  });
   for(const el of dialog.querySelectorAll('[data-session-close]'))el.onclick=()=>dialog.close();
 
   setInterval(()=>{if(dialog.open)paint();},1000);
