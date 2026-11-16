@@ -133,7 +133,7 @@ function installStore(currentUser, isFirebaseAdmin=false){
     if(path==='me') return json({user:publicUser(me)});
     if(path==='directory') return json((data.users||[]).filter(x=>x.active!==false).map(x=>({id:x.id,name:x.name,unit:x.unit||'',role:x.role})));
     if(path==='users' || path.startsWith('users/')){
-      if(me.role!=='admin') return json({error:'Solo el administrador puede gestionar usuarios.'},403);
+      if(me.role!=='admin' && !(me.permissions&&me.permissions.users)) return json({error:'Solo el administrador puede gestionar usuarios.'},403);
       // Delete user: DELETE /api/users/:id
       if(path.startsWith('users/') && method==='DELETE'){
         const delId=path.slice('users/'.length);
@@ -160,6 +160,7 @@ function installStore(currentUser, isFirebaseAdmin=false){
         isOwner: !!existing?.isOwner,
         revision: (existing?.revision||0)+1,
         passwordHash: body.password ? hash(body.password) : (existing?.passwordHash||''),
+        permissions: body.permissions && typeof body.permissions==='object' ? body.permissions : (existing?.permissions || null),
         created: existing?.created || new Date().toISOString(),
         updated: new Date().toISOString()
       };
@@ -172,7 +173,7 @@ function installStore(currentUser, isFirebaseAdmin=false){
     }
     if(path==='notices'){
       if(method==='GET'){
-        const list=(data.notices||[]).filter(n=>me.role==='admin'||n.toAccountId===me.id||n.fromAccountId===me.id);
+        const list=(data.notices||[]).filter(n=>(me.role==='admin'||(me.permissions&&me.permissions.view_all))||n.toAccountId===me.id||n.fromAccountId===me.id);
         return json(list.map(n=>({...n,incoming:n.toAccountId===me.id,read:!!(data.reads&&data.reads[me.id]&&data.reads[me.id][n.id])})).sort((a,b)=>(b.created||'').localeCompare(a.created||'')));
       }
       const ids=Array.isArray(body.toAccountIds)?body.toAccountIds:[];
@@ -208,7 +209,7 @@ function installStore(currentUser, isFirebaseAdmin=false){
     if(['reports','actions','plans'].includes(collection)){
       data[collection]=data[collection]||[]; const list=data[collection];
       // Read permission: admin sees all; others see own/assigned
-      const canReadRec=(r)=>me.role==='admin' || (collection==='plans' ? r.assignedAccountId===me.id : collection==='actions' ? (r.assignedAccountId===me.id||r.ownerAccountId===me.id) : r.ownerAccountId===me.id);
+      const canReadRec=(r)=>(me.role==='admin' || (me.permissions&&me.permissions.view_all)) || (collection==='plans' ? r.assignedAccountId===me.id : collection==='actions' ? (r.assignedAccountId===me.id||r.ownerAccountId===me.id) : r.ownerAccountId===me.id);
       if(method==='GET'){
         if(id){ const rec=list.find(x=>x.id===id); return rec && canReadRec(rec) ? json(rec) : json(null); }
         return json(me.role==='admin' ? list : list.filter(canReadRec));
@@ -229,7 +230,13 @@ function installStore(currentUser, isFirebaseAdmin=false){
   };
 }
 
-function publicUser(u){ return {id:u.id,email:u.email,name:u.name,role:u.role,active:u.active!==false,unit:u.unit||'',isOwner:!!u.isOwner,revision:u.revision||0}; }
+const DEFAULT_PERMS={
+  admin:{dashboard:true,reports:true,edit_reports:true,program:true,edit_program:true,actions:true,edit_actions:true,progress:true,team:true,manage_team:true,notices:true,send_notices:true,users:true,view_all:true,assign:true},
+  operator:{dashboard:true,reports:true,edit_reports:true,program:true,edit_program:false,actions:true,edit_actions:true,progress:true,team:false,manage_team:false,notices:true,send_notices:true,users:false,view_all:false,assign:false},
+  member:{dashboard:true,reports:true,edit_reports:true,program:true,edit_program:false,actions:true,edit_actions:true,progress:true,team:false,manage_team:false,notices:true,send_notices:false,users:false,view_all:false,assign:false}
+};
+function effectivePerms(u){ const base={...(DEFAULT_PERMS[u.role]||DEFAULT_PERMS.member)}; if(u.permissions&&typeof u.permissions==='object'){ for(const k in base){ if(k in u.permissions) base[k]=!!u.permissions[k]; } for(const k in u.permissions){ if(!(k in base)) base[k]=!!u.permissions[k]; } } return base; }
+function publicUser(u){ return {id:u.id,email:u.email,name:u.name,role:u.role,active:u.active!==false,unit:u.unit||'',isOwner:!!u.isOwner,revision:u.revision||0,permissions:effectivePerms(u)}; }
 
 async function loadAppScripts(){
   const srcs=['assets/pdf-lib.min.js','formats.js','extended-formats.js','progress-core.js','supervisor.js','workspace-pdf.js','report-pdf.js','workspace.js','accounts-ui.js'];
@@ -251,7 +258,7 @@ async function launch(user){
     const ou=ws.users.find(u=>u.isOwner || u.id===user.uid);
     if(ou){ou.name=user.displayName||ou.name||'Admin';ou.email=user.email;writeWS(ws);}
   }
-  const me={id:user.uid,name:user.displayName||'Admin',email:user.email,unit:'Sierra Madre',role:'admin',active:true,isOwner:true};
+  const me={id:user.uid,name:user.displayName||'Admin',email:user.email,unit:'Sierra Madre',role:'admin',active:true,isOwner:true,permissions:DEFAULT_PERMS.admin};
   installStore(me,true);
   globalThis.AUTH={user:me};
   globalThis.smStorageKey=k=>k+'-'+user.uid;
@@ -269,14 +276,14 @@ async function launch(user){
 // --- Launch for local (in-app created) users ---
 async function launchLocal(user){
   if(started) return; started=true;
-  const me={...user};
+  const me={...user, permissions: effectivePerms(user)};
   installStore(me,false);
   globalThis.AUTH={user:publicUser(me)};
   globalThis.smStorageKey=k=>k+'-'+user.id;
   const ws=readWS();
   globalThis.ACCOUNT_DIRECTORY=(ws.users||[]).filter(x=>x.active!==false).map(x=>({id:x.id,name:x.name,unit:x.unit||'',role:x.role}));
-  globalThis.ACCOUNT_USERS = me.role==='admin' ? (ws.users||[]).map(publicUser) : [];
-  globalThis.SM_SCOPE_ACCOUNT = me.role==='admin' ? '' : me.id;
+  globalThis.ACCOUNT_USERS = (me.permissions&&me.permissions.users) ? (ws.users||[]).map(publicUser) : [];
+  globalThis.SM_SCOPE_ACCOUNT = (me.permissions&&me.permissions.view_all) ? '' : me.id;
   document.body.dataset.role=me.role||'member';
   await loadAppScripts();
   by('accessScreen').hidden=true; by('appRoot').hidden=false;
