@@ -31,7 +31,9 @@ function mountInHeader(el,before){
 export async function startCloudSession(db,me){
   if(!['member','operator','admin'].includes(me.role))return async()=>{};
   const ref=doc(collection(db,'sessions'));
-  await setDoc(ref,{userId:me.id,startedAt:serverTimestamp(),updatedAt:serverTimestamp(),activeMs:0,closed:false});
+  let synced=true;
+  try{await setDoc(ref,{userId:me.id,startedAt:serverTimestamp(),updatedAt:serverTimestamp(),activeMs:0,closed:false});}
+  catch(error){synced=false;console.warn('No se pudo registrar la sesión en la nube; el contador seguirá funcionando en este equipo.',error);}
   const clock=createSessionClock();
   const el=document.createElement('span');
   el.className='session-timer';
@@ -56,6 +58,7 @@ export async function startCloudSession(db,me){
   for(const event of ['pointerdown','keydown','touchstart'])document.addEventListener(event,touch,{passive:true});
   function save(closed=false){
     const state=closed?clock.close():clock.snapshot();
+    if(!synced)return Promise.resolve();
     pending=pending.catch(()=>{}).then(()=>updateDoc(ref,{activeMs:Math.floor(state.activeMs),updatedAt:serverTimestamp(),closed}))
       .then(()=>{lastSaveOk=true;if(!stopped)paint();})
       .catch(error=>{lastSaveOk=false;if(!stopped)paint();throw error;});
