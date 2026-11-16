@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sierra Madre · Respaldo de migración</title>
+<style>body{margin:0;background:#17191b;color:#f5f3ed;font:17px system-ui;line-height:1.6}main{max-width:680px;margin:8vh auto;padding:32px}h1{color:#c7a64e}button{padding:16px 24px;background:#c7a64e;color:#111;border:0;border-radius:8px;font:inherit;cursor:pointer}a{color:#d9be74}#status{white-space:pre-wrap}small{color:#ccc}</style>
+<main><p>SIERRA MADRE · SEGURIDAD OPERATIVA</p><h1>Conserva tus registros</h1>
+<p>Abre esta página en el mismo navegador y dispositivo donde capturaste los formatos. Descarga el respaldo para verificar la migración.</p>
+<button id="download">Descargar respaldo</button><p id="status" role="status"></p>
+<small>El archivo contiene registros y evidencias. Consérvalo en un lugar privado. Las contraseñas y las sesiones de acceso se excluyen. La descarga conserva los datos originales.</small>
+<p><a href="/">Regresar al portal</a></p></main>
+<script>
+function clean(value){
+ if(Array.isArray(value))return value.map(clean);
+ if(value&&typeof value==='object')return Object.fromEntries(Object.entries(value).filter(([key])=>!/password|token|secret|credential/i.test(key)).map(([key,v])=>[key,clean(v)]));
+ return value;
+}
+async function createBackup(storage){
+ const sources={};
+ for(let i=0;i<storage.length;i++){
+  const key=storage.key(i);
+  if(!/^(sm-workspace-v1|centinela-v1|sm-session-history-v1)$/.test(key))continue;
+  const raw=storage.getItem(key);
+  try{sources[key]=clean(JSON.parse(raw));}catch{throw Error('No se pudo leer '+key+'. Los datos originales se conservaron.');}
+ }
+ if(!Object.keys(sources).length)throw Error('Este navegador no contiene registros. Abre esta página en el navegador donde usas el portal.');
+ const data=sources['sm-workspace-v1'];
+ if(data&&!Array.isArray(data.users))throw Error('El espacio local requiere revisión. No se modificó ningún dato.');
+ const serialized=JSON.stringify(data||sources);
+ const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(serialized));
+ const sha256=Array.from(new Uint8Array(digest)).map(b=>b.toString(16).padStart(2,'0')).join('');
+ return {format:data?'sierra-madre-local-workspace':'sierra-madre-legacy-backup',version:1,generatedAt:new Date().toISOString(),sha256,data:data||sources,additionalSources:Object.fromEntries(Object.entries(sources).filter(([key])=>key!=='sm-workspace-v1'))};
+}
+document.getElementById('download').onclick=async()=>{
+ const status=document.getElementById('status');
+ try{
+  const backup=await createBackup(localStorage);
+  const url=URL.createObjectURL(new Blob([JSON.stringify(backup,null,2)],{type:'application/json'}));
+  const a=document.createElement('a');a.href=url;a.download='Sierra-Madre-respaldo-migracion.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),3000);
+  status.textContent='Respaldo descargado. Tus registros originales siguen disponibles.\nSHA-256: '+backup.sha256;
+ }catch(error){status.textContent=error.message;}
+};
+</script></html>
