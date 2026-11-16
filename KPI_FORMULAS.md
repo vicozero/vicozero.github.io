@@ -17,6 +17,10 @@ Documentadas a partir de `progress-core.js` (función `matrix`) y `supervisor.js
 | unsafe | Actos / condiciones | 6 |
 | talk | Pláticas RIT | 5 |
 | epp | Inspección EPP | 5 |
+| veo | Verificación de Estándares | 5 |
+| observation | Observaciones preventivas | 6 |
+| incident | Incidentes y accidentes | 3 |
+| training | Capacitación | 4 |
 
 Las metas son configurables por persona en `plan.targets[id]`. Si no se define, se usa el target por defecto del grupo.
 
@@ -46,8 +50,8 @@ Para cada supervisor/persona con plan o reportes en el periodo:
 
 ## KPI 2 (Supervisor)
 
-- Grupos: los 6 grupos.
-- Meta total por defecto: 5 + 6 + 3 + 6 + 5 + 5 = **30 actividades/mes**.
+- Grupos: los 10 grupos (6 originales + 4 nuevos).
+- Meta total por defecto: 5 + 6 + 3 + 6 + 5 + 5 + 5 + 6 + 3 + 4 = **48 actividades/mes**.
 
 ## Acciones correctivas (por persona)
 
