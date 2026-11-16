@@ -1,4 +1,4 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Biblioteca NOM · Sierra Madre</title><link rel="icon" href="/assets/sierra-madre.png"><link rel="stylesheet" href="/supervisor.css"><link rel="stylesheet" href="/workspace.css"><link rel="stylesheet" href="/brand.css"><link rel="stylesheet" href="/phase3.css"><style>
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Biblioteca NOM · Sierra Madre</title><link rel="icon" href="/assets/sierra-madre.png"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#0b1f2a"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Seguridad SM"><link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png"><link rel="stylesheet" href="/supervisor.css"><link rel="stylesheet" href="/workspace.css"><link rel="stylesheet" href="/brand.css"><link rel="stylesheet" href="/phase3.css"><style>
 .nom-layout{display:grid;grid-template-columns:320px 1fr;gap:18px;min-height:70vh;}
 .nom-list{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-card,12px);padding:14px;overflow:auto;max-height:80vh;}
 .nom-search{width:100%;padding:8px 12px;border:1px solid var(--line);border-radius:999px;background:var(--surface-soft);color:var(--ink);font-size:12px;margin-bottom:10px;}
@@ -86,4 +86,4 @@
   searchEl.addEventListener('input', function(){ renderList(searchEl.value); });
   renderList('');
 })();
-</script></body></html>
+</script><script>if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('/sw.js').catch(()=>{});});}</script></body></html>
