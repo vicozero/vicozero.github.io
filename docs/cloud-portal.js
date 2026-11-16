@@ -77,6 +77,14 @@ export async function connectPortal(app,user,perms,database=null){
          const result=await Promise.all(notices.map(async n=>({...n,incoming:n.toAccountId===me.id,read:(await getDoc(doc(db,'noticeReads',n.toAccountId,'items',n.id))).exists()})));
          return response(result.sort((a,b)=>String(b.created||'').localeCompare(String(a.created||''))));
        }
+       if(method==='DELETE'&&id){
+         const snap=await getDoc(doc(db,'notices',id));
+         if(!snap.exists())return response({error:'Aviso no encontrado.'},404);
+         const n=snap.data();
+         if(!(isAdmin||me.permissions.view_all||n.fromAccountId===me.id||n.toAccountId===me.id))return response({error:'Sin permiso para eliminar este aviso.'},403);
+         await deleteDoc(doc(db,'notices',id));
+         return response({ok:true});
+       }
        if(!me.permissions.send_notices&&!isAdmin)return response({error:'No tienes permiso para enviar avisos.'},403);
        const targets=[...new Set(body.toAccountIds||[])];
        const attachmentRefs=[];

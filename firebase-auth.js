@@ -210,6 +210,18 @@ function installStore(currentUser, isFirebaseAdmin=false){
     if(readMatch && method==='POST'){
       data.reads=data.reads||{}; data.reads[me.id]=data.reads[me.id]||{}; data.reads[me.id][readMatch[1]]=true; writeWS(data); return json({ok:true});
     }
+    const delNotice=path.match(/^notices\/([^/]+)$/);
+    if(delNotice && method==='DELETE'){
+      const id=delNotice[1];
+      const idx=(data.notices||[]).findIndex(n=>n.id===id);
+      if(idx<0) return json({error:'Aviso no encontrado.'},404);
+      const n=data.notices[idx];
+      const can=(me.role==='admin'||(me.permissions&&me.permissions.view_all)||n.fromAccountId===me.id||n.toAccountId===me.id);
+      if(!can) return json({error:'Sin permiso para eliminar este aviso.'},403);
+      data.notices.splice(idx,1);
+      if(data.reads){for(const uid of Object.keys(data.reads)){if(data.reads[uid]) delete data.reads[uid][id];}}
+      writeWS(data); return json({ok:true});
+    }
     if(path==='assignable'){
       const col=u.searchParams.get('collection'); const list=(data[col]||[]);
       return json(list.map(r=>({id:r.id,label:r.folio||r.person||r.description||r.id,detail:r.supervisor||r.owner||r.period||'',accountId:r.assignedAccountId||r.ownerAccountId||me.id})));
