@@ -15,6 +15,9 @@ let localSessionUser=null; // for local (non-Firebase) user sessions
 // Theme
 const root=document.documentElement;
 root.dataset.theme=localStorage.getItem('sm-theme')||'light';
+const visualStyle=document.createElement('style');
+visualStyle.textContent=`.access-screen{position:relative;isolation:isolate}.access-screen::before{content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,#f4f3efed 0%,#f4f3efc9 46%,#f4f3efb5 100%),url('/assets/seguridad-acceso.png') center/cover no-repeat;border-radius:0 0 18px 18px}:root[data-theme=dark] .access-screen::before{background:linear-gradient(90deg,#161b1eed 0%,#161b1ec7 48%,#161b1ea3 100%),url('/assets/seguridad-acceso.png') center/cover no-repeat}.access-card{backdrop-filter:blur(9px)}:root[data-theme=dark] .hero{background-image:linear-gradient(90deg,#111a20eb 0%,#111a20b9 58%,#111a207a 100%),url('/assets/seguridad-panel.png');background-position:center right;background-size:cover}:root[data-theme=dark] .hero>*{position:relative;z-index:1}@media(max-width:1100px){.access-screen::before{opacity:.82}}`;
+document.head.appendChild(visualStyle);
 function refreshThemeButtons(){document.querySelectorAll('[data-theme-toggle]').forEach(b=>{const dark=root.dataset.theme==='dark';b.textContent=dark?'☀ Día':'☾ Noche';b.setAttribute('aria-label',dark?'Activar modo día':'Activar modo noche');b.setAttribute('aria-pressed',String(dark));});}
 document.addEventListener('click',e=>{if(!e.target.closest('[data-theme-toggle]'))return;root.dataset.theme=root.dataset.theme==='dark'?'light':'dark';localStorage.setItem('sm-theme',root.dataset.theme);refreshThemeButtons();});
 refreshThemeButtons();
@@ -29,6 +32,19 @@ const hash=s=>{let h=0;for(let i=0;i<s.length;i++)h=((h<<5)-h)+s.charCodeAt(i)|0
 function emptyWS(){return {reports:[],actions:[],plans:[],users:[],notices:[],reads:{}};}
 function readWS(){try{const d=JSON.parse(localStorage.getItem(WORKSPACE_KEY));if(d&&Array.isArray(d.users))return d;}catch{}return emptyWS();}
 function writeWS(d){try{localStorage.setItem(WORKSPACE_KEY,JSON.stringify(d));}catch{}}
+async function exportWorkspaceBackup(){
+  const workspace=readWS();
+  const clean={...workspace,users:(workspace.users||[]).map(({passwordHash,...user})=>user)};
+  const serialized=JSON.stringify(clean);
+  const bytes=new TextEncoder().encode(serialized);
+  const digest=await crypto.subtle.digest('SHA-256',bytes);
+  const sha256=Array.from(new Uint8Array(digest)).map(b=>b.toString(16).padStart(2,'0')).join('');
+  const backup={format:'sierra-madre-local-workspace',version:1,generatedAt:new Date().toISOString(),sha256,data:clean};
+  const url=URL.createObjectURL(new Blob([JSON.stringify(backup,null,2)],{type:'application/json'}));
+  const a=document.createElement('a');a.href=url;a.download='Sierra-Madre-respaldo-local-'+new Date().toISOString().slice(0,10)+'.json';a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),1500);
+  return {sha256,records:(clean.reports||[]).length+(clean.actions||[]).length+(clean.plans||[]).length,users:(clean.users||[]).length};
+}
 
 // --- Login screen ---
 function login(message=''){
@@ -252,14 +268,50 @@ function effectivePerms(u){ const base={...(DEFAULT_PERMS[u.role]||DEFAULT_PERMS
 function publicUser(u){ return {id:u.id,email:u.email,name:u.name,role:u.role,active:u.active!==false,unit:u.unit||'',isOwner:!!u.isOwner,revision:u.revision||0,permissions:effectivePerms(u),allowedUnits:Array.isArray(u.allowedUnits)?u.allowedUnits:(typeof u.allowedUnits==='string'&&u.allowedUnits?u.allowedUnits.split(',').map(s=>s.trim()).filter(Boolean):[]),restrictUnits:!!u.restrictUnits}; }
 
 async function loadAppScripts(){
-  const srcs=['assets/pdf-lib.min.js','formats.js','extended-formats.js','progress-core.js','supervisor.js','workspace-pdf.js','report-pdf.js','workspace.js','accounts-ui.js'];
-  for(const src of srcs){
-    await new Promise((ok,no)=>{const s=document.createElement('script');s.src=src;s.async=false;s.onload=ok;s.onerror=()=>no(new Error('No se pudo cargar '+src));document.body.append(s);});
+  const required=['assets/pdf-lib.min.js','formats.js','extended-formats.js','progress-core.js','supervisor.js','workspace-pdf.js','report-pdf.js','workspace.js','accounts-ui.js'];
+  const optional=['session-tracker.js'];
+  for(const src of [...required,...optional]){
+    await new Promise((ok,no)=>{const s=document.createElement('script');s.src=src;s.async=false;s.onload=ok;s.onerror=()=>optional.includes(src)?ok():no(new Error('No se pudo cargar '+src));document.body.append(s);});
   }
 }
 
 // --- Launch for Firebase admin ---
 async function launch(user){
+  if(started)return;started=true;
+  try{
+    const {connectPortal}=await import('./cloud-portal.js');
+    const cloud=await connectPortal(app,user,DEFAULT_PERMS);
+    globalThis.SM_CLOUD=cloud;
+    globalThis.AUTH={user:cloud.me};globalThis.ACCOUNT_USERS=cloud.users;globalThis.ACCOUNT_DIRECTORY=cloud.directory;
+    globalThis.SM_SCOPE_ACCOUNT=cloud.me.role==='admin'?'':cloud.me.id;
+    globalThis.smStorageKey=k=>k+'-'+user.uid;
+    document.body.dataset.role=cloud.me.role;
+    await loadAppScripts();
+    const {startCloudSession,installSessionReport}=await import('./cloud-sessions.js');
+    const closeSession=await startCloudSession(cloud.db,cloud.me);
+    installSessionReport(cloud.db,cloud.me);
+    by('accessScreen').hidden=true;by('appRoot').hidden=false;
+    if(cloud.me.role==='admin')mountProfile(user);
+    document.querySelector('.sign-out').onclick=async e=>{
+      e.preventDefault();
+      try{await closeSession();await signOut(auth);localStorage.removeItem('sm-local-session');location.reload();}
+      catch{toast('No se pudo cerrar y sincronizar la sesión. Recupera la conexión y vuelve a intentar.');}
+    };
+    toast('Conectado al almacenamiento central de Sierra Madre.');
+  }catch(error){
+    console.warn('Almacenamiento central no disponible; se usa el espacio local del navegador.',error);
+    started=false;
+    try{
+      await legacyLaunch(user);
+      toast('Sesión iniciada en el espacio local. El almacenamiento central no está disponible.');
+    }catch(fallbackError){
+      console.error('No se pudo abrir el espacio local.',fallbackError);
+      started=false;
+      login('No se pudo abrir tu espacio: '+(fallbackError.code||fallbackError.message));
+    }
+  }
+}
+async function legacyLaunch(user){
   if(started) return; started=true;
   // Ensure admin user exists in workspace
   const ws=readWS();
@@ -301,6 +353,7 @@ async function launchLocal(user){
   await loadAppScripts();
   by('accessScreen').hidden=true; by('appRoot').hidden=false;
   document.querySelector('.sign-out')?.addEventListener('click',e=>{e.preventDefault(); try{localStorage.removeItem('sm-local-session');}catch{} localSessionUser=null; started=false; login();});
+  try{globalThis.SM_SESSION_TRACKER?.start(me);}catch{toast('No se pudo guardar el tiempo de sesión. Verifica el almacenamiento del navegador.');}
   setTimeout(()=>toast('Sesión iniciada. Los datos se guardan en este navegador.'),600);
 }
 
@@ -312,15 +365,34 @@ function mountProfile(user){
   const btn=document.createElement('button'); btn.id='profileSettings'; btn.className='theme-button'; btn.type='button'; btn.textContent='Perfil';
   const signOutLink=tools.querySelector('.sign-out'); if(signOutLink) tools.insertBefore(btn,signOutLink); else tools.appendChild(btn);
   const dialog=document.createElement('dialog'); dialog.id='profileDialog';
-  dialog.innerHTML=`<form method="dialog" id="profileForm"><div class="dialog-top"><div><span class="eyebrow">ADMINISTRADOR</span><h2>Mi perfil y avisos</h2></div><button class="close" value="cancel" aria-label="Cerrar">×</button></div><div class="editor-scroll"><div class="fields"><label>Nombre<input name="name" required maxlength="100" value="${(user.displayName||'Admin').replace(/&/g,'&amp;').replace(/"/g,'&quot;')}"></label><label>Correo de acceso<input name="email" type="email" value="${user.email||''}" readonly></label><label>Teléfono / WhatsApp<input name="phone" type="tel" maxlength="30" value="${saved.phone||''}"></label><label>Nueva contraseña <small>(opcional)</small><input name="password" type="password" minlength="8" autocomplete="new-password"></label></div></div><div class="editor-footer"><button class="secondary" value="cancel" type="button" id="closeProfile">Cancelar</button><button class="primary" type="submit">Guardar perfil</button></div></form>`;
+  dialog.innerHTML=`<form method="dialog" id="profileForm"><div class="dialog-top"><div><span class="eyebrow">ADMINISTRADOR</span><h2>Mi perfil y avisos</h2></div><button class="close" value="cancel" aria-label="Cerrar">×</button></div><div class="editor-scroll"><div class="fields"><label>Nombre<input name="name" required maxlength="100" value="${(user.displayName||'Admin').replace(/&/g,'&amp;').replace(/"/g,'&quot;')}"></label><label>Correo de acceso<input name="email" type="email" value="${user.email||''}" readonly></label><label>Teléfono / WhatsApp<input name="phone" type="tel" maxlength="30" value="${saved.phone||''}"></label><label>Nueva contraseña <small>(opcional)</small><input name="password" type="password" minlength="8" autocomplete="new-password"></label></div><div class="report-note"><strong>Respaldo antes de migración</strong><p>Descarga una copia de formatos, acciones, evidencias, permisos, avisos e historiales almacenados en este navegador. Las contraseñas nunca se incluyen.</p><button class="secondary" type="button" id="exportWorkspace">Descargar respaldo local</button></div></div><div class="editor-footer"><button class="secondary" value="cancel" type="button" id="closeProfile">Cancelar</button><button class="primary" type="submit">Guardar perfil</button></div></form>`;
   document.body.appendChild(dialog);
   btn.onclick=()=>dialog.showModal();
   dialog.querySelector('#closeProfile').onclick=()=>dialog.close();
+  const connect=document.createElement('button');
+  connect.type='button';connect.className='secondary';connect.textContent='Verificar administración en Firebase';
+  dialog.querySelector('.report-note').appendChild(connect);
+  connect.onclick=async()=>{
+    connect.disabled=true;
+    try{
+      const {initializeAuthority}=await import('./firebase-cloud.js');
+      await initializeAuthority(app,user);
+      await exportWorkspaceBackup();
+      const {archiveWorkspace}=await import('./migration-archive.js');
+      const workspace=readWS();
+      workspace.users=(workspace.users||[]).map(({passwordHash,...profile})=>profile);
+      await archiveWorkspace(app,workspace);
+      toast('Respaldo central verificado. Se conservan los registros de este navegador.');
+    }catch(error){toast('No se pudo verificar Firebase: '+(error.code||error.message));}
+    finally{connect.disabled=false;}
+  };
+  dialog.querySelector('#exportWorkspace').onclick=async()=>{try{const result=await exportWorkspaceBackup();toast(`Respaldo descargado: ${result.records} registros y ${result.users} usuarios.`)}catch{toast('No se pudo crear el respaldo local. Verifica el espacio disponible e inténtalo de nuevo.')}};
   by('profileForm').addEventListener('submit',async event=>{
     event.preventDefault();
     const f=new FormData(event.currentTarget),name=String(f.get('name')).trim(),password=String(f.get('password'));
     try{
       if(name && name!==user.displayName) await updateProfile(user,{displayName:name});
+      if(globalThis.SM_CLOUD)await globalThis.SM_CLOUD.updateName(name);
       if(password) await updatePassword(user,password);
       localStorage.setItem('sm-profile-'+user.uid,JSON.stringify({phone:String(f.get('phone')).trim(),updatedAt:new Date().toISOString()}));
       if(globalThis.AUTH&&globalThis.AUTH.user) globalThis.AUTH.user.name=name;

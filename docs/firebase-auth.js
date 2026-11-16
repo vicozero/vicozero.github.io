@@ -268,14 +268,50 @@ function effectivePerms(u){ const base={...(DEFAULT_PERMS[u.role]||DEFAULT_PERMS
 function publicUser(u){ return {id:u.id,email:u.email,name:u.name,role:u.role,active:u.active!==false,unit:u.unit||'',isOwner:!!u.isOwner,revision:u.revision||0,permissions:effectivePerms(u),allowedUnits:Array.isArray(u.allowedUnits)?u.allowedUnits:(typeof u.allowedUnits==='string'&&u.allowedUnits?u.allowedUnits.split(',').map(s=>s.trim()).filter(Boolean):[]),restrictUnits:!!u.restrictUnits}; }
 
 async function loadAppScripts(){
-  const srcs=['session-tracker.js','assets/pdf-lib.min.js','formats.js','extended-formats.js','progress-core.js','supervisor.js','workspace-pdf.js','report-pdf.js','workspace.js','accounts-ui.js'];
-  for(const src of srcs){
-    await new Promise((ok,no)=>{const s=document.createElement('script');s.src=src;s.async=false;s.onload=ok;s.onerror=()=>no(new Error('No se pudo cargar '+src));document.body.append(s);});
+  const required=['assets/pdf-lib.min.js','formats.js','extended-formats.js','progress-core.js','supervisor.js','workspace-pdf.js','report-pdf.js','workspace.js','accounts-ui.js'];
+  const optional=['session-tracker.js'];
+  for(const src of [...required,...optional]){
+    await new Promise((ok,no)=>{const s=document.createElement('script');s.src=src;s.async=false;s.onload=ok;s.onerror=()=>optional.includes(src)?ok():no(new Error('No se pudo cargar '+src));document.body.append(s);});
   }
 }
 
 // --- Launch for Firebase admin ---
 async function launch(user){
+  if(started)return;started=true;
+  try{
+    const {connectPortal}=await import('./cloud-portal.js');
+    const cloud=await connectPortal(app,user,DEFAULT_PERMS);
+    globalThis.SM_CLOUD=cloud;
+    globalThis.AUTH={user:cloud.me};globalThis.ACCOUNT_USERS=cloud.users;globalThis.ACCOUNT_DIRECTORY=cloud.directory;
+    globalThis.SM_SCOPE_ACCOUNT=cloud.me.role==='admin'?'':cloud.me.id;
+    globalThis.smStorageKey=k=>k+'-'+user.uid;
+    document.body.dataset.role=cloud.me.role;
+    await loadAppScripts();
+    const {startCloudSession,installSessionReport}=await import('./cloud-sessions.js');
+    const closeSession=await startCloudSession(cloud.db,cloud.me);
+    installSessionReport(cloud.db,cloud.me);
+    by('accessScreen').hidden=true;by('appRoot').hidden=false;
+    if(cloud.me.role==='admin')mountProfile(user);
+    document.querySelector('.sign-out').onclick=async e=>{
+      e.preventDefault();
+      try{await closeSession();await signOut(auth);localStorage.removeItem('sm-local-session');location.reload();}
+      catch{toast('No se pudo cerrar y sincronizar la sesión. Recupera la conexión y vuelve a intentar.');}
+    };
+    toast('Conectado al almacenamiento central de Sierra Madre.');
+  }catch(error){
+    console.warn('Almacenamiento central no disponible; se usa el espacio local del navegador.',error);
+    started=false;
+    try{
+      await legacyLaunch(user);
+      toast('Sesión iniciada en el espacio local. El almacenamiento central no está disponible.');
+    }catch(fallbackError){
+      console.error('No se pudo abrir el espacio local.',fallbackError);
+      started=false;
+      login('No se pudo abrir tu espacio: '+(fallbackError.code||fallbackError.message));
+    }
+  }
+}
+async function legacyLaunch(user){
   if(started) return; started=true;
   // Ensure admin user exists in workspace
   const ws=readWS();
@@ -356,6 +392,7 @@ function mountProfile(user){
     const f=new FormData(event.currentTarget),name=String(f.get('name')).trim(),password=String(f.get('password'));
     try{
       if(name && name!==user.displayName) await updateProfile(user,{displayName:name});
+      if(globalThis.SM_CLOUD)await globalThis.SM_CLOUD.updateName(name);
       if(password) await updatePassword(user,password);
       localStorage.setItem('sm-profile-'+user.uid,JSON.stringify({phone:String(f.get('phone')).trim(),updatedAt:new Date().toISOString()}));
       if(globalThis.AUTH&&globalThis.AUTH.user) globalThis.AUTH.user.name=name;

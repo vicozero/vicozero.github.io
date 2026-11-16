@@ -79,7 +79,7 @@ function login(message=''){
       try{
         const ws=readWS();
         const user=(ws.users||[]).find(u=>(u.email||'').toLowerCase()===raw.toLowerCase() && u.active!==false);
-        if(false && user && user.passwordHash && user.passwordHash===hash(password)){
+        if(user && user.passwordHash && user.passwordHash===hash(password)){
           localSessionUser={...user};
           try{localStorage.setItem('sm-local-session',user.id);}catch{}
           await launchLocal(localSessionUser);
@@ -268,9 +268,10 @@ function effectivePerms(u){ const base={...(DEFAULT_PERMS[u.role]||DEFAULT_PERMS
 function publicUser(u){ return {id:u.id,email:u.email,name:u.name,role:u.role,active:u.active!==false,unit:u.unit||'',isOwner:!!u.isOwner,revision:u.revision||0,permissions:effectivePerms(u),allowedUnits:Array.isArray(u.allowedUnits)?u.allowedUnits:(typeof u.allowedUnits==='string'&&u.allowedUnits?u.allowedUnits.split(',').map(s=>s.trim()).filter(Boolean):[]),restrictUnits:!!u.restrictUnits}; }
 
 async function loadAppScripts(){
-  const srcs=['session-tracker.js','assets/pdf-lib.min.js','formats.js','extended-formats.js','progress-core.js','supervisor.js','workspace-pdf.js','report-pdf.js','workspace.js','accounts-ui.js'];
-  for(const src of srcs){
-    await new Promise((ok,no)=>{const s=document.createElement('script');s.src=src;s.async=false;s.onload=ok;s.onerror=()=>no(new Error('No se pudo cargar '+src));document.body.append(s);});
+  const required=['assets/pdf-lib.min.js','formats.js','extended-formats.js','progress-core.js','supervisor.js','workspace-pdf.js','report-pdf.js','workspace.js','accounts-ui.js'];
+  const optional=['session-tracker.js'];
+  for(const src of [...required,...optional]){
+    await new Promise((ok,no)=>{const s=document.createElement('script');s.src=src;s.async=false;s.onload=ok;s.onerror=()=>optional.includes(src)?ok():no(new Error('No se pudo cargar '+src));document.body.append(s);});
   }
 }
 
@@ -297,7 +298,18 @@ async function launch(user){
       catch{toast('No se pudo cerrar y sincronizar la sesión. Recupera la conexión y vuelve a intentar.');}
     };
     toast('Conectado al almacenamiento central de Sierra Madre.');
-  }catch(error){started=false;login('No se pudo abrir tu espacio: '+(error.code||error.message));}
+  }catch(error){
+    console.warn('Almacenamiento central no disponible; se usa el espacio local del navegador.',error);
+    started=false;
+    try{
+      await legacyLaunch(user);
+      toast('Sesión iniciada en el espacio local. El almacenamiento central no está disponible.');
+    }catch(fallbackError){
+      console.error('No se pudo abrir el espacio local.',fallbackError);
+      started=false;
+      login('No se pudo abrir tu espacio: '+(fallbackError.code||fallbackError.message));
+    }
+  }
 }
 async function legacyLaunch(user){
   if(started) return; started=true;
@@ -395,7 +407,7 @@ function mountProfile(user){
   // Restore local session if present
   try{
     const sid=localStorage.getItem('sm-local-session');
-    if(false && sid){
+    if(sid){
       const ws=readWS();
       const u=(ws.users||[]).find(x=>x.id===sid && x.active!==false);
       if(u){ localSessionUser=u; await launchLocal(u); return; }
