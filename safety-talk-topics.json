@@ -259,37 +259,48 @@
         15,
         30
       ],
-      "objective": "Conocer los riesgos asociados a selección y uso correcto del epp y las medidas preventivas aplicables.",
+      "objective": "Seleccionar y usar correctamente el EPP segun la actividad y los riesgos presentes.",
       "audience": [
-        "Trabajadores y supervisores"
+        "Todo el personal operativo"
       ],
       "department": "Seguridad",
       "risks": [
-        "Riesgos asociados a la actividad"
+        "Uso incorrecto de EPP",
+        "EPP deteriorado",
+        "Falta de EPP para la actividad"
       ],
-      "introduction": "La seguridad en selección y uso correcto del epp es fundamental para prevenir incidentes y proteger la vida.",
-      "development": "Se revisan los riesgos, medidas preventivas y procedimientos aplicables a selección y uso correcto del epp.",
+      "introduction": "El EPP es la ultima barrera de proteccion. Seleccionarlo y usarlo correctamente salva vidas.",
+      "development": "Se revisan los tipos de EPP (casco, lentes, auditivos, respiratorios, guantes, calzado), criterios de seleccion segun el riesgo, inspeccion antes de usar, conservacion y reposicion. Se practica la verificacion de EPP en campo.",
       "criticalPoints": [
-        "Uso correcto del EPP",
-        "Seguir procedimientos",
-        "Reportar condiciones inseguras"
+        "Seleccionar EPP segun el riesgo de la actividad",
+        "Inspeccionar antes de usar",
+        "No usar EPP danado o vencido",
+        "Reponer EPP deteriorado de inmediato"
       ],
       "practicalExamples": [
-        "Ejemplo practico de la actividad"
+        "Un trabajador que usa lentes sin proteccion lateral en soldadura",
+        "Un operador que usa casco sin barbiquejo en altura",
+        "Un empleado con guantes rotos manipulando quimicos"
       ],
       "reviewQuestions": [
-        "¿Cuales son los riesgos principales?",
-        "¿Que medidas preventivas aplicas?"
+        "¿Como seleccionas el EPP correcto?",
+        "¿Que haces si el EPP esta danado?",
+        "¿Es suficiente con tener EPP?"
       ],
       "recommendations": [
-        "Aplicar las medidas preventivas",
-        "Reportar riesgos",
-        "Usar EPP"
+        "Verifica tu EPP antes de cada turno",
+        "Reporta EPP danado o vencido",
+        "Usa EPP completo para la actividad",
+        "No compartas EPP personal"
       ],
-      "normativeReferences": [],
-      "internalProcedures": [],
+      "normativeReferences": [
+        "NOM-017-STPS-2024"
+      ],
+      "internalProcedures": [
+        "Procedimiento de seleccion y uso de EPP"
+      ],
       "materials": [
-        "Presentacion de la platica"
+        "Lista de EPP por actividad"
       ],
       "reviewedAt": null,
       "author": null,
@@ -308,37 +319,49 @@
         15,
         30
       ],
-      "objective": "Conocer los riesgos asociados a protección respiratoria y las medidas preventivas aplicables.",
+      "objective": "Conocer la proteccion respiratoria adecuada para cada tipo de contaminante.",
       "audience": [
-        "Trabajadores y supervisores"
+        "Personal expuesto a polvos y gases"
       ],
-      "department": "Seguridad",
+      "department": "Seguridad e Higiene",
       "risks": [
-        "Riesgos asociados a la actividad"
+        "Exposicion a polvo",
+        "Exposicion a gases toxicos",
+        "Uso incorrecto de respirador"
       ],
-      "introduction": "La seguridad en protección respiratoria es fundamental para prevenir incidentes y proteger la vida.",
-      "development": "Se revisan los riesgos, medidas preventivas y procedimientos aplicables a protección respiratoria.",
+      "introduction": "La proteccion respiratoria protege contra contaminantes invisibles. Elegir el respirador correcto es vital.",
+      "development": "Se revisan tipos de respiradores (filtrantes, suministro de aire), seleccion segun el contaminante, prueba de ajuste, mantenimiento y reemplazo de filtros/cartuchos.",
       "criticalPoints": [
-        "Uso correcto del EPP",
-        "Seguir procedimientos",
-        "Reportar condiciones inseguras"
+        "Seleccionar respirador segun el contaminante",
+        "Realizar prueba de ajuste",
+        "Reemplazar filtros segun vida util",
+        "No usar respirador con barba"
       ],
       "practicalExamples": [
-        "Ejemplo practico de la actividad"
+        "Un trabajador que usa respirador con filtro de particulas en ambiente con gases",
+        "Un operador que no sella correctamente la mascarilla",
+        "Un empleado que no cambia el cartucho a tiempo"
       ],
       "reviewQuestions": [
-        "¿Cuales son los riesgos principales?",
-        "¿Que medidas preventivas aplicas?"
+        "¿Que tipo de respirador necesitas para polvo?",
+        "¿Que es la prueba de ajuste?",
+        "¿Cuando debes cambiar el filtro?"
       ],
       "recommendations": [
-        "Aplicar las medidas preventivas",
-        "Reportar riesgos",
-        "Usar EPP"
+        "Identifica el contaminante antes de elegir",
+        "Realiza la prueba de ajuste",
+        "Cambia filtros segun vida util",
+        "Reporta incomodidad o fuga"
       ],
-      "normativeReferences": [],
-      "internalProcedures": [],
+      "normativeReferences": [
+        "NOM-015-STPS-2001",
+        "NOM-034-STPS-2016"
+      ],
+      "internalProcedures": [
+        "Procedimiento de proteccion respiratoria"
+      ],
       "materials": [
-        "Presentacion de la platica"
+        "Tabla de seleccion de respiradores"
       ],
       "reviewedAt": null,
       "author": null,
@@ -357,37 +380,49 @@
         15,
         30
       ],
-      "objective": "Conocer los riesgos asociados a protección auditiva y visual y las medidas preventivas aplicables.",
+      "objective": "Proteger la audicion y la vision en actividades con ruido y proyeccion de particulas.",
       "audience": [
-        "Trabajadores y supervisores"
+        "Todo el personal operativo"
       ],
-      "department": "Seguridad",
+      "department": "Seguridad e Higiene",
       "risks": [
-        "Riesgos asociados a la actividad"
+        "Perdida auditiva",
+        "Lesion ocular",
+        "Exposicion a ruido y particulas"
       ],
-      "introduction": "La seguridad en protección auditiva y visual es fundamental para prevenir incidentes y proteger la vida.",
-      "development": "Se revisan los riesgos, medidas preventivas y procedimientos aplicables a protección auditiva y visual.",
+      "introduction": "El ruido y las particulas pueden causar daño permanente. La proteccion auditiva y visual es esencial.",
+      "development": "Se revisan los tipos de proteccion auditiva (tapones, sordinas) y visual (lentes, caretas, gafas). Se practica la inspeccion y uso correcto.",
       "criticalPoints": [
-        "Uso correcto del EPP",
-        "Seguir procedimientos",
-        "Reportar condiciones inseguras"
+        "Usar proteccion auditiva en zonas de ruido",
+        "Usar lentes de seguridad en todo momento",
+        "No usar lentes rayados o danados",
+        "Reportar incomodidad"
       ],
       "practicalExamples": [
-        "Ejemplo practico de la actividad"
+        "Un trabajador sin proteccion auditiva en zona de perforacion",
+        "Un operador sin lentes en area de soldadura",
+        "Un empleado con lentes rayados que no ve bien"
       ],
       "reviewQuestions": [
-        "¿Cuales son los riesgos principales?",
-        "¿Que medidas preventivas aplicas?"
+        "¿Cuando debes usar proteccion auditiva?",
+        "¿Que tipo de lentes necesitas para soldadura?",
+        "¿Que haces si tus lentes estan rayados?"
       ],
       "recommendations": [
-        "Aplicar las medidas preventivas",
-        "Reportar riesgos",
-        "Usar EPP"
+        "Usa proteccion auditiva en zonas ruidosas",
+        "Usa lentes de seguridad siempre",
+        "Reporta EPP danado",
+        "Manten tus lentes limpios"
       ],
-      "normativeReferences": [],
-      "internalProcedures": [],
+      "normativeReferences": [
+        "NOM-011-STPS-2001",
+        "NOM-017-STPS-2024"
+      ],
+      "internalProcedures": [
+        "Procedimiento de proteccion auditiva y visual"
+      ],
       "materials": [
-        "Presentacion de la platica"
+        "Lista de EPP por actividad"
       ],
       "reviewedAt": null,
       "author": null,
@@ -406,37 +441,48 @@
         15,
         30
       ],
-      "objective": "Conocer los riesgos asociados a inspección, conservación y reposición del epp y las medidas preventivas aplicables.",
+      "objective": "Inspeccionar, conservar y reponer el EPP para garantizar su efectividad.",
       "audience": [
-        "Trabajadores y supervisores"
+        "Todo el personal"
       ],
       "department": "Seguridad",
       "risks": [
-        "Riesgos asociados a la actividad"
+        "EPP deteriorado",
+        "Falta de inspeccion",
+        "Uso de EPP vencido"
       ],
-      "introduction": "La seguridad en inspección, conservación y reposición del epp es fundamental para prevenir incidentes y proteger la vida.",
-      "development": "Se revisan los riesgos, medidas preventivas y procedimientos aplicables a inspección, conservación y reposición del epp.",
+      "introduction": "El EPP debe inspeccionarse regularmente. Un EPP danado no protege.",
+      "development": "Se revisan los criterios de inspeccion por tipo de EPP, conservacion (limpieza, almacenamiento), vida util y reposicion. Se practica la inspeccion en campo.",
       "criticalPoints": [
-        "Uso correcto del EPP",
-        "Seguir procedimientos",
-        "Reportar condiciones inseguras"
+        "Inspeccionar EPP antes de cada uso",
+        "Conservar en lugar limpio y seco",
+        "Reponer EPP vencido o danado",
+        "No reparar EPP danado"
       ],
       "practicalExamples": [
-        "Ejemplo practico de la actividad"
+        "Un casco con grietas que se sigue usando",
+        "Un respirador con filtro vencido",
+        "Unos guantes con perforaciones"
       ],
       "reviewQuestions": [
-        "¿Cuales son los riesgos principales?",
-        "¿Que medidas preventivas aplicas?"
+        "¿Con que frecuencia inspeccionas tu EPP?",
+        "¿Donde conservas tu EPP?",
+        "¿Que haces si tu EPP esta vencido?"
       ],
       "recommendations": [
-        "Aplicar las medidas preventivas",
-        "Reportar riesgos",
-        "Usar EPP"
+        "Inspecciona tu EPP diariamente",
+        "Conserva en lugar adecuado",
+        "Reporta EPP danado",
+        "Reponer EPP vencido de inmediato"
       ],
-      "normativeReferences": [],
-      "internalProcedures": [],
+      "normativeReferences": [
+        "NOM-017-STPS-2024"
+      ],
+      "internalProcedures": [
+        "Procedimiento de inspeccion de EPP"
+      ],
       "materials": [
-        "Presentacion de la platica"
+        "Checklist de inspeccion de EPP"
       ],
       "reviewedAt": null,
       "author": null,
@@ -455,37 +501,49 @@
         15,
         30
       ],
-      "objective": "Conocer los riesgos asociados a riesgos generales de trabajos subterráneos y las medidas preventivas aplicables.",
+      "objective": "Conocer los riesgos generales de los trabajos subterraneos y las medidas preventivas.",
       "audience": [
-        "Trabajadores y supervisores"
+        "Personal de mina subterranea"
       ],
       "department": "Seguridad",
       "risks": [
-        "Riesgos asociados a la actividad"
+        "Caída de roca",
+        "Atmósferas peligrosas",
+        "Inundacion",
+        "Atropellamiento"
       ],
-      "introduction": "La seguridad en riesgos generales de trabajos subterráneos es fundamental para prevenir incidentes y proteger la vida.",
-      "development": "Se revisan los riesgos, medidas preventivas y procedimientos aplicables a riesgos generales de trabajos subterráneos.",
+      "introduction": "La mina subterranea presenta riesgos unicos que requieren conocimiento y preparacion.",
+      "development": "Se revisan los riesgos generales: caida de roca, atmósferas deficientes, inundacion, atropellamiento por maquinaria, incendio. Se enfatiza la observacion de normas y procedimientos.",
       "criticalPoints": [
-        "Uso correcto del EPP",
-        "Seguir procedimientos",
-        "Reportar condiciones inseguras"
+        "No ingresar a zonas no autorizadas",
+        "Verificar ventilacion antes de entrar",
+        "Reportar condiciones inseguras",
+        "Usar EPP completo"
       ],
       "practicalExamples": [
-        "Ejemplo practico de la actividad"
+        "Un trabajador que entra a un area sin ventilacion",
+        "Un operador que ignora barricados",
+        "Un empleado que no reporta una fuga de agua"
       ],
       "reviewQuestions": [
-        "¿Cuales son los riesgos principales?",
-        "¿Que medidas preventivas aplicas?"
+        "¿Cuales son los riesgos principales en mina subterránea?",
+        "¿Que verificas antes de ingresar a un area?",
+        "¿Que haces si detectas una condicion insegura?"
       ],
       "recommendations": [
-        "Aplicar las medidas preventivas",
-        "Reportar riesgos",
-        "Usar EPP"
+        "Conoce los riesgos de tu area",
+        "Verifica condiciones antes de ingresar",
+        "Reporta cualquier anomalia",
+        "Usa tu EPP completo"
       ],
-      "normativeReferences": [],
-      "internalProcedures": [],
+      "normativeReferences": [
+        "NOM-023-STPS-2012"
+      ],
+      "internalProcedures": [
+        "Procedimiento de trabajo en mina subterránea"
+      ],
       "materials": [
-        "Presentacion de la platica"
+        "Mapa de riesgos de la mina"
       ],
       "reviewedAt": null,
       "author": null,
@@ -504,37 +562,48 @@
         15,
         30
       ],
-      "objective": "Conocer los riesgos asociados a caída de roca y control del terreno y las medidas preventivas aplicables.",
+      "objective": "Prevenir la caida de roca y controlar el terreno en la mina subterránea.",
       "audience": [
-        "Trabajadores y supervisores"
+        "Personal de mina subterranea"
       ],
       "department": "Seguridad",
       "risks": [
-        "Riesgos asociados a la actividad"
+        "Caída de roca",
+        "Desprendimiento de material",
+        "Lesiones por impacto"
       ],
-      "introduction": "La seguridad en caída de roca y control del terreno es fundamental para prevenir incidentes y proteger la vida.",
-      "development": "Se revisan los riesgos, medidas preventivas y procedimientos aplicables a caída de roca y control del terreno.",
+      "introduction": "La caida de roca es uno de los riesgos mas graves en mina subterránea. El control del terreno es esencial.",
+      "development": "Se revisan las causas de caida de roca, medidas de control (fortificacion, sostenimiento, inspeccion visual), senales de alerta y procedimientos de evacuacion.",
       "criticalPoints": [
-        "Uso correcto del EPP",
-        "Seguir procedimientos",
-        "Reportar condiciones inseguras"
+        "Inspeccionar el terreno antes de trabajar",
+        "No ingresar a zonas con desprendimientos",
+        "Reportar caida de roca de inmediato",
+        "Usar casco con barbiquejo"
       ],
       "practicalExamples": [
-        "Ejemplo practico de la actividad"
+        "Un trabajador que ignora grietas en el techo",
+        "Un operador que trabaja bajo roca suelta",
+        "Un empleado que no reporta desprendimiento"
       ],
       "reviewQuestions": [
-        "¿Cuales son los riesgos principales?",
-        "¿Que medidas preventivas aplicas?"
+        "¿Que senales indican riesgo de caida de roca?",
+        "¿Que debes hacer si detectas desprendimiento?",
+        "¿Es obligatorio el barbiquejo?"
       ],
       "recommendations": [
-        "Aplicar las medidas preventivas",
-        "Reportar riesgos",
-        "Usar EPP"
+        "Inspecciona el terreno antes de trabajar",
+        "Reporta desprendimientos de inmediato",
+        "No trabajes bajo roca suelta",
+        "Usa casco con barbiquejo"
       ],
-      "normativeReferences": [],
-      "internalProcedures": [],
+      "normativeReferences": [
+        "NOM-023-STPS-2012"
+      ],
+      "internalProcedures": [
+        "Procedimiento de control de terreno"
+      ],
       "materials": [
-        "Presentacion de la platica"
+        "Checklist de inspeccion de terreno"
       ],
       "reviewedAt": null,
       "author": null,
@@ -629,7 +698,9 @@
         "Reportar riesgos",
         "Usar EPP"
       ],
-      "normativeReferences": [],
+      "normativeReferences": [
+        "NOM-023-STPS-2012"
+      ],
       "internalProcedures": [],
       "materials": [
         "Presentacion de la platica"
@@ -727,7 +798,9 @@
         "Reportar riesgos",
         "Usar EPP"
       ],
-      "normativeReferences": [],
+      "normativeReferences": [
+        "NOM-004-STPS-1999"
+      ],
       "internalProcedures": [],
       "materials": [
         "Presentacion de la platica"
@@ -776,7 +849,9 @@
         "Reportar riesgos",
         "Usar EPP"
       ],
-      "normativeReferences": [],
+      "normativeReferences": [
+        "NOM-004-STPS-1999"
+      ],
       "internalProcedures": [],
       "materials": [
         "Presentacion de la platica"
@@ -825,7 +900,9 @@
         "Reportar riesgos",
         "Usar EPP"
       ],
-      "normativeReferences": [],
+      "normativeReferences": [
+        "NOM-019-STPS-2011"
+      ],
       "internalProcedures": [],
       "materials": [
         "Presentacion de la platica"
@@ -1021,7 +1098,9 @@
         "Reportar riesgos",
         "Usar EPP"
       ],
-      "normativeReferences": [],
+      "normativeReferences": [
+        "NOM-027-STPS-2008"
+      ],
       "internalProcedures": [],
       "materials": [
         "Presentacion de la platica"
@@ -1119,7 +1198,9 @@
         "Reportar riesgos",
         "Usar EPP"
       ],
-      "normativeReferences": [],
+      "normativeReferences": [
+        "NOM-009-STPS-2011"
+      ],
       "internalProcedures": [],
       "materials": [
         "Presentacion de la platica"
@@ -1168,7 +1249,9 @@
         "Reportar riesgos",
         "Usar EPP"
       ],
-      "normativeReferences": [],
+      "normativeReferences": [
+        "NOM-033-STPS-2015"
+      ],
       "internalProcedures": [],
       "materials": [
         "Presentacion de la platica"
@@ -1217,7 +1300,9 @@
         "Reportar riesgos",
         "Usar EPP"
       ],
-      "normativeReferences": [],
+      "normativeReferences": [
+        "NOM-004-STPS-1999"
+      ],
       "internalProcedures": [],
       "materials": [
         "Presentacion de la platica"
@@ -1266,7 +1351,9 @@
         "Reportar riesgos",
         "Usar EPP"
       ],
-      "normativeReferences": [],
+      "normativeReferences": [
+        "NOM-029-STPS-2011"
+      ],
       "internalProcedures": [],
       "materials": [
         "Presentacion de la platica"
@@ -1364,7 +1451,9 @@
         "Reportar riesgos",
         "Usar EPP"
       ],
-      "normativeReferences": [],
+      "normativeReferences": [
+        "NOM-023-STPS-2012"
+      ],
       "internalProcedures": [],
       "materials": [
         "Presentacion de la platica"
@@ -1413,7 +1502,9 @@
         "Reportar riesgos",
         "Usar EPP"
       ],
-      "normativeReferences": [],
+      "normativeReferences": [
+        "NOM-023-STPS-2012"
+      ],
       "internalProcedures": [],
       "materials": [
         "Presentacion de la platica"
@@ -1560,7 +1651,9 @@
         "Reportar riesgos",
         "Usar EPP"
       ],
-      "normativeReferences": [],
+      "normativeReferences": [
+        "NOM-011-STPS-2001"
+      ],
       "internalProcedures": [],
       "materials": [
         "Presentacion de la platica"
@@ -1609,7 +1702,10 @@
         "Reportar riesgos",
         "Usar EPP"
       ],
-      "normativeReferences": [],
+      "normativeReferences": [
+        "NOM-010-STPS-2014",
+        "NOM-034-STPS-2016"
+      ],
       "internalProcedures": [],
       "materials": [
         "Presentacion de la platica"
@@ -1658,7 +1754,10 @@
         "Reportar riesgos",
         "Usar EPP"
       ],
-      "normativeReferences": [],
+      "normativeReferences": [
+        "NOM-016-STPS-2001",
+        "NOM-036-STPS-2018"
+      ],
       "internalProcedures": [],
       "materials": [
         "Presentacion de la platica"
@@ -1707,7 +1806,9 @@
         "Reportar riesgos",
         "Usar EPP"
       ],
-      "normativeReferences": [],
+      "normativeReferences": [
+        "NOM-015-STPS-2001"
+      ],
       "internalProcedures": [],
       "materials": [
         "Presentacion de la platica"
@@ -1756,7 +1857,9 @@
         "Reportar riesgos",
         "Usar EPP"
       ],
-      "normativeReferences": [],
+      "normativeReferences": [
+        "NOM-002-STPS-2010"
+      ],
       "internalProcedures": [],
       "materials": [
         "Presentacion de la platica"
@@ -2001,7 +2104,9 @@
         "Reportar riesgos",
         "Usar EPP"
       ],
-      "normativeReferences": [],
+      "normativeReferences": [
+        "NOM-030-STPS-2009"
+      ],
       "internalProcedures": [],
       "materials": [
         "Presentacion de la platica"
@@ -2050,7 +2155,9 @@
         "Reportar riesgos",
         "Usar EPP"
       ],
-      "normativeReferences": [],
+      "normativeReferences": [
+        "NOM-023-STPS-2012"
+      ],
       "internalProcedures": [],
       "materials": [
         "Presentacion de la platica"
@@ -2099,7 +2206,9 @@
         "Reportar riesgos",
         "Usar EPP"
       ],
-      "normativeReferences": [],
+      "normativeReferences": [
+        "NOM-019-STPS-2011"
+      ],
       "internalProcedures": [],
       "materials": [
         "Presentacion de la platica"
@@ -2197,7 +2306,10 @@
         "Reportar riesgos",
         "Usar EPP"
       ],
-      "normativeReferences": [],
+      "normativeReferences": [
+        "NOM-004-STPS-1999",
+        "NOM-023-STPS-2012"
+      ],
       "internalProcedures": [],
       "materials": [
         "Presentacion de la platica"
@@ -2246,7 +2358,10 @@
         "Reportar riesgos",
         "Usar EPP"
       ],
-      "normativeReferences": [],
+      "normativeReferences": [
+        "NOM-004-STPS-1999",
+        "NOM-023-STPS-2012"
+      ],
       "internalProcedures": [],
       "materials": [
         "Presentacion de la platica"
@@ -2295,7 +2410,10 @@
         "Reportar riesgos",
         "Usar EPP"
       ],
-      "normativeReferences": [],
+      "normativeReferences": [
+        "NOM-004-STPS-1999",
+        "NOM-023-STPS-2012"
+      ],
       "internalProcedures": [],
       "materials": [
         "Presentacion de la platica"
@@ -2344,7 +2462,11 @@
         "Reportar riesgos",
         "Usar EPP"
       ],
-      "normativeReferences": [],
+      "normativeReferences": [
+        "NOM-004-STPS-1999",
+        "NOM-007-STPS-2008",
+        "NOM-029-STPS-2011"
+      ],
       "internalProcedures": [],
       "materials": [
         "Presentacion de la platica"
@@ -2393,7 +2515,9 @@
         "Reportar riesgos",
         "Usar EPP"
       ],
-      "normativeReferences": [],
+      "normativeReferences": [
+        "NOM-023-STPS-2012"
+      ],
       "internalProcedures": [],
       "materials": [
         "Presentacion de la platica"
@@ -2491,7 +2615,9 @@
         "Reportar riesgos",
         "Usar EPP"
       ],
-      "normativeReferences": [],
+      "normativeReferences": [
+        "NOM-018-STPS-2015"
+      ],
       "internalProcedures": [],
       "materials": [
         "Presentacion de la platica"
