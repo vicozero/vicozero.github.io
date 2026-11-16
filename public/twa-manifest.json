@@ -1,0 +1,39 @@
+{
+  "packageId": "io.github.vicozero.seguridad.twa",
+  "host": "vicozero.github.io",
+  "name": "Sierra Madre · Seguridad Operativa",
+  "launcherName": "Seguridad SM",
+  "display": "standalone",
+  "themeColor": "#0B1F2A",
+  "navigationColor": "#0B1F2A",
+  "navigationColorDark": "#0B1F2A",
+  "navigationDividerColor": "#0B1F2A",
+  "navigationDividerColorDark": "#0B1F2A",
+  "backgroundColor": "#0B1F2A",
+  "enableNotifications": false,
+  "startUrl": "/",
+  "iconUrl": "https://vicozero.github.io/assets/icons/icon-512.png",
+  "maskableIconUrl": "https://vicozero.github.io/assets/icons/icon-maskable-512.png",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "./android.keystore",
+    "alias": "seguridad-sm"
+  },
+  "appVersionName": "1.0.0",
+  "appVersionCode": 1,
+  "shortcuts": [],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://vicozero.github.io/manifest.webmanifest",
+  "fallbackType": "customtabs",
+  "features": {},
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "orientation": "portrait-primary",
+  "fingerprints": [],
+  "additionalTrustedOrigins": [],
+  "retainedBundles": [],
+  "appVersion": "1"
+}

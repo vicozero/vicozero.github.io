@@ -9,7 +9,7 @@ const targets = ['docs', 'public'];
 const tracked = [...new Set([...execSync('git ls-files docs/', { cwd: root, encoding: 'utf8' })
   .split(/\r?\n/)
   .filter(Boolean)
-  .map(p => p.replace(/^docs\//, '')), 'normative-library.js', 'regulatory-core.js', 'training-core.js', 'normative-catalog.json', 'safety-talk-topics.json', 'safety-suite-store.js', 'training-suite.js', 'manifest.webmanifest', 'sw.js', 'assets/icons/icon-192.png', 'assets/icons/icon-512.png', 'assets/icons/icon-maskable-512.png', 'assets/icons/apple-touch-icon.png', 'assets/icons/icon-32.png'])];
+  .map(p => p.replace(/^docs\//, '')), 'normative-library.js', 'regulatory-core.js', 'training-core.js', 'normative-catalog.json', 'safety-talk-topics.json', 'safety-suite-store.js', 'training-suite.js', 'manifest.webmanifest', 'sw.js', 'assets/icons/icon-192.png', 'assets/icons/icon-512.png', 'assets/icons/icon-maskable-512.png', 'assets/icons/apple-touch-icon.png', 'assets/icons/icon-32.png', '.well-known/assetlinks.json', 'twa-manifest.json', 'APK_TWA_README.md'])];
 
 let copied = 0;
 for (const rel of tracked) {
