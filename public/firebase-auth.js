@@ -161,6 +161,8 @@ function installStore(currentUser, isFirebaseAdmin=false){
         revision: (existing?.revision||0)+1,
         passwordHash: body.password ? hash(body.password) : (existing?.passwordHash||''),
         permissions: body.permissions && typeof body.permissions==='object' ? body.permissions : (existing?.permissions || null),
+        allowedUnits: Array.isArray(body.allowedUnits) ? body.allowedUnits.filter(Boolean) : (existing?.allowedUnits || []),
+        restrictUnits: typeof body.restrictUnits === 'boolean' ? body.restrictUnits : !!existing?.restrictUnits,
         created: existing?.created || new Date().toISOString(),
         updated: new Date().toISOString()
       };
@@ -209,7 +211,8 @@ function installStore(currentUser, isFirebaseAdmin=false){
     if(['reports','actions','plans'].includes(collection)){
       data[collection]=data[collection]||[]; const list=data[collection];
       // Read permission: admin sees all; others see own/assigned
-      const canReadRec=(r)=>(me.role==='admin' || (me.permissions&&me.permissions.view_all)) || (collection==='plans' ? r.assignedAccountId===me.id : collection==='actions' ? (r.assignedAccountId===me.id||r.ownerAccountId===me.id) : r.ownerAccountId===me.id);
+      const unitAllowed=(r)=>{ if(!(me.restrictUnits) || !(Array.isArray(me.allowedUnits)&&me.allowedUnits.length)) return true; const ru=(r.unit||r.area||r.unidad||'').toString().toLowerCase().trim(); if(!ru) return me.role==='admin'; return me.allowedUnits.some(u=>u.toString().toLowerCase().trim()===ru); };
+      const canReadRec=(r)=>{ if(!unitAllowed(r)) return false; return (me.role==='admin' || (me.permissions&&me.permissions.view_all)) || (collection==='plans' ? r.assignedAccountId===me.id : collection==='actions' ? (r.assignedAccountId===me.id||r.ownerAccountId===me.id) : r.ownerAccountId===me.id); };
       if(method==='GET'){
         if(id){ const rec=list.find(x=>x.id===id); return rec && canReadRec(rec) ? json(rec) : json(null); }
         return json(me.role==='admin' ? list : list.filter(canReadRec));
@@ -218,13 +221,22 @@ function installStore(currentUser, isFirebaseAdmin=false){
         const recId=body.id||id||crypto.randomUUID();
         const prev=list.find(x=>x.id===recId);
         const rec={...body,id:recId,revision:((prev&&prev.revision)||0)+1,updated:new Date().toISOString()};
+        // unit restriction enforcement
+        if(me.restrictUnits && Array.isArray(me.allowedUnits) && me.allowedUnits.length && me.role!=='admin' && !(me.permissions&&me.permissions.view_all)){
+          const ru=(rec.unit||rec.area||rec.unidad||'').toString().toLowerCase().trim();
+          if(ru && !me.allowedUnits.some(u=>u.toString().toLowerCase().trim()===ru)) return json({error:'No tienes permiso para esta unidad/área.'},403);
+        }
+        // edit permission checks
+        if(collection==='reports' && !(me.permissions&&me.permissions.edit_reports) && me.role!=='admin') return json({error:'No tienes permiso para editar formatos.'},403);
+        if(collection==='actions' && !(me.permissions&&me.permissions.edit_actions) && me.role!=='admin') return json({error:'No tienes permiso para editar acciones.'},403);
+        if(collection==='plans' && !(me.permissions&&(me.permissions.edit_program||me.permissions.manage_team)) && me.role!=='admin') return json({error:'No tienes permiso para editar programas.'},403);
         if(!rec.ownerAccountId) rec.ownerAccountId = prev?.ownerAccountId || me.id;
         if(collection==='actions' && !rec.assignedAccountId) rec.assignedAccountId = prev?.assignedAccountId || me.id;
         if(collection==='plans' && !rec.assignedAccountId) rec.assignedAccountId = prev?.assignedAccountId || me.id;
         const idx=list.findIndex(x=>x.id===rec.id); if(idx<0) list.unshift(rec); else list[idx]=rec;
         writeWS(data); return json(rec);
       }
-      if(method==='DELETE'){ data[collection]=list.filter(x=>x.id!==id); writeWS(data); return json({ok:true}); }
+      if(method==='DELETE'){ if(collection==='reports' && !(me.permissions&&me.permissions.edit_reports) && me.role!=='admin') return json({error:'Sin permiso.'},403); if(collection==='actions' && !(me.permissions&&me.permissions.edit_actions) && me.role!=='admin') return json({error:'Sin permiso.'},403); if(collection==='plans' && !(me.permissions&&(me.permissions.edit_program||me.permissions.manage_team)) && me.role!=='admin') return json({error:'Sin permiso.'},403); data[collection]=list.filter(x=>x.id!==id); writeWS(data); return json({ok:true}); }
     }
     return json({error:'No disponible'},404);
   };
@@ -236,7 +248,7 @@ const DEFAULT_PERMS={
   member:{dashboard:true,reports:true,edit_reports:true,program:true,edit_program:false,actions:true,edit_actions:true,progress:true,team:false,manage_team:false,notices:true,send_notices:false,users:false,view_all:false,assign:false}
 };
 function effectivePerms(u){ const base={...(DEFAULT_PERMS[u.role]||DEFAULT_PERMS.member)}; if(u.permissions&&typeof u.permissions==='object'){ for(const k in base){ if(k in u.permissions) base[k]=!!u.permissions[k]; } for(const k in u.permissions){ if(!(k in base)) base[k]=!!u.permissions[k]; } } return base; }
-function publicUser(u){ return {id:u.id,email:u.email,name:u.name,role:u.role,active:u.active!==false,unit:u.unit||'',isOwner:!!u.isOwner,revision:u.revision||0,permissions:effectivePerms(u)}; }
+function publicUser(u){ return {id:u.id,email:u.email,name:u.name,role:u.role,active:u.active!==false,unit:u.unit||'',isOwner:!!u.isOwner,revision:u.revision||0,permissions:effectivePerms(u),allowedUnits:Array.isArray(u.allowedUnits)?u.allowedUnits:(typeof u.allowedUnits==='string'&&u.allowedUnits?u.allowedUnits.split(',').map(s=>s.trim()).filter(Boolean):[]),restrictUnits:!!u.restrictUnits}; }
 
 async function loadAppScripts(){
   const srcs=['assets/pdf-lib.min.js','formats.js','extended-formats.js','progress-core.js','supervisor.js','workspace-pdf.js','report-pdf.js','workspace.js','accounts-ui.js'];
