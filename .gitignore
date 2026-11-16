@@ -2,3 +2,5 @@ output/
 node_modules/
 *.log
 .qa/
+.firebase/
+firebase-migration-config.json

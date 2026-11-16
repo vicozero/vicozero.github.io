@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {createSessionClock} from './session-clock.mjs';
+let time=0;
+const clock=createSessionClock({now:()=>time,idleMs:300000});
+time=60000;assert.equal(clock.snapshot().activeMs,60000);
+time=600000;assert.equal(clock.snapshot().activeMs,300000);
+clock.activity();time=660000;assert.equal(clock.snapshot().activeMs,360000);
+assert.equal(clock.close().closed,true);
+time=900000;assert.equal(clock.snapshot().activeMs,360000);
+console.log('Sesiones: actividad, pausa por inactividad, reanudación y cierre: OK');

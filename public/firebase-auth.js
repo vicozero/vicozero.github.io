@@ -292,6 +292,17 @@ async function launch(user){
     installSessionReport(cloud.db,cloud.me);
     by('accessScreen').hidden=true;by('appRoot').hidden=false;
     if(cloud.me.role==='admin')mountProfile(user);
+    if(localStorage.getItem('sm-cloud-import-pending-'+user.uid)==='1'){
+      localStorage.removeItem('sm-cloud-import-pending-'+user.uid);
+      setTimeout(async()=>{
+        try{
+          const summary=await importLocalWorkspace(cloud.me);
+          const missing=summary.notImported.length?` Recrea ${summary.notImported.length} usuarios locales en Usuarios y permisos.`:'';
+          toast(`Datos locales importados: ${summary.reports} formatos, ${summary.actions} acciones, ${summary.plans} programas, ${summary.notices} avisos.${missing}`);
+          setTimeout(()=>location.reload(),4000);
+        }catch(error){toast('No se pudieron importar todos los datos locales: '+error.message);}
+      },1800);
+    }
     document.querySelector('.sign-out').onclick=async e=>{
       e.preventDefault();
       try{await closeSession();await signOut(auth);localStorage.removeItem('sm-local-session');location.reload();}
@@ -301,14 +312,20 @@ async function launch(user){
   }catch(error){
     console.warn('Almacenamiento central no disponible; se usa el espacio local del navegador.',error);
     started=false;
-    try{
-      await legacyLaunch(user);
-      toast('Sesión iniciada en el espacio local. El almacenamiento central no está disponible.');
-    }catch(fallbackError){
-      console.error('No se pudo abrir el espacio local.',fallbackError);
-      started=false;
-      login('No se pudo abrir tu espacio: '+(fallbackError.code||fallbackError.message));
+    const ownerUid='Kgwk4gK0yxYJQMZZaggIyl2xtnh2';
+    if(user.uid===ownerUid){
+      try{
+        await legacyLaunch(user);
+        toast('Sesión iniciada en el espacio local. El almacenamiento central no está disponible.');
+        return;
+      }catch(fallbackError){
+        console.error('No se pudo abrir el espacio local.',fallbackError);
+        started=false;
+        login('No se pudo abrir tu espacio: '+(fallbackError.code||fallbackError.message));
+        return;
+      }
     }
+    login('No se pudo abrir tu espacio: '+(error.code||error.message));
   }
 }
 async function legacyLaunch(user){
@@ -357,6 +374,48 @@ async function launchLocal(user){
   setTimeout(()=>toast('Sesión iniciada. Los datos se guardan en este navegador.'),600);
 }
 
+async function importLocalWorkspace(me){
+  if(!globalThis.SM_CLOUD) throw Error('Activa primero el almacenamiento central.');
+  const ws=readWS();
+  const localUsers=Array.isArray(ws.users)?ws.users:[];
+  let profiles=[];
+  try{const r=await fetch('/api/users',{cache:'no-store'});if(r.ok)profiles=await r.json();}catch{}
+  const emailToUid={};
+  for(const p of profiles){if(p&&p.email)emailToUid[String(p.email).toLowerCase()]=p.id;}
+  const ownerFor=localId=>{const u=localUsers.find(x=>x.id===localId);return (u&&emailToUid[String(u.email||'').toLowerCase()])||me.id;};
+  const summary={reports:0,actions:0,plans:0,notices:0,skipped:0,notImported:[]};
+  for(const col of ['reports','actions','plans']){
+    const local=Array.isArray(ws[col])?ws[col]:[];
+    if(!local.length)continue;
+    let cloud=[];
+    try{const r=await fetch('/api/'+col,{cache:'no-store'});if(r.ok)cloud=await r.json();}catch{}
+    const existing=new Set((cloud||[]).map(x=>x.id));
+    for(const rec of local){
+      if(!rec||!rec.id||existing.has(rec.id)){summary.skipped++;continue;}
+      const body={...rec,revision:0,ownerAccountId:ownerFor(rec.ownerAccountId)};
+      if(col==='actions'||col==='plans')body.assignedAccountId=ownerFor(rec.assignedAccountId);
+      if(col==='plans'){body.ownerAccountId=me.id;body.assignedAccountId=ownerFor(rec.assignedAccountId);}
+      const r=await fetch('/api/'+col+'/'+encodeURIComponent(rec.id),{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+      if(!r.ok){let e={};try{e=await r.json();}catch{} throw Error(e.error||('No se pudo importar '+col+' ('+(rec.id||'sin id')+').'));}
+      summary[col]++;
+    }
+  }
+  let cloudNotices=[];
+  try{const r=await fetch('/api/notices',{cache:'no-store'});if(r.ok)cloudNotices=await r.json();}catch{}
+  const imported=new Set((cloudNotices||[]).map(n=>n.legacyId).filter(Boolean));
+  for(const n of (ws.notices||[])){
+    if(!n||!n.id||imported.has(n.id)){summary.skipped++;continue;}
+    const target=ownerFor(n.toAccountId);
+    const toAccountIds=[...new Set([target,me.id])];
+    const attachments=(Array.isArray(n.attachments)?n.attachments:[]).filter(a=>a&&a.dataUrl&&String(a.dataUrl).length<=850000);
+    const r=await fetch('/api/notices',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({toAccountIds,type:n.type||'Mensaje',severity:n.severity||'normal',text:String(n.text||'Aviso migrado').slice(0,5000),attachments,referenceId:n.referenceId,referenceCollection:n.referenceCollection,referenceLabel:n.referenceLabel,legacyId:n.id})});
+    if(!r.ok){let e={};try{e=await r.json();}catch{} throw Error(e.error||'No se pudo importar un aviso.');}
+    summary.notices++;
+  }
+  summary.notImported=localUsers.filter(u=>u&&u.email&&!u.isOwner&&!emailToUid[String(u.email).toLowerCase()]).map(u=>u.name||u.email);
+  return summary;
+}
+
 // --- Profile (Firebase admin) ---
 function mountProfile(user){
   if(by('profileSettings')) return;
@@ -370,13 +429,21 @@ function mountProfile(user){
   btn.onclick=()=>dialog.showModal();
   dialog.querySelector('#closeProfile').onclick=()=>dialog.close();
   const connect=document.createElement('button');
-  connect.type='button';connect.className='secondary';connect.textContent='Verificar administración en Firebase';
+  connect.type='button';connect.className='secondary';
+  const cloudActive=!!globalThis.SM_CLOUD;
+  connect.textContent=cloudActive?'Verificar administración en Firebase':'Activar almacenamiento central';
   dialog.querySelector('.report-note').appendChild(connect);
   connect.onclick=async()=>{
     connect.disabled=true;
     try{
       const {initializeAuthority}=await import('./firebase-cloud.js');
       await initializeAuthority(app,user);
+      if(!cloudActive){
+        localStorage.setItem('sm-cloud-import-pending-'+user.uid,'1');
+        toast('Nube activada. Recargando e importando los datos locales…');
+        setTimeout(()=>location.reload(),1000);
+        return;
+      }
       await exportWorkspaceBackup();
       const {archiveWorkspace}=await import('./migration-archive.js');
       const workspace=readWS();
@@ -386,6 +453,22 @@ function mountProfile(user){
     }catch(error){toast('No se pudo verificar Firebase: '+(error.code||error.message));}
     finally{connect.disabled=false;}
   };
+  if(cloudActive){
+    const importBtn=document.createElement('button');
+    importBtn.type='button';importBtn.className='secondary';importBtn.textContent='Importar datos locales a la nube';
+    dialog.querySelector('.report-note').appendChild(importBtn);
+    importBtn.onclick=async()=>{
+      if(!window.confirm('Se copiarán a la nube los formatos, acciones, programas y avisos guardados en este navegador. ¿Continuar?'))return;
+      importBtn.disabled=true;
+      try{
+        const summary=await importLocalWorkspace(globalThis.SM_CLOUD.me);
+        const missing=summary.notImported.length?` Recrea ${summary.notImported.length} usuarios locales en Usuarios y permisos.`:'';
+        toast(`Importados: ${summary.reports} formatos, ${summary.actions} acciones, ${summary.plans} programas, ${summary.notices} avisos.${missing}`);
+        setTimeout(()=>location.reload(),4000);
+      }catch(error){alert('No se pudieron importar todos los datos: '+error.message);}
+      finally{importBtn.disabled=false;}
+    };
+  }
   dialog.querySelector('#exportWorkspace').onclick=async()=>{try{const result=await exportWorkspaceBackup();toast(`Respaldo descargado: ${result.records} registros y ${result.users} usuarios.`)}catch{toast('No se pudo crear el respaldo local. Verifica el espacio disponible e inténtalo de nuevo.')}};
   by('profileForm').addEventListener('submit',async event=>{
     event.preventDefault();

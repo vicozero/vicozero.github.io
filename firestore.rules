@@ -1,0 +1,146 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Bootstrap access expires permanently once the authority document exists.
+    function initialAdministrator() {
+      return request.auth != null
+        && request.auth.uid == 'Kgwk4gK0yxYJQMZZaggIyl2xtnh2'
+        && !exists(/databases/$(database)/documents/security/authority);
+    }
+    function administrator() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/security/authority)
+        && request.auth.uid == get(/databases/$(database)/documents/security/authority).data.administratorUid;
+    }
+    match /security/authority {
+      allow get: if request.auth != null;
+      allow create: if initialAdministrator()
+        && request.resource.data.keys().hasOnly(['administratorUid', 'updatedAt'])
+        && request.resource.data.administratorUid == request.auth.uid
+        && request.resource.data.updatedAt == request.time;
+      allow update: if administrator()
+        && request.resource.data.keys().hasOnly(['administratorUid', 'updatedAt'])
+        && request.resource.data.administratorUid is string
+        && request.resource.data.administratorUid.size() > 0
+        && request.resource.data.updatedAt == request.time;
+      allow delete: if false;
+    }
+    function activeOperator() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/profiles/$(request.auth.uid))
+        && get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data.active == true
+        && get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data.role in ['member', 'operator'];
+    }
+    match /migrationBackups/{backupId} {
+      allow read: if administrator();
+      allow create: if administrator();
+      allow update, delete: if false;
+      match /chunks/{chunkId} {
+        allow read, create: if administrator();
+        allow update, delete: if false;
+      }
+    }
+    match /profiles/{uid} {
+      allow get: if administrator() || activeOperator() || (request.auth != null && request.auth.uid == uid);
+      allow list: if administrator() || activeOperator();
+      allow create, update: if administrator()
+        && (request.resource.data.role in ['member', 'operator', 'supervisor'] || (uid == get(/databases/$(database)/documents/security/authority).data.administratorUid && request.resource.data.role == 'admin'))
+        && request.resource.data.active is bool;
+      allow delete: if false;
+    }
+    function owns(record) {
+      return record.get('ownerAccountId', '') == request.auth.uid
+        || record.get('assignedAccountId', '') == request.auth.uid;
+    }
+    function canEdit(kind) {
+      let profile = get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data;
+      return activeOperator() && profile.get('permissions', {}).get(kind, true) == true;
+    }
+    function canViewAll() {
+      let profile = get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data;
+      return activeOperator() && profile.get('permissions', {}).get('view_all', false) == true;
+    }
+    match /{kind}/{recordId} {
+      allow get: if kind in ['reports', 'actions', 'plans'] && (administrator() || canViewAll() || (activeOperator() && (!exists(/databases/$(database)/documents/$(kind)/$(recordId)) || owns(resource.data))));
+      allow list: if kind in ['reports', 'actions', 'plans'] && (administrator() || canViewAll() || (activeOperator() && owns(resource.data)));
+      allow create: if kind in ['reports', 'actions', 'plans'] && (administrator() ||
+        (kind != 'plans' && canEdit(kind == 'reports' ? 'edit_reports' : 'edit_actions')
+        && request.resource.data.ownerAccountId == request.auth.uid
+        && request.resource.data.get('assignedAccountId', request.auth.uid) == request.auth.uid
+        && (kind != 'actions' || request.resource.data.status != 'Cerrado')));
+      allow update: if kind in ['reports', 'actions', 'plans'] && (administrator() ||
+        (kind != 'plans' && canEdit(kind == 'reports' ? 'edit_reports' : 'edit_actions')
+        && owns(resource.data)
+        && request.resource.data.get('ownerAccountId', '') == resource.data.get('ownerAccountId', '')
+        && request.resource.data.get('assignedAccountId', '') == resource.data.get('assignedAccountId', '')
+        && request.resource.data.revision == resource.data.revision + 1
+        && (kind != 'actions' || (resource.data.status != 'Cerrado' && request.resource.data.status != 'Cerrado'))));
+      allow delete: if false;
+    }
+    match /notices/{noticeId} {
+      allow read: if administrator() || (activeOperator() && (resource.data.toAccountId == request.auth.uid || resource.data.fromAccountId == request.auth.uid));
+      allow create: if (administrator() || canEdit('send_notices'))
+        && request.resource.data.fromAccountId == request.auth.uid
+        && request.resource.data.text is string
+        && request.resource.data.text.size() > 0
+        && request.resource.data.text.size() <= 5000
+        && (request.resource.data.type != 'Observación' || administrator());
+      allow update, delete: if false;
+    }
+    match /noticeImages/{imageId} {
+      allow get: if administrator() || (activeOperator() &&
+        (resource.data.fromAccountId == request.auth.uid || request.auth.uid in resource.data.toAccountIds));
+      allow list: if administrator() || (activeOperator() && resource.data.fromAccountId == request.auth.uid);
+      allow create: if (administrator() || canEdit('send_notices'))
+        && request.resource.data.fromAccountId == request.auth.uid
+        && request.resource.data.dataUrl is string
+        && request.resource.data.dataUrl.size() <= 900000
+        && request.resource.data.toAccountIds is list;
+      allow update, delete: if false;
+    }
+    match /evidenceChunks/{chunkId} {
+      allow get: if administrator() || (activeOperator() &&
+        (resource.data.ownerAccountId == request.auth.uid ||
+        owns(get(/databases/$(database)/documents/$(resource.data.recordCollection)/$(resource.data.recordId)).data)));
+      allow create: if administrator() || (activeOperator()
+        && request.resource.data.ownerAccountId == request.auth.uid
+        && request.resource.data.recordCollection in ['reports', 'actions']
+        && canEdit(request.resource.data.recordCollection == 'reports' ? 'edit_reports' : 'edit_actions')
+        && request.resource.data.payload is string
+        && request.resource.data.payload.size() <= 500000
+        && (!exists(/databases/$(database)/documents/$(request.resource.data.recordCollection)/$(request.resource.data.recordId)) ||
+        owns(get(/databases/$(database)/documents/$(request.resource.data.recordCollection)/$(request.resource.data.recordId)).data)));
+      allow update, delete: if false;
+    }
+    match /noticeReads/{uid}/items/{noticeId} {
+      allow read: if administrator() || (request.auth != null && (request.auth.uid == uid || get(/databases/$(database)/documents/notices/$(noticeId)).data.fromAccountId == request.auth.uid));
+      allow create, update: if request.auth != null && request.auth.uid == uid
+        && (administrator() || get(/databases/$(database)/documents/notices/$(noticeId)).data.toAccountId == uid);
+      allow delete: if false;
+    }
+    match /sessions/{sessionId} {
+      allow read: if administrator() || (activeOperator() && resource.data.userId == request.auth.uid);
+      allow create: if activeOperator()
+        && request.resource.data.keys().hasOnly(['userId', 'startedAt', 'updatedAt', 'activeMs', 'closed'])
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.startedAt == request.time
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.activeMs == 0
+        && request.resource.data.closed == false;
+      allow update: if activeOperator()
+        && resource.data.userId == request.auth.uid
+        && resource.data.closed == false
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['updatedAt', 'activeMs', 'closed'])
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.closed is bool
+        && request.resource.data.activeMs is int
+        && request.resource.data.activeMs >= resource.data.activeMs
+        && request.resource.data.activeMs <= (request.time - resource.data.startedAt).seconds() * 1000;
+      allow delete: if false;
+    }
+    // Operational records remain gated until migration reconciliation.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

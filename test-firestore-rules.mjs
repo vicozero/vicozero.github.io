@@ -1,0 +1,32 @@
+import fs from 'node:fs';
+import {initializeTestEnvironment,assertSucceeds,assertFails} from '@firebase/rules-unit-testing';
+import {doc,getDoc,setDoc,updateDoc,deleteDoc,serverTimestamp} from 'firebase/firestore';
+const env=await initializeTestEnvironment({projectId:'demo-sierra-madre',firestore:{host:'127.0.0.1',port:8087,rules:fs.readFileSync('firestore.rules','utf8')}});
+try {
+  const initial=env.authenticatedContext('Kgwk4gK0yxYJQMZZaggIyl2xtnh2').firestore();
+  const stranger=env.authenticatedContext('stranger').firestore();
+  const next=env.authenticatedContext('next-admin').firestore();
+  await assertFails(getDoc(doc(env.unauthenticatedContext().firestore(),'security/authority')));
+  await assertFails(setDoc(doc(stranger,'security/authority'),{administratorUid:'stranger',updatedAt:serverTimestamp()}));
+  await assertSucceeds(setDoc(doc(initial,'security/authority'),{administratorUid:'Kgwk4gK0yxYJQMZZaggIyl2xtnh2',updatedAt:serverTimestamp()}));
+  await assertFails(setDoc(doc(stranger,'reports/example'),{description:'blocked'}));
+  await assertFails(deleteDoc(doc(initial,'security/authority')));
+  const operator=env.authenticatedContext('operator').firestore();
+  await assertSucceeds(setDoc(doc(initial,'profiles/operator'),{role:'operator',active:true}));
+  await assertSucceeds(setDoc(doc(operator,'reports/own'),{ownerAccountId:'operator',revision:1,status:'Borrador'}));
+  await assertFails(getDoc(doc(stranger,'reports/own')));
+  await assertFails(updateDoc(doc(operator,'reports/own'),{ownerAccountId:'stranger',revision:2}));
+  await assertSucceeds(updateDoc(doc(operator,'reports/own'),{revision:2,status:'Finalizado'}));
+  await assertFails(setDoc(doc(operator,'actions/closed'),{ownerAccountId:'operator',status:'Cerrado'}));
+  await assertFails(setDoc(doc(stranger,'profiles/stranger'),{role:'operator',active:true}));
+  await assertSucceeds(setDoc(doc(operator,'sessions/own'),{userId:'operator',startedAt:serverTimestamp(),updatedAt:serverTimestamp(),activeMs:0,closed:false}));
+  await assertFails(setDoc(doc(operator,'sessions/forged'),{userId:'stranger',startedAt:serverTimestamp(),updatedAt:serverTimestamp(),activeMs:0,closed:false}));
+  await assertFails(getDoc(doc(stranger,'sessions/own')));
+  await assertSucceeds(getDoc(doc(initial,'sessions/own')));
+  await assertSucceeds(updateDoc(doc(operator,'sessions/own'),{activeMs:0,updatedAt:serverTimestamp(),closed:true}));
+  await assertFails(updateDoc(doc(operator,'sessions/own'),{activeMs:1,updatedAt:serverTimestamp()}));
+  await assertSucceeds(updateDoc(doc(initial,'security/authority'),{administratorUid:'next-admin',updatedAt:serverTimestamp()}));
+  await assertFails(updateDoc(doc(initial,'security/authority'),{administratorUid:'Kgwk4gK0yxYJQMZZaggIyl2xtnh2',updatedAt:serverTimestamp()}));
+  await assertSucceeds(getDoc(doc(next,'security/authority')));
+  console.log('Bootstrap, transferencia, revocación y protección de registros: OK');
+} finally { await env.cleanup(); }

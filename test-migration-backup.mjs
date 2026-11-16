@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import crypto from 'node:crypto';
+import {verifyBackup} from './verify-migration-backup.mjs';
+const data={reports:[],actions:[],plans:[],users:[],notices:[],reads:{}};
+const make = value => ({format:'sierra-madre-local-workspace',version:1,data:value,sha256:crypto.createHash('sha256').update(JSON.stringify(value)).digest('hex')});
+assert.equal(verifyBackup(make(data)).status,'verified');
+const changed=make(structuredClone(data));changed.data.actions.push({id:'changed'});
+assert.throws(()=>verifyBackup(changed),/huella/);
+assert.throws(()=>verifyBackup(make({...data,reports:[{id:'same'},{id:'same'}]})),/duplicado/);
+assert.throws(()=>verifyBackup(make({...data,users:[{}]})),/Identificador/);
+console.log('Verificación: respaldo íntegro, alteraciones, duplicados e identificadores ausentes. OK');
