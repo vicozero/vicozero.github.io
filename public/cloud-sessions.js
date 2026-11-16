@@ -61,11 +61,13 @@ export async function startCloudSession(db,me){
       synced=true;lastSaveOk=true;syncError=null;if(!stopped)paint();return true;
     }catch(error){
       syncError=error;lastSaveOk=false;if(!stopped)paint();
-      console.warn('No se pudo registrar la sesión en la nube; se reintentará.',error);
+      console.error('No se pudo registrar la sesión en la nube.',error);
+      try{alert('No se pudo registrar tu sesión en la nube: '+(error.code||error.message||error));}catch{}
       return false;
     }
   }
-  await ensureSession();
+  const initialSync=await ensureSession();
+  if(!initialSync) console.warn('La sesión quedó en modo solo local para este usuario.');
   function touch(){if(!stopped){clock.activity();paint();}}
   for(const event of ['pointerdown','keydown','touchstart'])document.addEventListener(event,touch,{passive:true});
   async function save(closed=false){
