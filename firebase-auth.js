@@ -363,6 +363,8 @@ async function legacyLaunch(user){
   await loadAppScripts();
   by('accessScreen').hidden=true; by('appRoot').hidden=false;
   mountProfile(user);
+  try{const {installNormativeLibrary}=await import('./normative-library.js');await installNormativeLibrary();}catch(e){console.warn('Biblioteca normativa no disponible',e);}
+  try{globalThis.SM_SESSION_TRACKER?.start(me);}catch{}
   document.querySelector('.sign-out')?.addEventListener('click',e=>{e.preventDefault(); try{localStorage.removeItem('sm-local-session');}catch{} localSessionUser=null; signOut(auth);});
   setTimeout(()=>toast('Sesión protegida. Los datos de trabajo se guardan en este navegador.'),600);
 }
@@ -382,6 +384,7 @@ async function launchLocal(user){
   await loadAppScripts();
   by('accessScreen').hidden=true; by('appRoot').hidden=false;
   document.querySelector('.sign-out')?.addEventListener('click',e=>{e.preventDefault(); try{localStorage.removeItem('sm-local-session');}catch{} localSessionUser=null; started=false; login();});
+  try{const {installNormativeLibrary}=await import('./normative-library.js');await installNormativeLibrary();}catch(e){console.warn('Biblioteca normativa no disponible',e);}
   try{globalThis.SM_SESSION_TRACKER?.start(me);}catch{toast('No se pudo guardar el tiempo de sesión. Verifica el almacenamiento del navegador.');}
   setTimeout(()=>toast('Sesión iniciada. Los datos se guardan en este navegador.'),600);
 }
