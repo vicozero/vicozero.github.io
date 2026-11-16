@@ -79,7 +79,7 @@ function login(message=''){
       try{
         const ws=readWS();
         const user=(ws.users||[]).find(u=>(u.email||'').toLowerCase()===raw.toLowerCase() && u.active!==false);
-        if(user && user.passwordHash && user.passwordHash===hash(password)){
+        if(false && user && user.passwordHash && user.passwordHash===hash(password)){
           localSessionUser={...user};
           try{localStorage.setItem('sm-local-session',user.id);}catch{}
           await launchLocal(localSessionUser);
@@ -200,7 +200,8 @@ function installStore(currentUser, isFirebaseAdmin=false){
       for(const tid of ids){
         const target=(data.users||[]).find(x=>x.id===tid);
         if(!target) continue;
-        data.notices.push({id:crypto.randomUUID(),type:body.type||'Mensaje',severity:body.severity||'normal',text:body.text||'',fromAccountId:me.id,fromName:me.name,toAccountId:tid,toName:target.name,created,referenceId:body.referenceId,referenceCollection:body.referenceCollection,referenceLabel:body.referenceLabel});
+        const attachments=Array.isArray(body.attachments)?body.attachments.filter(a=>a&&a.dataUrl).slice(0,10).map(a=>({name:String(a.name||'imagen').slice(0,120),type:String(a.type||'image/jpeg').slice(0,40),dataUrl:String(a.dataUrl)})):[];
+        data.notices.push({id:crypto.randomUUID(),type:body.type||'Mensaje',severity:body.severity||'normal',text:body.text||'',fromAccountId:me.id,fromName:me.name,toAccountId:tid,toName:target.name,created,referenceId:body.referenceId,referenceCollection:body.referenceCollection,referenceLabel:body.referenceLabel,attachments});
         count++;
       }
       writeWS(data); return json({ok:true,count});
@@ -267,7 +268,7 @@ function effectivePerms(u){ const base={...(DEFAULT_PERMS[u.role]||DEFAULT_PERMS
 function publicUser(u){ return {id:u.id,email:u.email,name:u.name,role:u.role,active:u.active!==false,unit:u.unit||'',isOwner:!!u.isOwner,revision:u.revision||0,permissions:effectivePerms(u),allowedUnits:Array.isArray(u.allowedUnits)?u.allowedUnits:(typeof u.allowedUnits==='string'&&u.allowedUnits?u.allowedUnits.split(',').map(s=>s.trim()).filter(Boolean):[]),restrictUnits:!!u.restrictUnits}; }
 
 async function loadAppScripts(){
-  const srcs=['assets/pdf-lib.min.js','formats.js','extended-formats.js','progress-core.js','supervisor.js','workspace-pdf.js','report-pdf.js','workspace.js','accounts-ui.js'];
+  const srcs=['session-tracker.js','assets/pdf-lib.min.js','formats.js','extended-formats.js','progress-core.js','supervisor.js','workspace-pdf.js','report-pdf.js','workspace.js','accounts-ui.js'];
   for(const src of srcs){
     await new Promise((ok,no)=>{const s=document.createElement('script');s.src=src;s.async=false;s.onload=ok;s.onerror=()=>no(new Error('No se pudo cargar '+src));document.body.append(s);});
   }
@@ -275,6 +276,30 @@ async function loadAppScripts(){
 
 // --- Launch for Firebase admin ---
 async function launch(user){
+  if(started)return;started=true;
+  try{
+    const {connectPortal}=await import('./cloud-portal.js');
+    const cloud=await connectPortal(app,user,DEFAULT_PERMS);
+    globalThis.SM_CLOUD=cloud;
+    globalThis.AUTH={user:cloud.me};globalThis.ACCOUNT_USERS=cloud.users;globalThis.ACCOUNT_DIRECTORY=cloud.directory;
+    globalThis.SM_SCOPE_ACCOUNT=cloud.me.role==='admin'?'':cloud.me.id;
+    globalThis.smStorageKey=k=>k+'-'+user.uid;
+    document.body.dataset.role=cloud.me.role;
+    await loadAppScripts();
+    const {startCloudSession,installSessionReport}=await import('./cloud-sessions.js');
+    const closeSession=await startCloudSession(cloud.db,cloud.me);
+    installSessionReport(cloud.db,cloud.me);
+    by('accessScreen').hidden=true;by('appRoot').hidden=false;
+    if(cloud.me.role==='admin')mountProfile(user);
+    document.querySelector('.sign-out').onclick=async e=>{
+      e.preventDefault();
+      try{await closeSession();await signOut(auth);localStorage.removeItem('sm-local-session');location.reload();}
+      catch{toast('No se pudo cerrar y sincronizar la sesión. Recupera la conexión y vuelve a intentar.');}
+    };
+    toast('Conectado al almacenamiento central de Sierra Madre.');
+  }catch(error){started=false;login('No se pudo abrir tu espacio: '+(error.code||error.message));}
+}
+async function legacyLaunch(user){
   if(started) return; started=true;
   // Ensure admin user exists in workspace
   const ws=readWS();
@@ -316,6 +341,7 @@ async function launchLocal(user){
   await loadAppScripts();
   by('accessScreen').hidden=true; by('appRoot').hidden=false;
   document.querySelector('.sign-out')?.addEventListener('click',e=>{e.preventDefault(); try{localStorage.removeItem('sm-local-session');}catch{} localSessionUser=null; started=false; login();});
+  try{globalThis.SM_SESSION_TRACKER?.start(me);}catch{toast('No se pudo guardar el tiempo de sesión. Verifica el almacenamiento del navegador.');}
   setTimeout(()=>toast('Sesión iniciada. Los datos se guardan en este navegador.'),600);
 }
 
@@ -331,12 +357,30 @@ function mountProfile(user){
   document.body.appendChild(dialog);
   btn.onclick=()=>dialog.showModal();
   dialog.querySelector('#closeProfile').onclick=()=>dialog.close();
+  const connect=document.createElement('button');
+  connect.type='button';connect.className='secondary';connect.textContent='Verificar administración en Firebase';
+  dialog.querySelector('.report-note').appendChild(connect);
+  connect.onclick=async()=>{
+    connect.disabled=true;
+    try{
+      const {initializeAuthority}=await import('./firebase-cloud.js');
+      await initializeAuthority(app,user);
+      await exportWorkspaceBackup();
+      const {archiveWorkspace}=await import('./migration-archive.js');
+      const workspace=readWS();
+      workspace.users=(workspace.users||[]).map(({passwordHash,...profile})=>profile);
+      await archiveWorkspace(app,workspace);
+      toast('Respaldo central verificado. Se conservan los registros de este navegador.');
+    }catch(error){toast('No se pudo verificar Firebase: '+(error.code||error.message));}
+    finally{connect.disabled=false;}
+  };
   dialog.querySelector('#exportWorkspace').onclick=async()=>{try{const result=await exportWorkspaceBackup();toast(`Respaldo descargado: ${result.records} registros y ${result.users} usuarios.`)}catch{toast('No se pudo crear el respaldo local. Verifica el espacio disponible e inténtalo de nuevo.')}};
   by('profileForm').addEventListener('submit',async event=>{
     event.preventDefault();
     const f=new FormData(event.currentTarget),name=String(f.get('name')).trim(),password=String(f.get('password'));
     try{
       if(name && name!==user.displayName) await updateProfile(user,{displayName:name});
+      if(globalThis.SM_CLOUD)await globalThis.SM_CLOUD.updateName(name);
       if(password) await updatePassword(user,password);
       localStorage.setItem('sm-profile-'+user.uid,JSON.stringify({phone:String(f.get('phone')).trim(),updatedAt:new Date().toISOString()}));
       if(globalThis.AUTH&&globalThis.AUTH.user) globalThis.AUTH.user.name=name;
@@ -351,7 +395,7 @@ function mountProfile(user){
   // Restore local session if present
   try{
     const sid=localStorage.getItem('sm-local-session');
-    if(sid){
+    if(false && sid){
       const ws=readWS();
       const u=(ws.users||[]).find(x=>x.id===sid && x.active!==false);
       if(u){ localSessionUser=u; await launchLocal(u); return; }

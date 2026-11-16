@@ -184,7 +184,8 @@ function installStore(currentUser, isFirebaseAdmin=false){
       for(const tid of ids){
         const target=(data.users||[]).find(x=>x.id===tid);
         if(!target) continue;
-        data.notices.push({id:crypto.randomUUID(),type:body.type||'Mensaje',severity:body.severity||'normal',text:body.text||'',fromAccountId:me.id,fromName:me.name,toAccountId:tid,toName:target.name,created,referenceId:body.referenceId,referenceCollection:body.referenceCollection,referenceLabel:body.referenceLabel});
+        const attachments=Array.isArray(body.attachments)?body.attachments.filter(a=>a&&a.dataUrl).slice(0,10).map(a=>({name:String(a.name||'imagen').slice(0,120),type:String(a.type||'image/jpeg').slice(0,40),dataUrl:String(a.dataUrl)})):[];
+        data.notices.push({id:crypto.randomUUID(),type:body.type||'Mensaje',severity:body.severity||'normal',text:body.text||'',fromAccountId:me.id,fromName:me.name,toAccountId:tid,toName:target.name,created,referenceId:body.referenceId,referenceCollection:body.referenceCollection,referenceLabel:body.referenceLabel,attachments});
         count++;
       }
       writeWS(data); return json({ok:true,count});

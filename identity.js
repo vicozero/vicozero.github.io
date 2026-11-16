@@ -66,7 +66,7 @@
         }
         const ids=Array.isArray(body.toAccountIds)?body.toAccountIds:[];
         const created=new Date().toISOString(); let count=0;
-        for(const tid of ids){ const target=data.users.find(x=>x.id===tid); if(!target) continue; (data.notices=data.notices||[]).push({id:crypto.randomUUID(),type:body.type||'Mensaje',severity:body.severity||'normal',text:body.text||'',fromAccountId:currentUser?.id,fromName:currentUser?.name,toAccountId:tid,toName:target.name,created,referenceId:body.referenceId,referenceCollection:body.referenceCollection,referenceLabel:body.referenceLabel}); count++; }
+        for(const tid of ids){ const target=data.users.find(x=>x.id===tid); if(!target) continue; const attachments=Array.isArray(body.attachments)?body.attachments.filter(a=>a&&a.dataUrl).slice(0,10).map(a=>({name:String(a.name||'imagen').slice(0,120),type:String(a.type||'image/jpeg').slice(0,40),dataUrl:String(a.dataUrl)})):[]; (data.notices=data.notices||[]).push({id:crypto.randomUUID(),type:body.type||'Mensaje',severity:body.severity||'normal',text:body.text||'',fromAccountId:currentUser?.id,fromName:currentUser?.name,toAccountId:tid,toName:target.name,created,referenceId:body.referenceId,referenceCollection:body.referenceCollection,referenceLabel:body.referenceLabel,attachments}); count++; }
         write(data); return json({ok:true,count});
       }
       const readMatch=path.match(/^notices\/([^/]+)\/read$/);
