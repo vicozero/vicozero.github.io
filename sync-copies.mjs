@@ -6,10 +6,10 @@ const root = process.cwd();
 const targets = ['docs', 'public'];
 
 // Allow-list comes from the files already tracked under docs/ (the deployed web assets).
-const tracked = execSync('git ls-files docs/', { cwd: root, encoding: 'utf8' })
+const tracked = [...new Set([...execSync('git ls-files docs/', { cwd: root, encoding: 'utf8' })
   .split(/\r?\n/)
   .filter(Boolean)
-  .map(p => p.replace(/^docs\//, ''));
+  .map(p => p.replace(/^docs\//, '')), 'normative-library.js', 'regulatory-core.js', 'training-core.js', 'normative-catalog.json', 'safety-talk-topics.json', 'safety-suite-store.js', 'training-suite.js'])];
 
 let copied = 0;
 for (const rel of tracked) {

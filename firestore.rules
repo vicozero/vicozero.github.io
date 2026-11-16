@@ -148,7 +148,117 @@ service cloud.firestore {
         && request.resource.data.activeMs >= resource.data.activeMs;
       allow delete: if false;
     }
-    // Operational records remain gated until migration reconciliation.
+    // Additive suite collections. Deploy only after the suite acceptance tests.
+    function suiteMember() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/profiles/$(request.auth.uid))
+        && get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data.active == true;
+    }
+    function suitePermission(key) {
+      return administrator() || (suiteMember() && get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data.get('permissions', {}).get(key, false) == true);
+    }
+    function officialNormSource(source) {
+      return source is string && source.matches('https://([a-zA-Z0-9-]+[.])*(stps[.]gob[.]mx|dof[.]gob[.]mx|diariooficial[.]gob[.]mx|sidof[.]segob[.]gob[.]mx)/.*');
+    }
+    function suiteCreate() {
+      return request.resource.data.ownerAccountId == request.auth.uid
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.revision == 1;
+    }
+    function suiteUpdate() {
+      return request.resource.data.ownerAccountId == resource.data.ownerAccountId
+        && request.resource.data.createdBy == resource.data.createdBy
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.revision == resource.data.revision + 1;
+    }
+    match /regulatory_versions/{versionId} {
+      allow read: if suiteMember();
+      allow create: if suitePermission('nom_manage') && suiteCreate()
+        && request.resource.data.versionId == versionId
+        && request.resource.data.status in ['Vigente','Sustituida','Cancelada','Proyecto','Pendiente de verificar']
+        && officialNormSource(request.resource.data.sourceUrl)
+        && (request.resource.data.status == 'Pendiente de verificar' ||
+          (suitePermission('nom_validate') && request.resource.data.verifiedBy == request.auth.uid && request.resource.data.verifiedAt is string));
+      allow update, delete: if false;
+    }
+    match /standard_requirements/{requirementId} {
+      allow read: if suiteMember();
+      allow create: if suitePermission('nom_validate') && suiteCreate()
+        && request.resource.data.section is string && request.resource.data.section.size() > 0
+        && request.resource.data.text is string && request.resource.data.text.size() > 0
+        && request.resource.data.verifiedBy == request.auth.uid
+        && request.resource.data.verifiedAt is string
+        && officialNormSource(request.resource.data.sourceUrl)
+        && exists(/databases/$(database)/documents/regulatory_versions/$(request.resource.data.versionId));
+      allow update, delete: if false;
+    }
+    match /talk_topics/{topicId} {
+      allow read: if suiteMember();
+      allow create: if suitePermission('training_manage') && suiteCreate()
+        && request.resource.data.status in ['Propuesta','Borrador','En revisión','Aprobado','Archivado']
+        && (request.resource.data.status != 'Aprobado' || (suitePermission('training_approve') && request.resource.data.approver == request.auth.uid));
+      allow update: if suitePermission('training_manage') && suiteUpdate()
+        && request.resource.data.status in ['Propuesta','Borrador','En revisión','Aprobado','Archivado']
+        && (request.resource.data.status != 'Aprobado' || (suitePermission('training_approve') && request.resource.data.approver == request.auth.uid));
+      allow delete: if false;
+    }
+    match /talk_topic_versions/{versionId} {
+      allow read: if suiteMember();
+      allow create: if suitePermission('training_manage')
+        && getAfter(/databases/$(database)/documents/talk_topics/$(request.resource.data.topicId)).data.revision == request.resource.data.revision
+        && request.resource.data.createdBy == getAfter(/databases/$(database)/documents/talk_topics/$(request.resource.data.topicId)).data.createdBy
+        && request.resource.data.updatedAt == request.time;
+      allow update, delete: if false;
+    }
+    match /talk_schedules/{scheduleId} {
+      allow get: if administrator() || (suiteMember() && (!exists(/databases/$(database)/documents/talk_schedules/$(scheduleId)) || owns(resource.data)));
+      allow list: if administrator() || (suiteMember() && owns(resource.data));
+      allow create: if suitePermission('training_schedule') && suiteCreate()
+        && exists(/databases/$(database)/documents/talk_topics/$(request.resource.data.topicId));
+      allow update: if suitePermission('training_schedule') && (administrator() || owns(resource.data)) && suiteUpdate();
+      allow delete: if false;
+    }
+    match /talk_sessions/{sessionId} {
+      allow get: if administrator() || (suiteMember() && (!exists(/databases/$(database)/documents/talk_sessions/$(sessionId)) || owns(resource.data)));
+      allow list: if administrator() || (suiteMember() && owns(resource.data));
+      allow create: if suitePermission('training_attendance') && suiteCreate()
+        && request.resource.data.attendees is list
+        && request.resource.data.attendees.size() > 0
+        && exists(/databases/$(database)/documents/talk_schedules/$(request.resource.data.scheduleId))
+        && get(/databases/$(database)/documents/talk_schedules/$(request.resource.data.scheduleId)).data.topicId == request.resource.data.topicId
+        && get(/databases/$(database)/documents/talk_topics/$(request.resource.data.topicId)).data.status == 'Aprobado';
+      allow update: if suitePermission('training_attendance') && (administrator() || owns(resource.data)) && suiteUpdate();
+      allow delete: if false;
+    }
+    function reviewedCompliance(assessmentId) {
+      return request.resource.data.state != 'Cumple, con evidencia revisada' ||
+        (suitePermission('nom_validate')
+        && getAfter(/databases/$(database)/documents/compliance_reviews/$(request.resource.data.evidenceReviewId)).data.assessmentId == assessmentId
+        && getAfter(/databases/$(database)/documents/compliance_reviews/$(request.resource.data.evidenceReviewId)).data.requirementId == request.resource.data.requirementId
+        && getAfter(/databases/$(database)/documents/compliance_reviews/$(request.resource.data.evidenceReviewId)).data.reviewedBy == request.auth.uid);
+    }
+    match /compliance_reviews/{reviewId} {
+      allow read: if suitePermission('nom_validate');
+      allow create: if suitePermission('nom_validate')
+        && request.resource.data.reviewedBy == request.auth.uid
+        && request.resource.data.reviewedAt == request.time
+        && request.resource.data.evidenceIds is list
+        && request.resource.data.evidenceIds.size() > 0;
+      allow update, delete: if false;
+    }
+    match /compliance_assessments/{assessmentId} {
+      allow get: if administrator() || (suiteMember() && (!exists(/databases/$(database)/documents/compliance_assessments/$(assessmentId)) || owns(resource.data)));
+      allow list: if administrator() || (suiteMember() && owns(resource.data));
+      allow create: if suitePermission('nom_assess') && suiteCreate()
+        && exists(/databases/$(database)/documents/standard_requirements/$(request.resource.data.requirementId))
+        && reviewedCompliance(assessmentId);
+      allow update: if suitePermission('nom_assess') && (administrator() || owns(resource.data)) && suiteUpdate()
+        && reviewedCompliance(assessmentId);
+      allow delete: if false;
+    }
     match /{document=**} {
       allow read, write: if false;
     }

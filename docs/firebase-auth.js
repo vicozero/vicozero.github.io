@@ -287,6 +287,15 @@ async function launch(user){
     globalThis.smStorageKey=k=>k+'-'+user.uid;
     document.body.dataset.role=cloud.me.role;
     await loadAppScripts();
+    try{
+      const {installNormativeLibrary}=await import('./normative-library.js');
+      await installNormativeLibrary();
+    }catch(error){console.warn('Biblioteca normativa no disponible',error);}
+    try{
+      const {createSafetySuiteStore}=await import('./safety-suite-store.js');
+      const {installTrainingSuite}=await import('./training-suite.js');
+      await installTrainingSuite({store:createSafetySuiteStore(cloud.db,cloud.me),me:cloud.me,directory:cloud.directory});
+    }catch(error){console.warn('Programa de pláticas no disponible',error);}
     const {startCloudSession,installSessionReport}=await import('./cloud-sessions.js');
     const closeSession=await startCloudSession(cloud.db,cloud.me);
     installSessionReport(cloud.db,cloud.me);

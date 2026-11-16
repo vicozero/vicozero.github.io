@@ -1,0 +1,48 @@
+import fs from 'node:fs';
+import assert from 'node:assert/strict';
+import {initializeTestEnvironment,assertFails} from '@firebase/rules-unit-testing';
+import {doc,setDoc,getDoc,updateDoc,serverTimestamp} from 'firebase/firestore';
+fs.mkdirSync('.qa',{recursive:true});
+const source=fs.readFileSync('safety-suite-store.js','utf8').replaceAll('https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js','firebase/firestore').replaceAll("'./regulatory-core.js'","'../regulatory-core.js'").replaceAll("'./training-core.js'","'../training-core.js'");
+fs.writeFileSync('.qa/suite-store-under-test.mjs',source);
+const {createSafetySuiteStore}=await import('./.qa/suite-store-under-test.mjs');
+const env=await initializeTestEnvironment({projectId:'demo-sierra-madre',firestore:{host:'127.0.0.1',port:8087,rules:fs.readFileSync('firestore.rules','utf8')}});
+const adminId='Kgwk4gK0yxYJQMZZaggIyl2xtnh2',permissions={training_manage:true,training_schedule:true,training_attendance:true,nom_assess:true};
+try{
+ await env.clearFirestore();
+ await env.withSecurityRulesDisabled(async ctx=>{
+  await setDoc(doc(ctx.firestore(),'security/authority'),{administratorUid:adminId});
+  await setDoc(doc(ctx.firestore(),'profiles',adminId),{role:'admin',active:true});
+  await setDoc(doc(ctx.firestore(),'profiles','instructor'),{role:'operator',active:true,permissions});
+  await setDoc(doc(ctx.firestore(),'profiles','other'),{role:'member',active:true});
+ });
+ const adminDb=env.authenticatedContext(adminId).firestore(),instructorDb=env.authenticatedContext('instructor').firestore(),otherDb=env.authenticatedContext('other').firestore();
+ const admin=createSafetySuiteStore(adminDb,{id:adminId,role:'admin'}),instructor=createSafetySuiteStore(instructorDb,{id:'instructor',role:'operator',permissions});
+ const version=JSON.parse(fs.readFileSync('normative-catalog.json','utf8')).standards.find(v=>v.standardId==='NOM-004-STPS');
+ await admin.saveVersion(version);
+ await assert.rejects(()=>admin.saveVersion(version),/inmutable/);
+ await assert.rejects(()=>instructor.saveVersion(version),/Permiso/);
+ await admin.saveRequirement({id:'req-test',versionId:version.versionId,section:'5.2',text:'Resumen aislado de prueba',sourceUrl:version.sourceUrl,revision:0});
+ await assertFails(updateDoc(doc(adminDb,'standard_requirements','req-test'),{text:'Mutación prohibida'}));
+ const topic={id:'topic-test',revision:0,title:'Tema de prueba',status:'Aprobado',objective:'Objetivo de prueba',introduction:'Introducción de prueba',development:'Desarrollo de prueba',criticalPoints:['Punto'],reviewQuestions:['Pregunta']};
+ await assert.rejects(()=>instructor.saveTopic(topic),/aprobación/);
+ const created=await admin.saveTopic(topic);
+ assert((await getDoc(doc(adminDb,'talk_topic_versions','topic-test--1'))).exists());
+ await admin.saveTopic({...topic,revision:created.revision,status:'Borrador',development:'Cambio conservado como revisión'});
+ assert((await getDoc(doc(adminDb,'talk_topic_versions','topic-test--1'))).exists());
+ await admin.saveTopic({...topic,revision:2});
+ const schedule={id:'schedule-test',revision:0,topicId:topic.id,date:'2026-11-16',shift:'Día / Turno 1',department:'QA',place:'Área QA',instructorId:'instructor',minutes:5,status:'Programada'};
+ await instructor.saveSchedule(schedule,new Set([topic.id]));
+ const session={id:'session-test',revision:0,topicId:topic.id,scheduleId:schedule.id,date: schedule.date,status:'Ejecutada',attendees:[{personId:'worker',name:'Persona QA'}],title:topic.title,instructor:'Instructor QA',department:'QA',place:'Área QA',shift:schedule.shift,minutes:5};
+ await instructor.saveSession(session);
+ await assertFails(getDoc(doc(otherDb,'talk_sessions',session.id)));
+ const first=await instructor.createOriginalTalkDraft(session),second=await instructor.createOriginalTalkDraft(session);
+ assert.equal(first.created,true);assert.equal(second.created,false);
+ const report=(await getDoc(doc(instructorDb,'reports',first.id))).data();assert.equal(report.status,'Borrador');assert.equal(report.type,'talk');
+ const assessment={id:'assessment-test',revision:0,versionId:version.versionId,requirementId:'req-test',department:'QA',responsibleId:'instructor',state:'Pendiente de evaluar'};
+ await instructor.saveAssessment(assessment);
+ await assertFails(updateDoc(doc(instructorDb,'compliance_assessments',assessment.id),{state:'Cumple, con evidencia revisada',revision:2,updatedAt:serverTimestamp()}));
+ await admin.saveAssessment({...assessment,revision:1,state:'Cumple, con evidencia revisada',evaluatedAt:'2026-11-16',evaluatedBy:adminId,reviewConfirmation:true,evidence:[{id:'evidence-test',reviewedBy:adminId,reviewedAt:'2026-11-16'}]});
+ assert((await getDoc(doc(adminDb,'compliance_reviews','assessment-test--2'))).exists());
+ console.log('Suite/Firestore: permisos, versiones inmutables, aprobación, calendario, asistencia privada, vínculo KPI sin duplicados y revisión de cumplimiento: OK');
+}finally{await env.cleanup();}
