@@ -104,49 +104,11 @@ export async function connectPortal(app,user,perms,database=null){
      }
      if(['reports','actions','plans'].includes(col)){
        if(method==='GET')return response(await list(col));
-       if(method!=='PUT')throw Error('Operación no disponible.');
-       if(!isAdmin&&me.restrictUnits&&Array.isArray(me.allowedUnits)&&me.allowedUnits.length){
-         const unit=String(body.unit||body.area||body.unidad||'').toLowerCase().trim();
-         if(unit&&!me.allowedUnits.map(u=>String(u).toLowerCase().trim()).includes(unit))throw Error('No tienes permiso para esta unidad/área.');
+       if(method==='DELETE'&&id){
+         if(!isAdmin&&col==='reports'&&!me.permissions.edit_reports)throw Error('No tienes permiso para eliminar formatos.');
+         if(!isAdmin&&col==='actions'&&!me.permissions.edit_actions)throw Error('No tienes permiso para eliminar acciones.');
+         if(!isAdmin&&col==='plans')throw Error('El programa mensual solo lo administra la cuenta principal.');
+         await deleteDoc(doc(db,col,id));
+         return response({ok:true});
        }
-       if(!isAdmin&&col==='reports'&&!me.permissions.edit_reports)throw Error('No tienes permiso para editar formatos.');
-       if(!isAdmin&&col==='actions'&&!me.permissions.edit_actions)throw Error('No tienes permiso para editar acciones.');
-       if(!isAdmin&&col==='plans')throw Error('El programa mensual solo lo administra la cuenta principal.');
-       if(col==='reports'&&['veo','incident','training'].includes(body.type)){
-         if(!['Borrador','Finalizado'].includes(body.status))throw Error('Estado de formato inválido.');
-         if(body.status==='Finalizado'){
-           if(!globalThis.SAFETY?.validateOperationalReport)throw Error('Recarga la página para validar el formato.');
-           const error=globalThis.SAFETY.validateOperationalReport(body);if(error)throw Error(error);
-         }
-       }
-       const reference=doc(db,col,id);
-       const photoChunkIds=[];
-       if(body.photos?.length){
-         const raw=JSON.stringify(body.photos),version=crypto.randomUUID();
-         for(let offset=0;offset<raw.length;offset+=120000){
-           const key=id+'-'+version+'-'+photoChunkIds.length;
-           await setDoc(doc(db,'evidenceChunks',key),{ownerAccountId:me.id,recordCollection:col,recordId:id,payload:raw.slice(offset,offset+120000)});photoChunkIds.push(key);
-         }
-       }
-       const saved=await runTransaction(db,async tx=>{
-         const prior=await tx.get(reference),old=prior.exists()?prior.data():null;
-         if((body.revision||0)!==(old?.revision||0))throw Error('CONFLICT');
-         let record={...body,id,ownerAccountId:(isAdmin&&body.ownerAccountId)||old?.ownerAccountId||me.id,revision:(old?.revision||0)+1,updated:new Date().toISOString(),updatedBy:me.name};
-         if(col==='actions'){
-           record.history=[...(old?.history||[]),{at:record.updated,by:me.name,status:record.status,progress:record.progress,comment:body.newComment||'Actualización de seguimiento.'}];delete record.newComment;
-           if(record.status==='Cerrado'){if(!isAdmin)throw Error('El cierre requiere verificación administrativa.');record.verifier=me.name;}
-         }
-         const safe=clean({...record,photos:[],photoChunkIds});
-         if(new TextEncoder().encode(JSON.stringify(safe)).length>850000)throw Error('El registro excede el límite de esta versión. Conserva las fotografías y reduce su tamaño antes de guardar.');
-         tx.set(reference,safe);return safe;
-       });
-       return response({...saved,photos:body.photos||[]});
-     }
-     if(col==='assignable'&&isAdmin){const name=url.searchParams.get('collection');if(!['reports','actions','plans'].includes(name))throw Error('Colección inválida');return response((await list(name)).map(r=>({id:r.id,label:r.folio||r.person||r.id,detail:r.supervisor||r.owner||'',accountId:r.assignedAccountId||r.ownerAccountId})));}
-     if(col==='assign'&&isAdmin){if(!['reports','actions','plans'].includes(body.collection))throw Error('Colección inválida');await updateDoc(doc(db,body.collection,body.id),{assignedAccountId:body.accountId});return response({ok:true});}
-     return response({error:'Operación pendiente de integración.'},404);
-   }catch(error){return response({error:error.message},error.message==='CONFLICT'?409:403);}
- };
- return {db,me,directory,users:isAdmin?allProfiles.docs.map(d=>({...d.data(),id:d.id})):[],list,updateName:name=>updateDoc(doc(db,'profiles',me.id),{name})};
-}
-
+              if(method!=='PUT')throw Error('Operación no disponible.');
