@@ -1,4 +1,4 @@
-import {collection,doc,getDoc,getDocs,query,where,or,runTransaction,serverTimestamp,deleteDoc} from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
+import {collection,doc,getDoc,getDocs,query,where,or,runTransaction,serverTimestamp} from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
 import {validateVersion,validateAssessment,officialSource} from './regulatory-core.js';
 import {validateSchedule,validateAttendance,sessionToOriginalTalkReport} from './training-core.js';
 
@@ -94,15 +94,6 @@ export function createSafetySuiteStore(db,me){
     tx.set(ref,{...report,ownerAccountId:me.id,folio:'SM-PL-'+session.id,revision:1,updated:new Date().toISOString()});
     return {id:report.id,created:true};
    });
-  },
-  async remove(name,id){
-   if(!entities.has(name)||!id)throw Error('Entidad o identificador inválido.');
-   if(name==='talk_schedules'&&!permission('training_schedule'))throw Error('Permiso de programación requerido.');
-   if(name==='talk_sessions'&&!permission('training_attendance'))throw Error('Permiso de captura de asistencia requerido.');
-   if(name==='talk_topics'&&!permission('training_manage'))throw Error('Permiso de gestión de pláticas requerido.');
-   if(['regulatory_versions','standard_requirements','compliance_assessments'].includes(name)&&!permission('nom_manage')&&!permission('nom_validate'))throw Error('Permiso requerido.');
-   await deleteDoc(doc(db,name,id));
-   return {ok:true};
   }
  };
 }
