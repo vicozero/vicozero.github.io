@@ -476,28 +476,34 @@ function mountProfile(user){
 }
 
 // --- Boot: check local session, then Firebase state ---
-(async function boot(){
-  // Restore local session if present
-  try{
-    const sid=localStorage.getItem('sm-local-session');
-    if(sid){
-      const ws=readWS();
-      const u=(ws.users||[]).find(x=>x.id===sid && x.active!==false);
-      if(u){ localSessionUser=u; await launchLocal(u); return; }
-      else { localStorage.removeItem('sm-local-session'); }
+let bootAuthResolved=false;
+onAuthStateChanged(auth, async user=>{
+  if(localSessionUser) return; // local session takes precedence if already launched
+  if(!user){
+    // No Firebase session: try to restore a local session (only once).
+    if(!bootAuthResolved){
+      bootAuthResolved=true;
+      try{
+        const sid=localStorage.getItem('sm-local-session');
+        if(sid){
+          const ws=readWS();
+          const u=(ws.users||[]).find(x=>x.id===sid && x.active!==false);
+          if(u){ localSessionUser=u; await launchLocal(u); return; }
+          else { localStorage.removeItem('sm-local-session'); }
+        }
+      }catch{}
     }
-  }catch{}
-
-  onAuthStateChanged(auth, async user=>{
-    if(localSessionUser) return; // local session takes precedence if already launched
-    if(!user){ started=false; login(); return; }
-    // Codex: one-time bootstrap - if temp admin already used, force re-login with personal account
-    if(user.email===initial && user.displayName===bootstrapDone){
-      await signOut(auth);
-      login('El acceso temporal ya se utilizó. Ingresa con tu correo personal.');
-      return;
-    }
-    if(user.email===initial){ onboarding(user); }
-    else { await launch(user); }
-  });
-})();
+    started=false; login(); return;
+  }
+  // Firebase session exists: clear any stale local session marker and use the cloud.
+  bootAuthResolved=true;
+  try{ localStorage.removeItem('sm-local-session'); }catch{}
+  // Codex: one-time bootstrap - if temp admin already used, force re-login with personal account
+  if(user.email===initial && user.displayName===bootstrapDone){
+    await signOut(auth);
+    login('El acceso temporal ya se utilizó. Ingresa con tu correo personal.');
+    return;
+  }
+  if(user.email===initial){ onboarding(user); }
+  else { await launch(user); }
+});
