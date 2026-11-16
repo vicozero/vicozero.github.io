@@ -121,6 +121,14 @@ service cloud.firestore {
         && (administrator() || get(/databases/$(database)/documents/notices/$(noticeId)).data.toAccountId == uid);
       allow delete: if false;
     }
+    match /auditLog/{entryId} {
+      allow read: if administrator();
+      allow create: if request.auth != null
+        && request.resource.data.keys().hasAll(['actorUid','action','target','createdAt'])
+        && request.resource.data.actorUid == request.auth.uid
+        && request.resource.data.createdAt == request.time;
+      allow update, delete: if false;
+    }
     match /sessions/{sessionId} {
       allow read: if administrator() || (activeOperator() && resource.data.userId == request.auth.uid);
       allow create: if sessionOwner()
