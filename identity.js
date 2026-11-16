@@ -43,8 +43,15 @@
         return json({user:{id:currentUser.id,name:currentUser.name,email:currentUser.email,unit:currentUser.unit||'',role:currentUser.role,active:currentUser.active,isOwner:!!currentUser.isOwner,revision:currentUser.revision||0}});
       }
       if(path==='directory') return json(data.users.filter(x=>x.active!==false).map(x=>({id:x.id,name:x.name,unit:x.unit||'',role:x.role})));
-      if(path==='users'){
+      if(path==='users' || path.startsWith('users/')){
         if(!currentUser||currentUser.role!=='admin') return json({error:'Solo el administrador puede gestionar usuarios.'},403);
+        if(path.startsWith('users/') && method==='DELETE'){
+          const delId=path.slice('users/'.length);
+          const target=(data.users||[]).find(x=>x.id===delId);
+          if(!target) return json({error:'Usuario no encontrado.'},404);
+          if(target.isOwner) return json({error:'No se puede eliminar la cuenta propietaria.'},403);
+          data.users=(data.users||[]).filter(x=>x.id!==delId); write(data); return json({ok:true});
+        }
         if(method==='GET') return json(data.users.map(x=>({id:x.id,email:x.email,name:x.name,role:x.role,active:x.active,unit:x.unit||'',isOwner:!!x.isOwner,revision:x.revision||0})));
         const id=body.id||(body.email?( 'u-'+hash((body.email||'').toLowerCase()) ) :crypto.randomUUID());
         const existing=data.users.find(x=>x.id===id||(x.email||'').toLowerCase()===(body.email||'').toLowerCase());

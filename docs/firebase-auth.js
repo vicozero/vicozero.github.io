@@ -132,8 +132,19 @@ function installStore(currentUser, isFirebaseAdmin=false){
 
     if(path==='me') return json({user:publicUser(me)});
     if(path==='directory') return json((data.users||[]).filter(x=>x.active!==false).map(x=>({id:x.id,name:x.name,unit:x.unit||'',role:x.role})));
-    if(path==='users'){
+    if(path==='users' || path.startsWith('users/')){
       if(me.role!=='admin') return json({error:'Solo el administrador puede gestionar usuarios.'},403);
+      // Delete user: DELETE /api/users/:id
+      if(path.startsWith('users/') && method==='DELETE'){
+        const delId=path.slice('users/'.length);
+        const target=(data.users||[]).find(x=>x.id===delId);
+        if(!target) return json({error:'Usuario no encontrado.'},404);
+        if(target.isOwner) return json({error:'No se puede eliminar la cuenta propietaria.'},403);
+        if(target.id===me.id) return json({error:'No puedes eliminar tu propia cuenta.'},403);
+        data.users=(data.users||[]).filter(x=>x.id!==delId);
+        writeWS(data);
+        return json({ok:true});
+      }
       if(method==='GET') return json((data.users||[]).map(publicUser));
       // create/update user
       const id=body.id || (body.email ? 'u-'+hash((body.email||'').toLowerCase()) : crypto.randomUUID());
