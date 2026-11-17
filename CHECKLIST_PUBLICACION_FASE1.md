@@ -4,7 +4,8 @@
 **Proyecto:** `centinela/`  
 **Sitio actual:** `https://vicozero.github.io/`  
 **Rama:** `fase1-validada-2026-11-17` · **código validado:** `fb1795d` (etiqueta `fase1-validada-2026-11-17-final`)  
-**Commits posteriores (sin tocar código validado):** `7b5aa65` (documentación), `4b10d9e` (lockfile), `318eca1` (prueba de seguridad)  
+**Commits posteriores (sin tocar código validado):** `7b5aa65` (documentación), `4b10d9e` (lockfile), `318eca1` (prueba de seguridad), `714dcb6` (preparación final), `5fa55c9` (varios administradores y transferencia segura), `3a98d00` (herramientas en cabecera y panel)  
+**HEAD actual:** `3a98d00` · **Caché PWA:** `sm-seguridad-v10`  
 **Estado:** **PREPARADO PERO DETENIDO.** No se publicó, no se migró, no se crearon usuarios y no se modificaron datos productivos.
 
 ---
@@ -14,11 +15,11 @@
 | Concepto | Resultado |
 |---|---|
 | Rama activa | `fase1-validada-2026-11-17` |
-| `HEAD` | `318eca1` (prueba de seguridad). Código validado inalterado en `fb1795d`; etiqueta `fase1-validada-2026-11-17-final` **sin mover**. |
-| Contenido de la rama | **98 archivos** respecto a `312da55`: **79 modificados + 19 nuevos** esenciales. Incluye `firestore.rules`, `storage.rules`, `cloud-portal.js`, `firebase-auth.js`, `sw.js`, `brand.css`, `library-page.js` y sus copias, `verify-migration-backup.mjs`, `migrate-verified-workspace.mjs`, `test-*.mjs`, informes y este checklist. |
+| `HEAD` | `3a98d00` (herramientas de administración). Código validado inalterado en `fb1795d`; etiqueta `fase1-validada-2026-11-17-final` **sin mover**. |
+| Contenido de la rama | **102 archivos** respecto a `312da55`: **80 modificados + 22 nuevos** esenciales. Incluye `firestore.rules`, `storage.rules`, `cloud-portal.js`, `firebase-auth.js`, `sw.js`, `brand.css`, `library-page.js` y sus copias, `verify-migration-backup.mjs`, `migrate-verified-workspace.mjs`, `test-*.mjs`, informes y este checklist. |
 | Árbol de trabajo | Limpio: 0 modificados, 0 en staging. 7 artefactos sin versionar (sección 3). |
 | Espejos `docs/` / `public/` | Verificado por hash SHA-256 en 9 archivos clave (`cloud-portal.js`, `firebase-auth.js`, `brand.css`, `sw.js`, `index.html`, `library-page.js`, `workspace.js`, `training-suite.js`, `normative-catalog.json`): **raíz = docs = public**. |
-| Service worker | Caché **`sm-seguridad-v8`** (corrección: el informe anterior decía v7). |
+| Service worker | Caché **`sm-seguridad-v10`** (v8 en el código validado `fb1795d`; v9 y v10 tras el modelo multi-admin). |
 | Operaciones realizadas | Solo lectura + verificaciones aisladas: `git status/log/diff/ls-remote`, `npm ls`, hashes, `npm ci` en directorio temporal, prueba de seguridad en emulador. **Sin `push`, sin `firebase deploy`, sin migración, sin `--force`.** |
 
 ---
@@ -33,8 +34,9 @@
 | **Total Fase 1 (original)** | **23 PASS · 0 FAIL · 0 BLOCKED** |
 | **Prueba de seguridad añadida (esta pasada)** | **1/1 PASS** — `test-phase1-admin-report-security.mjs` en emulador Firestore + Storage. Verifica que las fuentes del reporte están protegidas por **reglas**, no solo por el `isAdmin` de `cloud-portal.js`. |
 | `npm ci` aislado | **PASS** — 687 paquetes instalados desde cero con solo `package.json` + `package-lock.json`; `exit 0`; versiones idénticas. |
+| **Pruebas del modelo multi-admin (esta pasada)** | **3/3 PASS** — `node test-admin-users-ui.mjs`, `node test-cloud-session-ui.mjs` (transferencia transaccional, botones en cabecera y panel, limpieza y permisos por rol) y `npm.cmd run test:rules` con Java 21 (reglas Firestore + portal + suite). `npm.cmd run check`: PASS. No se repitieron las 24 pruebas ya aprobadas. |
 | Carga del sitio live (sin sesión) | OK — título correcto, pantalla de acceso, 0 errores de consola |
-| Repetición de pruebas | **No se repitió ninguna de las 23.** Solo se ejecutó la nueva prueba de seguridad; no se modificó código de producción. |
+| Repetición de pruebas | **No se repitieron las 24 pruebas ya aprobadas.** En esta pasada se ejecutaron solo las pruebas afectadas por el modelo multi-admin (fila anterior); el código sí cambió en commits posteriores al validado. |
 
 Detalle de la nueva prueba (resultado real):
 
@@ -59,7 +61,7 @@ Cobertura ya aprobada: reglas Firestore/Storage (propiedad, unidad, permisos, `r
 | Versiones resueltas = instaladas | `@firebase/rules-unit-testing` **5.0.2** (`^5.0.0`), `firebase` **12.19.0** (`^12.0.0`), `firebase-tools` **15.36.0** (`^15.0.0`). Coinciden con `npm ls --depth=0`. Total: 688 entradas (687 paquetes + root). |
 | Escaneo de credenciales | **Sin secretos.** Únicos hallazgos del escaneo: nombres de dependencias y URLs del registry (`@inquirer/password`, `jsonwebtoken`, `gtoken`, `registry-auth-token`). No hay tokens, API keys, contraseñas, claves privadas ni rutas locales de usuario. |
 | `npm ci` reproducible | **PASS.** En `C:\Users\Dell\AppData\Local\Temp\opencode\npm-ci-verify-fase1` se copiaron solo `package.json` + `package-lock.json`; `npm.cmd ci --no-audit --no-fund` → `added 687 packages in 2m`, `exit=0`, versiones 5.0.2 / 12.19.0 / 15.36.0. Solo avisos de deprecación de paquetes transitivos (`json-ptr`, `node-domexception`, `glob`, `uuid`). |
-| Históricos intactos | `fb1795d` y `7b5aa65` conservan sus hashes; la etiqueta sigue apuntando a `fb1795d`. No se hizo `commit --amend`, `rebase` ni `reset`. |
+| Históricos intactos | `fb1795d` y `7b5aa65` conservan sus hashes; la etiqueta sigue apuntando a `fb1795d`. Se hizo un `commit --amend` **solo del mensaje** en `5fa55c9` (árbol idéntico); no hubo `rebase` ni `reset`. |
 | `functions/` | `functions/package.json` declara Node 20, `firebase-admin ^12`, `firebase-functions ^5`. **No existe `functions/package-lock.json`**. Las Cloud Functions **no** están en el alcance de esta publicación. |
 
 ### Artefactos sin versionar (7)
@@ -104,7 +106,7 @@ Cobertura ya aprobada: reglas Firestore/Storage (propiedad, unidad, permisos, `r
 **Principios:** el usuario dueño autoriza y ejecuta la creación; el asistente no solicita, recibe, guarda ni reutiliza contraseñas; no se usan credenciales personales ni se crean cuentas reales sin autorización.
 
 1. **Cuenta no administradora (creable desde la UI):** tras autorización, en la app → *Usuarios y permisos* → **+ Registrar usuario**. Usar un correo de prueba desechable del dominio autorizado, p. ej. `qa-op-20261117@<dominio-autorizado>`. Generar la contraseña **localmente** con `[guid]::NewGuid().ToString('N')`; escribirla solo en el formulario; no pegarla en chat, correos, archivos ni `localStorage`. Rol: **operador / usuario operativo**, sin administración; desactivar permisos de `reports`/`actions`/`plans` si la UI lo permite (es el caso que debe dar 403).
-2. **Cuenta administradora:** la UI **no permite crear un segundo administrador** («La administración principal se transfiere desde la configuración central…»). Por tanto, la validación admin debe hacerla **el administrador dueño en su propia sesión**, tecleando su contraseña él mismo. No se comparte ni se almacena. No se modifica `security/authority` ni `initialAdministrator`.
+2. **Cuenta administradora:** ahora el **encargado principal** puede asignar el rol `admin` desde *Usuarios y permisos* (opción «Administrador» habilitada solo para él). Los administradores secundarios tienen acceso operativo completo pero **no pueden transferir la encargatura ni promover a otros administradores**. La validación debe ejecutarla el dueño en su propia sesión, tecleando su contraseña él mismo; no se comparte ni se almacena. No se modifica `security/authority` manualmente ni `initialAdministrator`.
 3. **Higiene:** tras las pruebas, desactivar/eliminar la cuenta `qa-op-…` desde la misma vista. No crear registros operativos de prueba: las cinco validaciones son de solo lectura (la previsualización se cancela).
 4. **Si no se autoriza la creación:** las validaciones siguen pendientes y **no se declaran aprobadas**. El modo local no sustituye a una cuenta cloud.
 
@@ -112,7 +114,7 @@ Cobertura ya aprobada: reglas Firestore/Storage (propiedad, unidad, permisos, `r
 
 ## 7. Procedimiento para validación en navegador (instrucciones, no ejecutadas)
 
-Precondición: sesión autenticada, sitio `https://vicozero.github.io/`, caché PWA v8 cargada (si aparece UI antigua: recarga forzada / borrar datos del sitio).
+Precondición: sesión autenticada, sitio `https://vicozero.github.io/`, caché PWA v10 cargada (si aparece UI antigua: recarga forzada / borrar datos del sitio).
 
 ### Guía rápida (marcar al ejecutar)
 
@@ -123,6 +125,8 @@ Precondición: sesión autenticada, sitio `https://vicozero.github.io/`, caché 
 | 3 | Preview importación | *Importar datos locales a la nube* → **Cancelar** | Conteos mostrados, **0 escrituras** |
 | 4 | Admin reporte | `await fetch('/api/inconsistencies')` en consola admin | **200** + JSON con `counts` |
 | 5 | Sin permisos | Misma llamada con cuenta `qa-op-…` | **403** + `{"error":"Permiso administrativo requerido."}` |
+| 6 | Herramientas admin visibles | Revisar cabecera y *Usuarios y permisos* en sesión principal y en secundaria | Principal: «Sesiones» y «Cambiar encargado» en cabecera + «Sesiones activas» y «Cambiar encargado» en el panel. Secundaria: solo los botones de sesiones. |
+| 7 | Alta de administradores | Abrir *+ Registrar usuario* con principal y con admin secundario | Principal ve habilitada la opción «Administrador»; secundario la ve deshabilitada. **No transferir la encargatura ni crear administradores reales.** |
 
 ### Pasos detallados
 
@@ -151,7 +155,15 @@ Precondición: sesión autenticada, sitio `https://vicozero.github.io/`, caché 
 5. **Rechazo para usuario sin permisos**
    - Repetir el mismo comando en la sesión `qa-op-…`: esperado **403** y cuerpo `{"error":"Permiso administrativo requerido."}`.
    - Comprobar además que las secciones `admin-only` no son visibles.
-6. **Cierre:** registrar en este checklist fecha, cuenta usada (sin contraseña), resultado de cada punto y cualquier error de consola.
+6. **Herramientas de administración visibles (solo inspección, sin ejecutar transferencias)**
+   - En la sesión del encargado principal: confirmar en la cabecera los botones **`Sesiones`** y **`Cambiar encargado`**, y al entrar a *Usuarios y permisos* el panel **`HERRAMIENTAS DE ADMINISTRACIÓN`** con **`Sesiones activas`** y **`Cambiar encargado`** (sin atributo `hidden`).
+   - En una sesión de administrador secundario (si se autoriza crearla): confirmar que solo aparecen los botones de sesiones en cabecera y panel, y que **no** existe `Cambiar encargado`.
+   - Opcional: pulsar **Sesiones** y comprobar que se abre el diálogo *Equipo conectado* con la tabla de sesiones.
+7. **Alta de administradores (solo inspección)**
+   - Con el encargado principal, abrir *+ Registrar usuario* y verificar que la opción **`Administrador`** está habilitada.
+   - Con un administrador secundario, verificar que la misma opción está deshabilitada y que el backend rechazaría el cambio con «Solo el encargado principal puede asignar el rol de administrador.»
+   - **No crear cuentas reales ni transferir la encargatura.** La transferencia transaccional ya quedó cubierta por `test-cloud-session-ui.mjs` en emulador/UI aislada.
+8. **Cierre:** registrar en este checklist fecha, cuenta usada (sin contraseña), resultado de cada punto y cualquier error de consola.
 
 > Si alguno falla: no publicar (o ejecutar reversión si ya se publicó) y documentar el bloqueo. No se marcan como aprobadas hasta ejecutarse.
 
@@ -210,7 +222,7 @@ Notas:
 - `git revert --no-commit 312da55..HEAD` produce exactamente el árbol de `312da55` mediante commits inversos; el push resultante es un **avance** y no reescribe historia.
 - **Prohibido:** `git push --force`, `git push public-pages 312da55:main`, `git reset --hard` seguido de push, o cualquier actualización no fast-forward de `public-pages/main`.
 - Si el despliegue es interrumpido a mitad, repetir el paso 1: las reglas son declarativas e idempotentes.
-- Tras reponer el frontend, la caché **`sm-seguridad-v8`** puede seguir sirviendo assets nuevos: recarga forzada, borrar datos del sitio o reinstalar la PWA. El `activate` del SW elimina todas las cachés `sm-seguridad-*` distintas de la activa, por lo que v8 **no bloquea** la actualización: basta con que el SW nuevo se active.
+- Tras reponer el frontend, la caché **`sm-seguridad-v10`** puede seguir sirviendo assets nuevos: recarga forzada, borrar datos del sitio o reinstalar la PWA. El `activate` del SW elimina todas las cachés `sm-seguridad-*` distintas de la activa, por lo que v10 **no bloquea** la actualización: basta con que el SW nuevo se active.
 - **No hay reversión de datos**: no se migró ni escribió nada productivo.
 - Si el problema aparece solo en módulos de capacitación/NOM, sospechar de las validaciones nuevas de `talk_topics`/`talk_schedules`/`talk_sessions`/`compliance_assessments` y revertir reglas antes que el frontend.
 - Para volver a Fase 1 tras una reversión: publicar de nuevo el frontend desde `fase1-validada-2026-11-17` como commit en avance, no rewindear.
@@ -228,7 +240,7 @@ Notas:
 | **MEDIO** | Reglas probadas solo en emulador `demo-sierra-madre`, no con volumen real. | Autorización expresa; revisar `/api/inconsistencies` con datos reales antes de cualquier reasignación. |
 | **BAJO (resuelto)** | `package-lock.json` sin versionar impedía `npm ci`. | Versionado en `4b10d9e`; `npm ci` verificado en entorno aislado. |
 | **MEDIO** | Ausencia de `.firebaserc`: riesgo de desplegar reglas en proyecto equivocado. | Usar siempre `--project sierra-madre-seguridad`. |
-| **BAJO** | Caché PWA v8 en dispositivos con assets antiguos (contador ausente). | El `activate` borra cachés `sm-seguridad-*` antiguas; recarga forzada / borrar datos / reinstalar si persiste. |
+| **BAJO** | Caché PWA v10 en dispositivos con assets antiguos (herramientas de administración ausentes). | El `activate` borra cachés `sm-seguridad-*` antiguas; recarga forzada / borrar datos / reinstalar si persiste. |
 | **BAJO** | `origin/main` divergente (1/59). | Publicar **solo** a `public-pages`; nunca hacer push a `origin`. |
 | **BAJO** | `functions/` sin lockfile y fuera de alcance. | No desplegar functions en esta publicación. |
 | **INFORMATIVO** | API key pública de Firebase en el código. | Pública por diseño; la seguridad depende de las reglas. Sin secretos privados en el repo. |
@@ -241,7 +253,7 @@ Notas:
 - **No se crearon usuarios reales**, no se usaron credenciales personales y no se solicitaron contraseñas.
 - **No se realizaron migraciones ni restauraciones**; `migrate-verified-workspace.mjs` y `verify-migration-backup.mjs` siguen como herramientas sin ejecutar sobre producción.
 - **No se publicaron reglas ni se desplegó el sitio.** `public-pages/main` sigue en `312da55`.
-- **No se usó `--force`, `rebase`, `reset` ni `commit --amend`** sobre la rama validada.
+- **No se usó `--force`, `rebase` ni `reset`.** El único `--amend` fue de mensaje en `5fa55c9` (código posterior al validado, árbol sin cambios).
 - **No se inició la Fase 2.**
 
 ---
@@ -251,10 +263,10 @@ Notas:
 Bloqueos actuales:
 
 1. Sin autorización expresa para publicar frontend y reglas.
-2. Sin cuentas de prueba autorizadas; el administrador no puede ser creado desde la UI (debe usar su sesión dueña).
+2. Sin cuentas de prueba autorizadas; el encargado principal puede crear administradores desde la UI, pero la validación debe ejecutarla el dueño en su propia sesión.
 3. ~~Sin decisión sobre versionar `package-lock.json`~~ → **RESUELTO**: versionado en `4b10d9e` y `npm ci` verificado.
 
-Resuelto en esta pasada: dependencias coherentes y sin secretos, lockfile versionado, instalación reproducible, prueba de seguridad del reporte (1/1 PASS), orden de publicación y reversión no destructiva, guía breve de navegador, confirmación de proyecto Firebase y caché PWA v8.
+Resuelto en esta pasada: dependencias coherentes y sin secretos, lockfile versionado, instalación reproducible, prueba de seguridad del reporte (1/1 PASS), orden de publicación y reversión no destructiva, guía breve de navegador, confirmación de proyecto Firebase, caché PWA v10 y modelo multi-admin con herramientas visibles en cabecera y panel.
 
 Se solicita autorización para:
 
