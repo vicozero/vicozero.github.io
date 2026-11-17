@@ -6,7 +6,7 @@
 **Rama:** `fase1-validada-2026-11-17` · **código validado:** `fb1795d` (etiqueta `fase1-validada-2026-11-17-final`)  
 **Commits posteriores (sin tocar código validado):** `7b5aa65` (documentación), `4b10d9e` (lockfile), `318eca1` (prueba de seguridad), `714dcb6` (preparación final), `5fa55c9` (varios administradores y transferencia segura), `3a98d00` (herramientas en cabecera y panel)  
 **HEAD actual:** `3a98d00` · **Caché PWA:** `sm-seguridad-v10`  
-**Estado:** **AUTORIZADO PARA PUBLICACIÓN — en ejecución.** Autorización expresa recibida el 17 de noviembre de 2026. No se migró, no se crearon usuarios y no se modificaron datos productivos.
+**Estado:** **PUBLICACIÓN PARCIAL — pendiente de Storage.** Frontend publicado y reglas de Firestore desplegadas el 17-11-2026. Las reglas de Storage quedan bloqueadas porque el proyecto no tiene Firebase Storage dado de alta (requiere un paso manual en consola). No se migró, no se crearon usuarios y no se modificaron datos productivos. Ver sección 12.
 
 ---
 
@@ -15,7 +15,9 @@
 | Concepto | Resultado |
 |---|---|
 | Rama activa | `fase1-validada-2026-11-17` |
-| `HEAD` | `3a98d00` (herramientas de administración). Código validado inalterado en `fb1795d`; etiqueta `fase1-validada-2026-11-17-final` **sin mover**. |
+| `HEAD` | `264db0a` (autorización de publicación). Código validado inalterado en `fb1795d`; etiqueta `fase1-validada-2026-11-17-final` **sin mover**. |
+| Frontend publicado | `public-pages/main`: `312da55` → `264db0a`, push en avance, **sin `--force`**. Verificado en `https://vicozero.github.io/`: HTTP 200, `adminTools` presente y `sm-seguridad-v10` activo. |
+| Reglas desplegadas | **Firestore: OK** (compiló y se liberó en `sierra-madre-seguridad`). **Storage: BLOQUEADO** — el proyecto no tiene Firebase Storage dado de alta; el deploy se detuvo en preverificación sin escribir nada. |
 | Contenido de la rama | **102 archivos** respecto a `312da55`: **80 modificados + 22 nuevos** esenciales. Incluye `firestore.rules`, `storage.rules`, `cloud-portal.js`, `firebase-auth.js`, `sw.js`, `brand.css`, `library-page.js` y sus copias, `verify-migration-backup.mjs`, `migrate-verified-workspace.mjs`, `test-*.mjs`, informes y este checklist. |
 | Árbol de trabajo | Limpio: 0 modificados, 0 en staging. 7 artefactos sin versionar (sección 3). |
 | Espejos `docs/` / `public/` | Verificado por hash SHA-256 en 9 archivos clave (`cloud-portal.js`, `firebase-auth.js`, `brand.css`, `sw.js`, `index.html`, `library-page.js`, `workspace.js`, `training-suite.js`, `normative-catalog.json`): **raíz = docs = public**. |
@@ -275,3 +277,31 @@ Secuencia autorizada:
 - Crear la cuenta operativa de prueba `qa-op-…`: **fuera de alcance de esta automatización**; la ejecuta el dueño en su propia sesión.
 
 **No se ejecutan migraciones, restauraciones, creación de usuarios reales ni Fase 2.**
+
+Resultado: ver **sección 12**.
+
+---
+
+## 12. Resultado de la publicación (17-11-2026)
+
+| Acción | Resultado |
+|---|---|
+| `git push public-pages HEAD:main` | **OK** — `312da55..264db0a`, fast-forward, sin `--force`. `git ls-remote` confirma `264db0a041325ba7a0615069331c083b5b8d2ecb`. |
+| Verificación del sitio | **OK** — `https://vicozero.github.io/` responde 200; el HTML contiene `adminTools`; `sw.js` sirve `sm-seguridad-v10`. (`adminSessionsButton` se crea dinámicamente, no aparece en el HTML estático.) |
+| `firebase deploy --only firestore:rules --project sierra-madre-seguridad` | **OK** — «rules file compiled successfully» + «released rules to cloud.firestore» + «Deploy complete!». |
+| `firebase deploy --only firestore:rules,storage:rules --project sierra-madre-seguridad` | **FALLÓ en preverificación, sin escrituras** — «Firebase Storage has not been set up on project sierra-madre-seguridad». Por eso se aisló Firestore, que sí estaba listo. |
+| Proyecto | **Correcto** — ID `sierra-madre-seguridad`, número `260475494499`, coincide con `projectId`, `appId` y `messagingSenderId` de la config web. |
+| Cuentas de prueba | **No creadas.** Fuera de alcance; las ejecuta el dueño en su sesión. |
+| Migraciones / restauraciones / Fase 2 | **No ejecutadas.** |
+
+### Paso manual pendiente para terminar Storage
+
+1. Abrir https://console.firebase.google.com/project/sierra-madre-seguridad/storage y pulsar **Get Started** para dar de alta Storage y crear el bucket por defecto (el elegido en la config web es `sierra-madre-seguridad.firebasestorage.app`). Revisar la ubicación del bucket: es una decisión irreversible.
+2. Con Storage dado de alta, ejecutar desde `centinela/`:
+
+```powershell
+$env:PATH="$env:JAVA_HOME\bin;$env:PATH"
+.\node_modules\.bin\firebase.cmd deploy --only storage:rules --project sierra-madre-seguridad
+```
+
+3. Registrar aquí el resultado. Hasta entonces, **la publicación no está completamente terminada**: las reglas de Storage siguen siendo las antiguas (más permisivas), por lo que no hay bloqueo de escrituras, pero sí queda pendiente el endurecimiento documentado.
