@@ -38,8 +38,19 @@ globalThis.SAFETY={
  groups:[['inspection','Inspección de áreas',5],['leadership','Liderazgo visible',6],['pst','Evaluación de PST',3],['unsafe','Actos y condiciones',6],['talk','Plática de 5 minutos',5],['epp','Inspección de EPP',5],['veo','Verificación de Estándares Operacionales',5],['observation','Observaciones preventivas',6],['incident','Incidentes y accidentes',3],['training','Capacitacion',4]]
 };
 
+// A format ID identifies existing records. Keep its most complete definition once.
+SAFETY.types=SAFETY.types.filter((definition,index,definitions)=>
+ definitions.findLastIndex(candidate=>candidate.id===definition.id)===index);
+// New activities need an explicitly assigned goal; preserve the original KPI targets.
+for(const group of SAFETY.groups)if(['veo','observation','incident','training'].includes(group[0]))group[2]=0;
+for(const definition of SAFETY.types)if(['veo','observation','incident','training'].includes(definition.id))definition.target=0;
+for(const definition of SAFETY.types){
+ definition.fields=(definition.fields||[]).map(field=>
+  field[2]==='select'&&Array.isArray(field[3])?[...field.slice(0,3),0,field[3]]:field);
+}
+
 // Keep workflow fields (date, department, shift, status) separate from form data.
-for(const id of ['veo','incident','training']){
+for(const id of ['veo','observation','incident','training']){
  const definition=SAFETY.types.find(t=>t.id===id);
  definition.fields=definition.fields.filter(([key])=>!['date','department','shift','folio'].includes(key)).map(field=>{
    const [key,label,kind,required,options]=field;
@@ -52,8 +63,11 @@ for(const id of ['veo','incident','training']){
 }
 const incidentDefinition=SAFETY.types.find(t=>t.id==='incident');
 incidentDefinition.table.columns.push(['due','Fecha compromiso','date']);
+const observationDefinition=SAFETY.types.find(t=>t.id==='observation');
+observationDefinition.name='Observación preventiva';
+observationDefinition.table.columns.push(['due','Fecha compromiso','date']);
 SAFETY.types.find(t=>t.id==='training').name='Capacitación';
-SAFETY.operationalTypes=['veo','incident','training'];
+SAFETY.operationalTypes=['veo','observation','incident','training'];
 SAFETY.validateOperationalReport=function(r){
  if(!this.operationalTypes.includes(r.type))return '';
  const definition=this.types.find(t=>t.id===r.type);

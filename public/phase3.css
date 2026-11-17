@@ -102,8 +102,6 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 
 /* --- Transiciones suaves globales --- */
 *{transition-timing-function:var(--ease);}
-EOF
-echo written
 /* --- Mobile / PWA usability improvements --- */
 @media (max-width: 800px){
   html, body { -webkit-text-size-adjust: 100%; }
@@ -153,4 +151,28 @@ echo written
   .notice-tabs { flex-wrap: wrap; }
   .notice-tabs button { flex: 1 1 45%; }
   table { min-width: 560px; }
+}
+
+/* One menu state shared by the original navigation and dynamically added views. */
+@media(min-width:801px){
+  .menu-toggle{display:inline-flex;align-items:center;justify-content:center;}
+  body.sidebar-collapsed .shell{margin-left:68px;}
+  body.sidebar-collapsed aside nav a span{display:none;}
+  body.sidebar-collapsed aside nav a span:first-child{display:inline;}
+}
+@media(max-width:800px){
+  body.sidebar-collapsed aside{width:244px;min-width:244px;}
+  body.sidebar-collapsed aside .side-caption,
+  body.sidebar-collapsed aside .nav-group,
+  body.sidebar-collapsed aside .side-user div,
+  body.sidebar-collapsed aside nav button span{display:revert;}
+  body.sidebar-collapsed aside nav button{justify-content:flex-start;padding:13px 12px;}
+  body.sidebar-collapsed aside nav button b{display:revert;}
+  body.nav-open:after{display:none;}
+  body.nav-open .mobile-backdrop{opacity:1;pointer-events:auto;}
+  .action-metric:last-child{grid-column:auto;display:block;}
+  .action-metric:last-child strong{margin:6px 0;}
+  .action-editor-grid label:has(textarea){grid-column:auto;}
+  .fields>label{min-width:0;}
+  dialog form{min-width:0;}
 }

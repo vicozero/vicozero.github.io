@@ -65,15 +65,15 @@ export function createSafetySuiteStore(db,me){
   },
   async saveSchedule(schedule,topicIds){
    if(!permission('training_schedule'))throw Error('Permiso de programación requerido.');
-   validateSchedule(schedule,topicIds);return save('talk_schedules',schedule);
+   validateSchedule(schedule,topicIds);return save('talk_schedules',{...schedule,assignedAccountId:schedule.instructorId});
   },
   async saveSession(session){
    if(!permission('training_attendance'))throw Error('Permiso de captura de asistencia requerido.');
-   validateAttendance(session.attendees);
+   session={...session,attendees:validateAttendance(session.attendees)};
    sessionToOriginalTalkReport(session);
-   const topic=await getDoc(doc(db,'talk_topics',session.topicId));if(!topic.exists()||topic.data().status!=='Aprobado')throw Error('La ejecución requiere un material aprobado.');
-   const schedule=await getDoc(doc(db,'talk_schedules',session.scheduleId));if(!schedule.exists()||schedule.data().topicId!==session.topicId)throw Error('La sesión no corresponde al tema programado.');
-   return save('talk_sessions',session);
+   const topic=await getDoc(session.topicRevision?doc(db,'talk_topic_versions',session.topicId+'--'+session.topicRevision):doc(db,'talk_topics',session.topicId));if(!topic.exists()||topic.data().status!=='Aprobado')throw Error('La ejecución requiere un material aprobado.');
+   const schedule=await getDoc(doc(db,'talk_schedules',session.scheduleId));if(!schedule.exists()||schedule.data().topicId!==session.topicId||schedule.data().status==='Cancelada')throw Error('La sesión no corresponde a una programación activa.');
+   return save('talk_sessions',{...session,assignedAccountId:schedule.data().instructorId,topicRevision:topic.data().revision});
   },
   async saveAssessment(record){
    if(!permission('nom_assess'))throw Error('Permiso de evaluación normativa requerido.');
@@ -103,17 +103,24 @@ export function createSafetySuiteStore(db,me){
 export function createLocalSafetySuiteStore(me,{directory=[]}={}){
  const admin=me.role==='admin',permission=key=>admin||me.permissions?.[key]===true;
  const KEY='sm-suite-workspace-v1';
- const read=()=>{try{const v=JSON.parse(localStorage.getItem(KEY)||'{}');return v&&typeof v==='object'?v:{};}catch{return {};}};
+ const read=()=>{const raw=localStorage.getItem(KEY);if(!raw)return {};try{const v=JSON.parse(raw);if(v&&typeof v==='object'&&!Array.isArray(v))return v;}catch{}throw Error('El programa local contiene datos dañados. Conserva un respaldo antes de repararlo.');};
  const write=data=>localStorage.setItem(KEY,JSON.stringify(data));
  const ensure=(db,name)=>{db[name]=Array.isArray(db[name])?db[name]:[];return db[name];};
  const clean=value=>JSON.parse(JSON.stringify(value));
- async function list(name){const db=read();return ensure(db,name).map(x=>({...x}));}
+ const shared=new Set(['talk_topics','talk_topic_versions']);
+ const allowed=new Set([...shared,'talk_schedules','talk_sessions']);
+ const owns=record=>record.ownerAccountId===me.id||record.assignedAccountId===me.id;
+ async function list(name){if(!allowed.has(name))throw Error('Colección no permitida.');const db=read();return clean(ensure(db,name).filter(x=>admin||shared.has(name)||owns(x)));}
  async function save(name,data){
   const db=read(),list=ensure(db,name),idx=list.findIndex(x=>x.id===data.id);
   const old=idx>=0?list[idx]:null;
+  if(old&&!admin&&!shared.has(name)&&!owns(old))throw Error('No tienes acceso a este registro.');
+  if(old&&!admin&&old.assignedAccountId!==data.assignedAccountId)throw Error('Solo el administrador puede reasignar este registro.');
   if((data.revision||0)!==(old?.revision||0))throw Error('El registro cambió en otra sesión. Recarga antes de guardar.');
   const record={...clean(data),revision:(old?.revision||0)+1,ownerAccountId:old?.ownerAccountId||me.id,createdBy:old?.createdBy||me.id,createdAt:old?.createdAt||new Date().toISOString(),updatedAt:new Date().toISOString()};
   if(idx>=0)list[idx]=record;else list.push(record);
+  if(name==='talk_topics')ensure(db,'talk_topic_versions').push({...clean(record),id:data.id+'--'+record.revision,topicId:data.id});
+  ensure(db,'auditLog').push({actorUid:me.id,action:'suite:'+name+':'+(old?'update':'create'),target:data.id,createdAt:new Date().toISOString()});
   write(db);return record;
  }
  return {
@@ -131,19 +138,21 @@ export function createLocalSafetySuiteStore(me,{directory=[]}={}){
   },
   async saveSchedule(schedule,topicIds){
    if(!permission('training_schedule'))throw Error('Permiso de programación requerido.');
-   validateSchedule(schedule,topicIds);return save('talk_schedules',schedule);
+   validateSchedule(schedule,topicIds);
+   if(!(await list('talk_topics')).some(t=>t.id===schedule.topicId))throw Error('El material debe guardarse antes de programarlo.');
+   return save('talk_schedules',{...schedule,assignedAccountId:schedule.instructorId});
   },
   async saveSession(session){
    if(!permission('training_attendance'))throw Error('Permiso de captura de asistencia requerido.');
-   validateAttendance(session.attendees);
+   session={...session,attendees:validateAttendance(session.attendees)};
    sessionToOriginalTalkReport(session);
    const topics=await list('talk_topics');
-   const topic=topics.find(t=>t.id===session.topicId);
+   const topic=session.topicRevision?(await list('talk_topic_versions')).find(t=>t.topicId===session.topicId&&t.revision===session.topicRevision):topics.find(t=>t.id===session.topicId);
    if(!topic||topic.status!=='Aprobado')throw Error('La ejecución requiere un material aprobado.');
    const schedules=await list('talk_schedules');
    const schedule=schedules.find(s=>s.id===session.scheduleId);
-   if(!schedule||schedule.topicId!==session.topicId)throw Error('La sesión no corresponde al tema programado.');
-   return save('talk_sessions',session);
+   if(!schedule||schedule.topicId!==session.topicId||schedule.status==='Cancelada')throw Error('La sesión no corresponde a una programación activa.');
+   return save('talk_sessions',{...session,assignedAccountId:schedule.instructorId,topicRevision:topic.revision});
   },
   async createOriginalTalkDraft(session){
    if(!permission('training_attendance'))throw Error('Permiso de captura requerido.');
@@ -151,11 +160,12 @@ export function createLocalSafetySuiteStore(me,{directory=[]}={}){
    const stored=sessions.find(s=>s.id===session.id);
    if(!stored)throw Error('La ejecución no está guardada.');
    const report=sessionToOriginalTalkReport({...stored,id:stored.id});
-   const WS='sm-workspace';
-   let ws={};try{ws=JSON.parse(localStorage.getItem(WS)||'{}')||{};}catch{ws={}}
+   const WS='sm-workspace-v1';
+   let ws;try{ws=JSON.parse(localStorage.getItem(WS)||'{}');if(!ws||typeof ws!=='object'||Array.isArray(ws))throw Error();}catch{throw Error('No se pudo leer el espacio de trabajo. No se sobrescribieron sus datos.');}
    ws.reports=Array.isArray(ws.reports)?ws.reports:[];
    if(ws.reports.some(r=>r.id===report.id))return {id:report.id,created:false};
-   ws.reports.push({...report,ownerAccountId:me.id,folio:'SM-PL-'+session.id,revision:1,updated:new Date().toISOString()});
+   let legacy=null;try{legacy=JSON.parse(localStorage.getItem('sm-workspace')||'{}')?.reports?.find(r=>r.id===report.id);}catch{}
+   ws.reports.push(legacy||{...report,ownerAccountId:me.id,folio:'SM-PL-'+session.id,revision:1,updated:new Date().toISOString()});
    localStorage.setItem(WS,JSON.stringify(ws));
    return {id:report.id,created:true};
   }

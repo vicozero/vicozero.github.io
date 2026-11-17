@@ -2,10 +2,10 @@
 .nom-layout{display:grid;grid-template-columns:320px 1fr;gap:18px;min-height:70vh;}
 .nom-list{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-card,12px);padding:14px;overflow:auto;max-height:80vh;}
 .nom-search{width:100%;padding:8px 12px;border:1px solid var(--line);border-radius:999px;background:var(--surface-soft);color:var(--ink);font-size:12px;margin-bottom:10px;}
-.nom-item{padding:10px 12px;border-radius:8px;cursor:pointer;margin-bottom:6px;border:1px solid transparent;transition:background .15s,border-color .15s;}
+.nom-item{display:block;width:100%;text-align:left;background:transparent;padding:10px 12px;border-radius:8px;cursor:pointer;margin-bottom:6px;border:1px solid transparent;transition:background .15s,border-color .15s;}
 .nom-item:hover{background:var(--surface-soft);}
 .nom-item.active{background:var(--accent-soft,#f4ecd9);border-color:var(--gold,#ba9343);}
-.nom-item .nom-id{font-size:11px;font-weight:700;color:var(--accent-text,#8c6b2c);}
+.nom-item span{display:block}.nom-item .nom-id{font-size:11px;font-weight:700;color:var(--accent-text,#8c6b2c);}
 .nom-item .nom-name{font-size:12px;color:var(--ink);margin-top:2px;}
 .nom-item .nom-cat{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:4px;}
 .nom-detail{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-card,12px);padding:22px;overflow:auto;max-height:80vh;}
@@ -23,67 +23,17 @@
   <header style="position:relative;border-radius:10px;margin-bottom:18px;">
     <div>Seguridad operativa <span>/</span> <b>Biblioteca NOM</b></div>
     <div class="header-tools">
-      <a class="sign-out" href="/index.html">← Volver al portal</a>
+      <button class="theme-button" id="libraryTheme" type="button">☾ Noche</button><a class="sign-out" href="/index.html">← Volver al portal</a>
     </div>
   </header>
   <div class="nom-layout">
     <div class="nom-list">
-      <input class="nom-search" id="nomSearch" placeholder="Buscar por número, nombre, palabra clave…" />
-      <div id="nomList"></div>
+      <input type="search" aria-label="Buscar norma" class="nom-search" id="nomSearch" placeholder="Buscar por número, nombre, palabra clave…" />
+      <label>Categoría<select id="nomCategory"><option value="">Todas las categorías</option></select></label><p id="nomCount" role="status"></p><div id="nomError" hidden role="alert"><p id="nomErrorText"></p><button id="nomRetry" class="secondary" type="button">Reintentar</button></div><div id="nomList"></div>
     </div>
     <div class="nom-detail" id="nomDetail">
       <div class="nom-empty">Selecciona una norma de la lista para ver su ficha técnica.</div>
     </div>
   </div>
 </div>
-<script src="/nom-data.js"></script>
-<script>
-(function(){
-  const lib = window.NOM_LIBRARY || [];
-  const listEl = document.getElementById('nomList');
-  const detailEl = document.getElementById('nomDetail');
-  const searchEl = document.getElementById('nomSearch');
-  let selected = null;
-
-  function renderList(q){
-    q = (q||'').trim();
-    const items = q ? window.searchNOM(q) : lib;
-    if (!items.length){ listEl.innerHTML = '<div class="nom-empty">Sin resultados.</div>'; return; }
-    listEl.innerHTML = items.map(n =>
-      '<div class="nom-item'+(selected===n.id?' active':'')+'" data-id="'+n.id+'">'+
-        '<div class="nom-id">'+n.id+'</div>'+
-        '<div class="nom-name">'+n.name+'</div>'+
-        '<div class="nom-cat">'+n.categoria+' · '+n.tema+'</div>'+
-      '</div>'
-    ).join('');
-    listEl.querySelectorAll('.nom-item').forEach(el => {
-      el.addEventListener('click', function(){ showDetail(el.dataset.id); });
-    });
-  }
-
-  function showDetail(id){
-    selected = id;
-    const n = lib.find(x => x.id === id);
-    if (!n){ detailEl.innerHTML = '<div class="nom-empty">Norma no encontrada.</div>'; return; }
-    detailEl.innerHTML =
-      '<h2>'+n.id+'</h2>'+
-      '<p style="color:var(--muted);font-size:13px;margin:0 0 12px;">'+n.name+'</p>'+
-      '<span class="nom-status">'+n.estado+'</span>'+
-      '<dl class="nom-meta">'+
-        '<dt>Categoría</dt><dd>'+n.categoria+'</dd>'+
-        '<dt>Tema</dt><dd>'+n.tema+'</dd>'+
-        '<dt>Identificador</dt><dd>'+n.id+'</dd>'+
-        '<dt>Palabras clave</dt><dd>'+(n.palabras||[]).join(', ')+'</dd>'+
-      '</dl>'+
-      '<div class="nom-source">'+
-        '<a href="/assets/nom-pdfs/'+n.id.replace(/[^A-Za-z0-9-]/g,'')+'.pdf" target="_blank" rel="noopener" style="display:inline-block;margin-bottom:6px;">📄 Consultar PDF (copia local, sin red)</a><br>'+
-        'Fuente oficial: <a href="'+n.fuente+'" target="_blank" rel="noopener">Consultar en STPS ↗</a><br>'+
-        '<small>Verificar versión, vigencia y contenido contra la fuente oficial antes de considerar vigente.</small>'+
-      '</div>';
-    renderList(searchEl.value);
-  }
-
-  searchEl.addEventListener('input', function(){ renderList(searchEl.value); });
-  renderList('');
-})();
-</script><script>if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('/sw.js').catch(()=>{});});}</script></body></html>
+<script type="module" src="/library-page.js"></script><script>if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('/sw.js').catch(()=>{});});}</script></body></html>

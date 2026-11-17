@@ -5,7 +5,7 @@ import {doc,setDoc,getDoc,updateDoc,serverTimestamp} from 'firebase/firestore';
 fs.mkdirSync('.qa',{recursive:true});
 const source=fs.readFileSync('safety-suite-store.js','utf8').replaceAll('https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js','firebase/firestore').replaceAll("'./regulatory-core.js'","'../regulatory-core.js'").replaceAll("'./training-core.js'","'../training-core.js'");
 fs.writeFileSync('.qa/suite-store-under-test.mjs',source);
-const {createSafetySuiteStore}=await import('./.qa/suite-store-under-test.mjs');
+const {createSafetySuiteStore,createLocalSafetySuiteStore}=await import('./.qa/suite-store-under-test.mjs');
 const env=await initializeTestEnvironment({projectId:'demo-sierra-madre',firestore:{host:'127.0.0.1',port:8087,rules:fs.readFileSync('firestore.rules','utf8')}});
 const adminId='Kgwk4gK0yxYJQMZZaggIyl2xtnh2',permissions={training_manage:true,training_schedule:true,training_attendance:true,nom_assess:true};
 try{
@@ -25,6 +25,7 @@ try{
  await admin.saveRequirement({id:'req-test',versionId:version.versionId,section:'5.2',text:'Resumen aislado de prueba',sourceUrl:version.sourceUrl,revision:0});
  await assertFails(updateDoc(doc(adminDb,'standard_requirements','req-test'),{text:'Mutación prohibida'}));
  const topic={id:'topic-test',revision:0,title:'Tema de prueba',status:'Aprobado',objective:'Objetivo de prueba',introduction:'Introducción de prueba',development:'Desarrollo de prueba',criticalPoints:['Punto'],reviewQuestions:['Pregunta']};
+ await assertFails(setDoc(doc(adminDb,'talk_topics','empty-approved'),{id:'empty-approved',title:'Vacío',status:'Aprobado',approver:adminId,reviewedAt:'2026-11-16',revision:1,ownerAccountId:adminId,createdBy:adminId,createdAt:serverTimestamp(),updatedAt:serverTimestamp()}));
  await assert.rejects(()=>instructor.saveTopic(topic),/aprobación/);
  const created=await admin.saveTopic(topic);
  assert((await getDoc(doc(adminDb,'talk_topic_versions','topic-test--1'))).exists());
@@ -35,14 +36,31 @@ try{
  await instructor.saveSchedule(schedule,new Set([topic.id]));
  const session={id:'session-test',revision:0,topicId:topic.id,scheduleId:schedule.id,date: schedule.date,status:'Ejecutada',attendees:[{personId:'worker',name:'Persona QA'}],title:topic.title,instructor:'Instructor QA',department:'QA',place:'Área QA',shift:schedule.shift,minutes:5};
  await instructor.saveSession(session);
+ await assertFails(updateDoc(doc(instructorDb,'talk_sessions',session.id),{topicId:'other-topic',revision:2,updatedAt:serverTimestamp()}));
+ await assertFails(updateDoc(doc(instructorDb,'talk_sessions',session.id),{attendees:[],revision:2,updatedAt:serverTimestamp()}));
  await assertFails(getDoc(doc(otherDb,'talk_sessions',session.id)));
  const first=await instructor.createOriginalTalkDraft(session),second=await instructor.createOriginalTalkDraft(session);
  assert.equal(first.created,true);assert.equal(second.created,false);
  const report=(await getDoc(doc(instructorDb,'reports',first.id))).data();assert.equal(report.status,'Borrador');assert.equal(report.type,'talk');
+ const savedSession=(await getDoc(doc(instructorDb,'talk_sessions',session.id))).data();
+ await admin.saveTopic({...topic,revision:3,status:'Borrador',development:'Nueva revisión pendiente'});
+ await instructor.saveSession({...savedSession,observations:'Asistencia corregida con material histórico aprobado'});
+ assert.equal((await getDoc(doc(instructorDb,'talk_sessions',session.id))).data().topicRevision,3);
  const assessment={id:'assessment-test',revision:0,versionId:version.versionId,requirementId:'req-test',department:'QA',responsibleId:'instructor',state:'Pendiente de evaluar'};
  await instructor.saveAssessment(assessment);
+ await assertFails(updateDoc(doc(instructorDb,'compliance_assessments',assessment.id),{versionId:'wrong-version',revision:2,updatedAt:serverTimestamp()}));
+ await assertFails(updateDoc(doc(instructorDb,'compliance_assessments',assessment.id),{state:'No aplica, con justificación',revision:2,updatedAt:serverTimestamp()}));
  await assertFails(updateDoc(doc(instructorDb,'compliance_assessments',assessment.id),{state:'Cumple, con evidencia revisada',revision:2,updatedAt:serverTimestamp()}));
  await admin.saveAssessment({...assessment,revision:1,state:'Cumple, con evidencia revisada',evaluatedAt:'2026-11-16',evaluatedBy:adminId,reviewConfirmation:true,evidence:[{id:'evidence-test',reviewedBy:adminId,reviewedAt:'2026-11-16'}]});
  assert((await getDoc(doc(adminDb,'compliance_reviews','assessment-test--2'))).exists());
+ const cache=new Map();globalThis.localStorage={getItem:key=>cache.get(key)||null,setItem:(key,value)=>cache.set(key,value)};
+ const localAdmin=createLocalSafetySuiteStore({id:adminId,role:'admin'}),localInstructor=createLocalSafetySuiteStore({id:'instructor',role:'operator',permissions}),localOther=createLocalSafetySuiteStore({id:'other',role:'member'});
+ await localAdmin.saveTopic(topic);await localInstructor.saveSchedule(schedule,new Set([topic.id]));await localInstructor.saveSession(session);
+ assert.equal((await localOther.list('talk_sessions')).length,0);assert.equal((await localAdmin.list('talk_sessions')).length,1);
+ const linked=await localInstructor.createOriginalTalkDraft(session);assert.equal(linked.created,true);assert.equal((await localInstructor.createOriginalTalkDraft(session)).created,false);
+ assert.equal(JSON.parse(cache.get('sm-workspace-v1')).reports[0].id,linked.id);assert.equal(cache.has('sm-workspace'),false);
+ await assert.rejects(()=>localOther.saveSession(session),/Permiso/);assert.equal((await localAdmin.list('talk_topic_versions')).length,1);
+ const intact=cache.get('sm-suite-workspace-v1');cache.set('sm-suite-workspace-v1','{dañado');await assert.rejects(()=>localAdmin.saveTopic(topic),/datos dañados/);assert.equal(cache.get('sm-suite-workspace-v1'),'{dañado');cache.set('sm-suite-workspace-v1',intact);
+ delete globalThis.localStorage;
  console.log('Suite/Firestore: permisos, versiones inmutables, aprobación, calendario, asistencia privada, vínculo KPI sin duplicados y revisión de cumplimiento: OK');
 }finally{await env.cleanup();}

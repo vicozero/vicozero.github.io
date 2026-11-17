@@ -4,7 +4,7 @@ import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,createUserWithEmai
 const config={apiKey:'AIzaSyAukoVwasMxI2-uRHd7u13ycxb53h2wbeY',authDomain:'sierra-madre-seguridad.firebaseapp.com',projectId:'sierra-madre-seguridad',storageBucket:'sierra-madre-seguridad.firebasestorage.app',messagingSenderId:'260475494499',appId:'1:260475494499:web:b3ef3d6a9ca392842cd856'};
 const app=initializeApp(config);
 const auth=getAuth(app);
-setPersistence(auth,browserLocalPersistence);
+setPersistence(auth,browserLocalPersistence).catch(error=>console.warn('La sesión no podrá recordarse en este navegador.',error));
 
 const by=id=>document.getElementById(id);
 const initial='admin@sierra-madre-seguridad.app';
@@ -14,12 +14,12 @@ let localSessionUser=null; // for local (non-Firebase) user sessions
 
 // Theme
 const root=document.documentElement;
-root.dataset.theme=localStorage.getItem('sm-theme')||'light';
+try{const theme=localStorage.getItem('sm-theme');root.dataset.theme=['light','dark'].includes(theme)?theme:'light';}catch{root.dataset.theme='light';}
 const visualStyle=document.createElement('style');
 visualStyle.textContent=`.access-screen{position:relative;isolation:isolate}.access-screen::before{content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,#f4f3efed 0%,#f4f3efc9 46%,#f4f3efb5 100%),url('/assets/seguridad-acceso.png') center/cover no-repeat;border-radius:0 0 18px 18px}:root[data-theme=dark] .access-screen::before{background:linear-gradient(90deg,#161b1eed 0%,#161b1ec7 48%,#161b1ea3 100%),url('/assets/seguridad-acceso.png') center/cover no-repeat}.access-card{backdrop-filter:blur(9px)}:root[data-theme=dark] .hero{background-image:linear-gradient(90deg,#111a20eb 0%,#111a20b9 58%,#111a207a 100%),url('/assets/seguridad-panel.png');background-position:center right;background-size:cover}:root[data-theme=dark] .hero>*{position:relative;z-index:1}@media(max-width:1100px){.access-screen::before{opacity:.82}}`;
 document.head.appendChild(visualStyle);
 function refreshThemeButtons(){document.querySelectorAll('[data-theme-toggle]').forEach(b=>{const dark=root.dataset.theme==='dark';b.textContent=dark?'☀ Día':'☾ Noche';b.setAttribute('aria-label',dark?'Activar modo día':'Activar modo noche');b.setAttribute('aria-pressed',String(dark));});}
-document.addEventListener('click',e=>{if(!e.target.closest('[data-theme-toggle]'))return;root.dataset.theme=root.dataset.theme==='dark'?'light':'dark';localStorage.setItem('sm-theme',root.dataset.theme);refreshThemeButtons();});
+document.addEventListener('click',e=>{if(!e.target.closest('[data-theme-toggle]'))return;root.dataset.theme=root.dataset.theme==='dark'?'light':'dark';try{localStorage.setItem('sm-theme',root.dataset.theme);}catch{}refreshThemeButtons();});
 refreshThemeButtons();
 
 const card=()=>document.querySelector('.access-card');
@@ -30,8 +30,13 @@ function toast(msg){const t=by('toast');if(t){t.textContent=msg;t.classList.add(
 const WORKSPACE_KEY='sm-workspace-v1';
 const hash=s=>{let h=0;for(let i=0;i<s.length;i++)h=((h<<5)-h)+s.charCodeAt(i)|0;return 'h'+Math.abs(h).toString(16)};
 function emptyWS(){return {reports:[],actions:[],plans:[],users:[],notices:[],reads:{}};}
-function readWS(){try{const d=JSON.parse(localStorage.getItem(WORKSPACE_KEY));if(d&&Array.isArray(d.users))return d;}catch{}return emptyWS();}
-function writeWS(d){try{localStorage.setItem(WORKSPACE_KEY,JSON.stringify(d));}catch{}}
+function readWS(){
+  const raw=localStorage.getItem(WORKSPACE_KEY);if(!raw)return emptyWS();
+  let data;try{data=JSON.parse(raw);}catch{throw Error('El espacio local no se pudo leer. Conserva el respaldo antes de intentar restaurarlo.');}
+  if(!data||!Array.isArray(data.users))throw Error('La estructura del espacio local no es válida. No se reemplazaron tus registros.');
+  return data;
+}
+function writeWS(data){try{localStorage.setItem(WORKSPACE_KEY,JSON.stringify(data));}catch{throw Error('No se pudo guardar en este navegador. Libera espacio o descarga un respaldo; los cambios aún no se guardaron.');}}
 async function exportWorkspaceBackup(){
   const workspace=readWS();
   const clean={...workspace,users:(workspace.users||[]).map(({passwordHash,...user})=>user)};
@@ -274,6 +279,7 @@ function installStore(currentUser, isFirebaseAdmin=false){
 const DEFAULT_PERMS={
   admin:{dashboard:true,reports:true,edit_reports:true,program:true,edit_program:true,actions:true,edit_actions:true,progress:true,team:true,manage_team:true,notices:true,send_notices:true,users:true,view_all:true,assign:true},
   operator:{dashboard:true,reports:true,edit_reports:true,program:true,edit_program:false,actions:true,edit_actions:true,progress:true,team:false,manage_team:false,notices:true,send_notices:true,users:false,view_all:false,assign:false},
+  supervisor:{dashboard:true,reports:true,edit_reports:true,program:true,edit_program:false,actions:true,edit_actions:true,progress:true,team:true,manage_team:false,notices:true,send_notices:true,users:false,view_all:false,assign:false},
   member:{dashboard:true,reports:true,edit_reports:true,program:true,edit_program:false,actions:true,edit_actions:true,progress:true,team:false,manage_team:false,notices:true,send_notices:false,users:false,view_all:false,assign:false}
 };
 function effectivePerms(u){ const base={...(DEFAULT_PERMS[u.role]||DEFAULT_PERMS.member)}; if(u.permissions&&typeof u.permissions==='object'){ for(const k in base){ if(k in u.permissions) base[k]=!!u.permissions[k]; } for(const k in u.permissions){ if(!(k in base)) base[k]=!!u.permissions[k]; } } return base; }
@@ -295,7 +301,7 @@ async function launch(user){
     const cloud=await connectPortal(app,user,DEFAULT_PERMS);
     globalThis.SM_CLOUD=cloud;
     globalThis.AUTH={user:cloud.me};globalThis.ACCOUNT_USERS=cloud.users;globalThis.ACCOUNT_DIRECTORY=cloud.directory;
-    globalThis.SM_SCOPE_ACCOUNT=cloud.me.role==='admin'?'':cloud.me.id;
+    globalThis.SM_SCOPE_ACCOUNT=cloud.me.role==='admin'||cloud.me.permissions.view_all?'':cloud.me.id;
     globalThis.smStorageKey=k=>k+'-'+user.uid;
     document.body.dataset.role=cloud.me.role;
     await loadAppScripts();
@@ -317,27 +323,16 @@ async function launch(user){
     if(cloud.me.role==='admin')mountProfile(user);
     document.querySelector('.sign-out').onclick=async e=>{
       e.preventDefault();
-      try{await closeSession();await signOut(auth);localStorage.removeItem('sm-local-session');location.reload();}
-      catch{toast('No se pudo cerrar y sincronizar la sesión. Recupera la conexión y vuelve a intentar.');}
+      try{await Promise.race([closeSession().catch(error=>console.warn('No se pudo sincronizar el cierre de presencia.',error)),new Promise(resolve=>setTimeout(resolve,3000))]);await signOut(auth);try{localStorage.removeItem('sm-local-session');}catch{}location.reload();}
+      catch{toast('No se pudo cerrar la sesión. Inténtalo de nuevo.');}
     };
     toast('Conectado al almacenamiento central de Sierra Madre.');
   }catch(error){
-    console.warn('Almacenamiento central no disponible; se usa el espacio local del navegador.',error);
+    console.warn('No se pudo abrir el almacenamiento central.',error);
     started=false;
-    const ownerUid='Kgwk4gK0yxYJQMZZaggIyl2xtnh2';
-    if(user.uid===ownerUid){
-      try{
-        await legacyLaunch(user);
-        toast('Sesión iniciada en el espacio local. El almacenamiento central no está disponible.');
-        return;
-      }catch(fallbackError){
-        console.error('No se pudo abrir el espacio local.',fallbackError);
-        started=false;
-        login('No se pudo abrir tu espacio: '+(fallbackError.code||fallbackError.message));
-        return;
-      }
-    }
     login('No se pudo abrir tu espacio: '+(error.code||error.message));
+    const retry=document.createElement('button');retry.type='button';retry.className='secondary';retry.textContent='Reintentar conexión';retry.onclick=()=>location.reload();card()?.append(retry);
+    const backup=document.createElement('button');backup.type='button';backup.className='secondary';backup.textContent='Descargar respaldo de este navegador';backup.onclick=()=>exportWorkspaceBackup().catch(()=>toast('No se pudo descargar el respaldo.'));card()?.append(backup);
   }
 }
 async function legacyLaunch(user){
@@ -362,12 +357,15 @@ async function legacyLaunch(user){
   document.body.dataset.role='admin';
   await loadAppScripts();
   by('accessScreen').hidden=true; by('appRoot').hidden=false;
+  globalThis.SM_LOCAL_MODE=true;
+  document.body.dataset.storage='local';
+  const syncEl=by('sync'); if(syncEl){syncEl.textContent='Modo local: datos guardados en este navegador (sin sincronización central)'; syncEl.className='sync local'; syncEl.title='Los datos no se comparten ni sincronizan con otros dispositivos/cuentas desde este modo. Realiza respaldos periódicos.';}
   mountProfile(user);
   try{const {installNormativeLibrary}=await import('./normative-library.js');await installNormativeLibrary();}catch(e){console.warn('Biblioteca normativa no disponible',e);}
   try{const {createLocalSafetySuiteStore}=await import('./safety-suite-store.js');const {installTrainingSuite}=await import('./training-suite.js');const wsDir=(readWS().users||[]).filter(x=>x.active!==false).map(x=>({id:x.id,name:x.name,unit:x.unit||'',role:x.role}));await installTrainingSuite({store:createLocalSafetySuiteStore(me,{directory:wsDir}),me,directory:wsDir});}catch(e){console.warn('Programa de pláticas no disponible',e);}
   try{globalThis.SM_SESSION_TRACKER?.start(me);}catch{}
   document.querySelector('.sign-out')?.addEventListener('click',e=>{e.preventDefault(); try{localStorage.removeItem('sm-local-session');}catch{} localSessionUser=null; signOut(auth);});
-  setTimeout(()=>toast('Sesión protegida. Los datos de trabajo se guardan en este navegador.'),600);
+  setTimeout(()=>toast('Modo local: los datos se guardan solo en este navegador y no se sincronizan con otros equipos. Descarga respaldos periódicos.'),1200);
 }
 
 // --- Launch for local (in-app created) users ---
@@ -384,23 +382,27 @@ async function launchLocal(user){
   document.body.dataset.role=me.role||'member';
   await loadAppScripts();
   by('accessScreen').hidden=true; by('appRoot').hidden=false;
-  document.querySelector('.sign-out')?.addEventListener('click',e=>{e.preventDefault(); try{localStorage.removeItem('sm-local-session');}catch{} localSessionUser=null; started=false; login();});
+  globalThis.SM_LOCAL_MODE=true;
+  document.body.dataset.storage='local';
+  const syncEl=by('sync'); if(syncEl){syncEl.textContent='Modo local: datos guardados en este navegador (sin sincronización central)'; syncEl.className='sync local'; syncEl.title='Los datos no se comparten ni sincronizan con otros dispositivos/cuentas desde este modo. Realiza respaldos periódicos.';}
+  document.querySelector('.sign-out')?.addEventListener('click',e=>{e.preventDefault();try{localStorage.removeItem('sm-local-session');}catch{}localSessionUser=null;location.reload();});
   try{const {installNormativeLibrary}=await import('./normative-library.js');await installNormativeLibrary();}catch(e){console.warn('Biblioteca normativa no disponible',e);}
   try{const {createLocalSafetySuiteStore}=await import('./safety-suite-store.js');const {installTrainingSuite}=await import('./training-suite.js');const wsDir=(readWS().users||[]).filter(x=>x.active!==false).map(x=>({id:x.id,name:x.name,unit:x.unit||'',role:x.role}));await installTrainingSuite({store:createLocalSafetySuiteStore(me,{directory:wsDir}),me,directory:wsDir});}catch(e){console.warn('Programa de pláticas no disponible',e);}
   try{globalThis.SM_SESSION_TRACKER?.start(me);}catch{toast('No se pudo guardar el tiempo de sesión. Verifica el almacenamiento del navegador.');}
-  setTimeout(()=>toast('Sesión iniciada. Los datos se guardan en este navegador.'),600);
+  setTimeout(()=>toast('Modo local: los datos se guardan solo en este navegador y no se sincronizan con otros equipos. Descarga respaldos periódicos.'),1200);
 }
 
-async function importLocalWorkspace(me){
+async function importLocalWorkspace(me,{preview=false}={}){
   if(!globalThis.SM_CLOUD) throw Error('Activa primero el almacenamiento central.');
   const ws=readWS();
+  if(JSON.stringify(ws).match(/"passwordHash"|"refreshToken"|"idToken"|"accessToken"|"apiKey"\s*:/)) throw Error('El espacio local contiene campos sensibles. Descarga un respaldo limpio antes de importar.');
   const localUsers=Array.isArray(ws.users)?ws.users:[];
   let profiles=[];
   try{const r=await fetch('/api/users',{cache:'no-store'});if(r.ok)profiles=await r.json();}catch{}
   const emailToUid={};
   for(const p of profiles){if(p&&p.email)emailToUid[String(p.email).toLowerCase()]=p.id;}
   const ownerFor=localId=>{const u=localUsers.find(x=>x.id===localId);return (u&&emailToUid[String(u.email||'').toLowerCase()])||me.id;};
-  const summary={reports:0,actions:0,plans:0,notices:0,skipped:0,notImported:[]};
+  const summary={reports:0,actions:0,plans:0,notices:0,skipped:0,conflicts:0,notImported:[],preview:[]};
   for(const col of ['reports','actions','plans']){
     const local=Array.isArray(ws[col])?ws[col]:[];
     if(!local.length)continue;
@@ -408,7 +410,10 @@ async function importLocalWorkspace(me){
     try{const r=await fetch('/api/'+col,{cache:'no-store'});if(r.ok)cloud=await r.json();}catch{}
     const existing=new Set((cloud||[]).map(x=>x.id));
     for(const rec of local){
-      if(!rec||!rec.id||existing.has(rec.id)){summary.skipped++;continue;}
+      if(!rec||!rec.id){summary.conflicts++;summary.preview.push({collection:col,id:'',action:'conflicto',reason:'sin identificador'});continue;}
+      if(existing.has(rec.id)){summary.skipped++;summary.preview.push({collection:col,id:rec.id,action:'omitir',reason:'ya existe en la nube'});continue;}
+      summary.preview.push({collection:col,id:rec.id,action:'agregar'});
+      if(preview)continue;
       const body={...rec,revision:0,ownerAccountId:ownerFor(rec.ownerAccountId)};
       if(col==='actions'||col==='plans')body.assignedAccountId=ownerFor(rec.assignedAccountId);
       if(col==='plans'){body.ownerAccountId=me.id;body.assignedAccountId=ownerFor(rec.assignedAccountId);}
@@ -421,7 +426,9 @@ async function importLocalWorkspace(me){
   try{const r=await fetch('/api/notices',{cache:'no-store'});if(r.ok)cloudNotices=await r.json();}catch{}
   const imported=new Set((cloudNotices||[]).map(n=>n.legacyId).filter(Boolean));
   for(const n of (ws.notices||[])){
-    if(!n||!n.id||imported.has(n.id)){summary.skipped++;continue;}
+    if(!n||!n.id||imported.has(n.id)){summary.skipped++;summary.preview.push({collection:'notices',id:n?.id||'',action:'omitir',reason:n?.id&&imported.has(n.id)?'ya importado':'sin identificador'});continue;}
+    summary.preview.push({collection:'notices',id:n.id,action:'agregar'});
+    if(preview)continue;
     const target=ownerFor(n.toAccountId);
     const toAccountIds=[...new Set([target,me.id])];
     const attachments=(Array.isArray(n.attachments)?n.attachments:[]).filter(a=>a&&a.dataUrl&&String(a.dataUrl).length<=850000);
@@ -430,6 +437,7 @@ async function importLocalWorkspace(me){
     summary.notices++;
   }
   summary.notImported=localUsers.filter(u=>u&&u.email&&!u.isOwner&&!emailToUid[String(u.email).toLowerCase()]).map(u=>u.name||u.email);
+  summary.counts={toAdd:summary.preview.filter(x=>x.action==='agregar').length,toSkip:summary.preview.filter(x=>x.action==='omitir').length,conflicts:summary.preview.filter(x=>x.action==='conflicto').length};
   return summary;
 }
 
@@ -437,11 +445,11 @@ async function importLocalWorkspace(me){
 function mountProfile(user){
   if(by('profileSettings')) return;
   const tools=document.querySelector('.header-tools'); if(!tools) return;
-  const saved=JSON.parse(localStorage.getItem('sm-profile-'+user.uid)||'{}');
+  let saved={};try{saved=JSON.parse(localStorage.getItem('sm-profile-'+user.uid)||'{}')||{};}catch{}
   const btn=document.createElement('button'); btn.id='profileSettings'; btn.className='theme-button'; btn.type='button'; btn.textContent='Perfil';
   const signOutLink=tools.querySelector('.sign-out'); if(signOutLink) tools.insertBefore(btn,signOutLink); else tools.appendChild(btn);
   const dialog=document.createElement('dialog'); dialog.id='profileDialog';
-  dialog.innerHTML=`<form method="dialog" id="profileForm"><div class="dialog-top"><div><span class="eyebrow">ADMINISTRADOR</span><h2>Mi perfil y avisos</h2></div><button class="close" value="cancel" aria-label="Cerrar">×</button></div><div class="editor-scroll"><div class="fields"><label>Nombre<input name="name" required maxlength="100" value="${(user.displayName||'Admin').replace(/&/g,'&amp;').replace(/"/g,'&quot;')}"></label><label>Correo de acceso<input name="email" type="email" value="${user.email||''}" readonly></label><label>Teléfono / WhatsApp<input name="phone" type="tel" maxlength="30" value="${saved.phone||''}"></label><label>Nueva contraseña <small>(opcional)</small><input name="password" type="password" minlength="8" autocomplete="new-password"></label></div><div class="report-note"><strong>Respaldo antes de migración</strong><p>Descarga una copia de formatos, acciones, evidencias, permisos, avisos e historiales almacenados en este navegador. Las contraseñas nunca se incluyen.</p><button class="secondary" type="button" id="exportWorkspace">Descargar respaldo local</button></div></div><div class="editor-footer"><button class="secondary" value="cancel" type="button" id="closeProfile">Cancelar</button><button class="primary" type="submit">Guardar perfil</button></div></form>`;
+  dialog.innerHTML=`<form method="dialog" id="profileForm"><div class="dialog-top"><div><span class="eyebrow">ADMINISTRADOR</span><h2>Mi perfil y avisos</h2></div><button class="close" value="cancel" aria-label="Cerrar">×</button></div><div class="editor-scroll"><div class="fields"><label>Nombre<input name="name" required maxlength="100" value="${(user.displayName||'Admin').replace(/&/g,'&amp;').replace(/"/g,'&quot;')}"></label><label>Correo de acceso<input name="email" type="email" value="${user.email||''}" readonly></label><label>Teléfono / WhatsApp<input name="phone" type="tel" maxlength="30" value="${String(saved.phone||'').replace(/&/g,'&amp;').replace(/\"/g,'&quot;')}"></label><label>Nueva contraseña <small>(opcional)</small><input name="password" type="password" minlength="8" autocomplete="new-password"></label></div><div class="report-note"><strong>Respaldo antes de migración</strong><p>Descarga una copia de formatos, acciones, evidencias, permisos, avisos e historiales almacenados en este navegador. Las contraseñas nunca se incluyen.</p><button class="secondary" type="button" id="exportWorkspace">Descargar respaldo local</button></div></div><div class="editor-footer"><button class="secondary" value="cancel" type="button" id="closeProfile">Cancelar</button><button class="primary" type="submit">Guardar perfil</button></div></form>`;
   document.body.appendChild(dialog);
   btn.onclick=()=>dialog.showModal();
   dialog.querySelector('#closeProfile').onclick=()=>dialog.close();
@@ -472,18 +480,20 @@ function mountProfile(user){
   if(cloudActive){
     const importBtn=document.createElement('button');
     importBtn.type='button';importBtn.className='secondary';importBtn.textContent='Importar datos locales a la nube';
-    dialog.querySelector('.report-note').appendChild(importBtn);
-    importBtn.onclick=async()=>{
-      if(!window.confirm('Antes de importar, crea en Usuarios y permisos las mismas cuentas (con su correo) para conservar la propiedad de los registros. Los usuarios que no existan en la nube se asignarán a tu cuenta.\n\nSe copiarán a la nube los formatos, acciones, programas y avisos guardados en este navegador. ¿Continuar?'))return;
-      importBtn.disabled=true;
-      try{
-        const summary=await importLocalWorkspace(globalThis.SM_CLOUD.me);
-        const missing=summary.notImported.length?` Recrea ${summary.notImported.length} usuarios locales en Usuarios y permisos.`:'';
-        toast(`Importados: ${summary.reports} formatos, ${summary.actions} acciones, ${summary.plans} programas, ${summary.notices} avisos.${missing}`);
-        setTimeout(()=>location.reload(),4000);
-      }catch(error){alert('No se pudieron importar todos los datos: '+error.message);}
-      finally{importBtn.disabled=false;}
-    };
+     dialog.querySelector('.report-note').appendChild(importBtn);
+     importBtn.onclick=async()=>{
+       importBtn.disabled=true;
+       try{
+         const preview=await importLocalWorkspace(globalThis.SM_CLOUD.me,{preview:true});
+         const msg=`Previsualización (sin escribir):\n- A agregar: ${preview.counts.toAdd}\n- Omitidos (ya existen/sin id): ${preview.counts.toSkip}\n- Conflictos: ${preview.counts.conflicts}\n\nAntes de importar, crea en Usuarios y permisos las mismas cuentas (con su correo). Los registros de usuarios no existentes en la nube se asignarán a tu cuenta.\n\n¿Continuar con la importación?`;
+         if(!window.confirm(msg))return;
+         const summary=await importLocalWorkspace(globalThis.SM_CLOUD.me);
+         const missing=summary.notImported.length?` Recrea ${summary.notImported.length} usuarios locales en Usuarios y permisos.`:'';
+         toast(`Importados: ${summary.reports} formatos, ${summary.actions} acciones, ${summary.plans} programas, ${summary.notices} avisos.${missing}`);
+         setTimeout(()=>location.reload(),4000);
+       }catch(error){alert('No se pudieron importar todos los datos: '+error.message);}
+       finally{importBtn.disabled=false;}
+     };
   }
   dialog.querySelector('#exportWorkspace').onclick=async()=>{try{const result=await exportWorkspaceBackup();toast(`Respaldo descargado: ${result.records} registros y ${result.users} usuarios.`)}catch{toast('No se pudo crear el respaldo local. Verifica el espacio disponible e inténtalo de nuevo.')}};
   by('profileForm').addEventListener('submit',async event=>{

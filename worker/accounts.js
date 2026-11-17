@@ -35,7 +35,7 @@ const publicUser=u=>({id:u.id,email:u.email,name:u.name,role:u.role,active:u.act
 const userCanRead=(user,record,collection)=>user.role==='admin'||(collection==='plans'?record.assignedAccountId===user.id:collection==='actions'?(record.assignedAccountId===user.id||record.ownerAccountId===user.id):record.ownerAccountId===user.id);
 async function allUsers(env,me){const saved=await readAll(env.BUCKET,'accounts');return [ownerProfile(normalizeEmail(env.SM_OWNER_EMAIL),me.isOwner?me.name:undefined),...saved]}
 async function resolveAccount(env,me,id){return (await allUsers(env,me)).find(u=>u.id===id&&u.active)}
-function decodeJsonBody(request){return request.text().then(raw=>{if(raw.length>10000000)throw Error('Registro demasiado grande');return JSON.parse(raw)})
+function decodeJsonBody(request){return request.text().then(raw=>{if(raw.length>10000000)throw Error('Registro demasiado grande');return JSON.parse(raw)})}
 function canAccessNotice(user,n){return user.role==='admin'||n.toAccountId===user.id||n.fromAccountId===user.id}
 async function getNotices(env,me){
   const stored=(await readAll(env.BUCKET,'notices')).filter(n=>canAccessNotice(me,n));

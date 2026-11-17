@@ -1,27 +1,54 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
+    function admin() {
+      return request.auth != null && firestore.get(/databases/(default)/documents/security/authority).data.administratorUid == request.auth.uid;
+    }
+    function active() {
+      return request.auth != null && firestore.get(/databases/(default)/documents/profiles/$(request.auth.uid)).data.active == true;
+    }
+    function own(data) {
+      return data.get('ownerAccountId', '') == request.auth.uid || data.get('assignedAccountId', '') == request.auth.uid;
+    }
+    function unitAllowed(data) {
+      let profile = firestore.get(/databases/(default)/documents/profiles/$(request.auth.uid)).data;
+      return !profile.get('restrictUnits', false) || profile.get('allowedUnits', []).size() == 0
+        || data.get('unit', data.get('area', data.get('unidad', ''))) in profile.get('allowedUnits', []);
+    }
+    function recordAllowed(kind, id, edit) {
+      let data = firestore.get(/databases/(default)/documents/$(kind)/$(id)).data;
+      let profile = firestore.get(/databases/(default)/documents/profiles/$(request.auth.uid)).data;
+      return admin() || (active() && unitAllowed(data)
+        && (own(data) || (!edit && profile.get('permissions', {}).get('view_all', false)))
+        && profile.get('permissions', {}).get(edit ? (kind == 'reports' ? 'edit_reports' : 'edit_actions') : kind, true));
+    }
+    function noticeAllowed(id) {
+      let notice = firestore.get(/databases/(default)/documents/notices/$(id)).data;
+      return admin() || (active() && (notice.fromAccountId == request.auth.uid || notice.toAccountId == request.auth.uid));
+    }
     // Evidencias fotográficas por registro
     match /evidence/{recordCollection}/{recordId}/{fileName} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null
+      allow read: if recordCollection in ['reports', 'actions'] && recordAllowed(recordCollection, recordId, false);
+      allow create: if resource == null && recordCollection in ['reports', 'actions'] && recordAllowed(recordCollection, recordId, true)
         && request.resource.size < 10 * 1024 * 1024
         && request.resource.contentType.matches('image/.*');
-      allow delete: if false;
+      allow update, delete: if false;
     }
     // Avatares / imágenes de perfil
     match /avatars/{uid}/{fileName} {
-      allow read: if true;
-      allow write: if request.auth != null && request.auth.uid == uid
+      allow read: if admin() || (active() && request.auth.uid == uid);
+      allow create, update: if active() && request.auth.uid == uid
         && request.resource.size < 2 * 1024 * 1024
         && request.resource.contentType.matches('image/.*');
     }
     // Adjuntos de avisos
     match /notices/{noticeId}/{fileName} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null
-        && request.resource.size < 10 * 1024 * 1024;
-      allow delete: if false;
+      allow read: if noticeAllowed(noticeId);
+      allow create: if resource == null && noticeAllowed(noticeId)
+        && firestore.get(/databases/(default)/documents/notices/$(noticeId)).data.fromAccountId == request.auth.uid
+        && request.resource.size < 10 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+      allow update, delete: if false;
     }
     // Denegar todo lo demás
     match /{allPaths=**} {

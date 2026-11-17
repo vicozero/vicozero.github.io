@@ -17,7 +17,8 @@ try{
   const db=ctx.firestore();
   await setDoc(doc(db,'security/authority'),{administratorUid:own});
   await setDoc(doc(db,'profiles',own),{id:own,name:'Admin test',role:'admin',active:true});
-  await setDoc(doc(db,'profiles','operator'),{id:'operator',name:'Operator test',role:'operator',active:true});
+  await setDoc(doc(db,'profiles','operator'),{id:'operator',email:'operator@example.test',name:'Operator test',role:'operator',active:true,revision:0});
+  await setDoc(doc(db,'profiles','supervisor'),{id:'supervisor',name:'Supervisor test',role:'supervisor',active:true,revision:0});
  });
  const perms={admin:{},operator:{edit_reports:true,edit_actions:true,send_notices:true}};
  const db=env.authenticatedContext('operator').firestore();
@@ -25,9 +26,13 @@ try{
  let result=await window.fetch('/api/reports/test-record',{method:'PUT',body:JSON.stringify({revision:0,type:'inspection',status:'Borrador',photos:[]})});
  const saved=await result.json();assert.equal(result.status,200,JSON.stringify(saved));assert.equal(saved.revision,1);
  result=await window.fetch('/api/reports');assert.equal(result.status,200);assert.equal((await result.json()).length,1);
+ result=await window.fetch('/api/reports/test-record');assert.equal((await result.json()).id,'test-record');
+ result=await window.fetch('/api/reports/test-record',{method:'DELETE'});assert.equal(result.status,405);
  const photo='data:image/jpeg;base64,'+'x'.repeat(1100000);
  result=await window.fetch('/api/reports/with-evidence',{method:'PUT',body:JSON.stringify({revision:0,type:'inspection',status:'Borrador',photos:[{data:photo,caption:'Large evidence'}]})});assert.equal(result.status,200,JSON.stringify(await result.clone().json()));
  result=await window.fetch('/api/reports');assert.equal((await result.json()).find(r=>r.id==='with-evidence').photos[0].data,photo);
+ result=await window.fetch('/api/reports/with-evidence',{method:'PUT',body:JSON.stringify({revision:1,type:'inspection',status:'Borrador',observations:'Metadata update without replacing evidence'})});assert.equal(result.status,200);assert.equal((await result.json()).photos[0].data,photo);
+ result=await window.fetch('/api/reports/with-evidence');assert.equal((await result.json()).photos[0].data,photo);
  result=await window.fetch('/api/reports/test-record',{method:'PUT',body:JSON.stringify({revision:0,status:'Borrador'})});assert.equal(result.status,409);
  result=await window.fetch('/api/notices',{method:'POST',body:JSON.stringify({toAccountIds:[own],text:'Integration test',type:'Mensaje'})});assert.equal(result.status,200);
  result=await window.fetch('/api/notices');assert.equal(result.status,200);assert.equal((await result.json()).length,1);
@@ -42,5 +47,21 @@ try{
  }
  const invalid={...operational.find(r=>r.type==='training'),id:'invalid-training',revision:0,hours:'0',ownerAccountId:'operator'};
  const rejected=await window.fetch('/api/reports/invalid-training',{method:'PUT',body:JSON.stringify(invalid)});assert.equal(rejected.status,403);
+ const admin=env.authenticatedContext(own).firestore();
+ await connectPortal({}, {uid:own},perms,admin);
+ const profileBody={id:'operator',email:'operator@example.test',name:'Operator renamed',role:'operator',active:true,revision:0};
+ result=await window.fetch('/api/users',{method:'POST',body:JSON.stringify(profileBody)});assert.equal(result.status,200);assert.equal((await result.json()).revision,1);
+ result=await window.fetch('/api/users',{method:'POST',body:JSON.stringify(profileBody)});assert.equal(result.status,409);
+ const action={id:'assigned-action',folio:'SM-AC-TEST',revision:0,description:'Review safety guard',owner:'Operator renamed',unit:'Workshop',requester:'Admin test',source:'Inspection',start:'2026-11-01',due:'2026-11-20',priority:'Media',progress:0,status:'Pendiente',photos:[]};
+ result=await window.fetch('/api/actions/'+action.id,{method:'PUT',body:JSON.stringify(action)});assert.equal(result.status,200,JSON.stringify(await result.clone().json()));const assigned=await result.json();assert.equal(assigned.assignedAccountId,'operator');
+ result=await window.fetch('/api/notices',{method:'POST',body:JSON.stringify({toAccountIds:['operator','missing'],text:'Should not be partly sent',type:'Mensaje'})});assert.equal(result.status,403);
+ result=await window.fetch('/api/users/'+own,{method:'DELETE'});assert.equal(result.status,403);
+ result=await window.fetch('/api/assign',{method:'POST',body:JSON.stringify({collection:'reports',id:'test-record',accountId:'supervisor'})});assert.equal(result.status,200);
+ result=await window.fetch('/api/reports/test-record');const reassigned=await result.json();assert.equal(reassigned.ownerAccountId,'supervisor');assert.equal(reassigned.supervisor,'Supervisor test');assert.equal(reassigned.revision,2);
+ await connectPortal({}, {uid:'supervisor'},perms,env.authenticatedContext('supervisor').firestore());
+ result=await window.fetch('/api/reports/test-record');assert.equal(result.status,200);assert.equal((await result.json()).id,'test-record');
+ await connectPortal({}, {uid:'operator'},perms,db);
+ result=await window.fetch('/api/actions/'+action.id,{method:'PUT',body:JSON.stringify({...assigned,description:'Tampered description',owner:'Somebody else',progress:40})});assert.equal(result.status,200,JSON.stringify(await result.clone().json()));const updated=await result.json();assert.equal(updated.description,action.description);assert.equal(updated.owner,'Operator renamed');assert.equal(updated.progress,40);assert.equal(updated.history.at(-1).by,'Operator renamed');
+ result=await window.fetch('/api/actions/'+action.id,{method:'PUT',body:JSON.stringify({...updated,status:'Cerrado',progress:100,verifiedDate:'2026-11-16'})});assert.equal(result.status,403);
  console.log('Portal/Firestore: guardado, consulta, conflicto, avisos y cuenta no autorizada: OK');
 }finally{await env.cleanup();}

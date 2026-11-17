@@ -21,6 +21,7 @@ try{
  host.querySelector('[data-nom-add]').click();assert.equal(SM_ACTIVE.normativeReferences.length,1);assert.equal(SM_ACTIVE.normativeReferences[0].verifiedAt,null);
  host.querySelector('[data-nom-add]').click();assert.equal(SM_ACTIVE.normativeReferences.length,1);assert(host.querySelector('[data-nom-error]').textContent.includes('ya está'));
  host.querySelector('[data-nom-remove]').click();assert.equal(SM_ACTIVE.normativeReferences.length,0);
+ const query=host.querySelector('[data-nom-search]');query.value='zzzzzz-no-results';query.dispatchEvent(new w.Event('input'));assert(!host.querySelector('[data-nom-source]').hasAttribute('href'));assert.equal(host.querySelector('[data-nom-section]').options.length,1);
  editor.removeAttribute('open');SM_ACTIVE.status='Finalizado';editor.setAttribute('open','');await new Promise(r=>setTimeout(r,0));
  assert(w.document.querySelector('[data-nom-add]').disabled);
  console.log('Biblioteca y selector: búsqueda, navegación, confirmación, versiones, duplicados, retiro y bloqueo de finalizados: OK');

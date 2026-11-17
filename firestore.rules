@@ -29,7 +29,7 @@ service cloud.firestore {
       return request.auth != null
         && exists(/databases/$(database)/documents/profiles/$(request.auth.uid))
         && get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data.active == true
-        && get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data.role in ['member', 'operator'];
+        && get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data.role in ['member', 'operator', 'supervisor'];
     }
     match /migrationBackups/{backupId} {
       allow read: if administrator();
@@ -63,16 +63,71 @@ service cloud.firestore {
     function sessionOwner() {
       return administrator() || activeOperator();
     }
+    function allowedUnit(data) {
+      let profile = get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data;
+      return !profile.get('restrictUnits', false) || profile.get('allowedUnits', []).size() == 0
+        || data.get('unit', '') in profile.get('allowedUnits', [])
+        || data.get('area', '') in profile.get('allowedUnits', [])
+        || data.get('unidad', '') in profile.get('allowedUnits', []);
+    }
+    function readOperation(kind) {
+      return activeOperator() && get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data.get('permissions', {}).get(kind, true) == true;
+    }
+    function validDateString(value) {
+      return value is string && value.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
+    }
+    // Critical fields are type/range checked whenever present. Drafts may omit
+    // fields that the app fills later; terminal states require their coherence.
+    function validActionWrite(data) {
+      return data.status in ['Pendiente', 'Por verificar', 'Cerrado']
+        && (!('progress' in data) || (data.progress is int && data.progress >= 0 && data.progress <= 100))
+        && (!('start' in data) || validDateString(data.start))
+        && (!('due' in data) || validDateString(data.due))
+        && (!('start' in data) || !('due' in data) || data.start <= data.due)
+        && (!('description' in data) || (data.description is string && data.description.size() <= 12000))
+        && (!('owner' in data) || (data.owner is string && data.owner.size() <= 200))
+        && (!('unit' in data) || (data.unit is string && data.unit.size() <= 200))
+        && (!('requester' in data) || (data.requester is string && data.requester.size() <= 200))
+        && (!('source' in data) || (data.source is string && data.source.size() <= 200))
+        && (!('priority' in data) || data.priority in ['Baja', 'Media', 'Alta'])
+        && (data.status != 'Cerrado' || (
+          data.progress is int && data.progress == 100
+          && data.verifiedDate is string && validDateString(data.verifiedDate)
+          && (!('start' in data) || data.verifiedDate >= data.start)
+          && data.verifier is string && data.verifier.size() > 0));
+    }
+    function validReportWrite(data) {
+      return data.status in ['Borrador', 'Finalizado']
+        && (!('type' in data) || (data.type is string && data.type.size() > 0 && data.type.size() <= 80))
+        && (!('date' in data) || validDateString(data.date))
+        && (!('supervisor' in data) || (data.supervisor is string && data.supervisor.size() <= 200))
+        && (!('revision' in data) || data.revision is int)
+        && (!('photos' in data) || data.photos is list)
+        && (!('photoChunkIds' in data) || data.photoChunkIds is list);
+    }
+    function validPlanWrite(data) {
+      return (!('period' in data) || (data.period is string && data.period.matches('^[0-9]{4}-[0-9]{2}$')))
+        && (!('person' in data) || (data.person is string && data.person.size() <= 200))
+        && (!('unit' in data) || (data.unit is string && data.unit.size() <= 200))
+        && (!('department' in data) || (data.department is string && data.department.size() <= 200))
+        && (!('kpi' in data) || data.kpi == '1' || data.kpi == '2' || data.kpi == 1 || data.kpi == 2)
+        && (!('targets' in data) || data.targets is map);
+    }
+    function validRecordWrite(kind, data) {
+      return (kind != 'actions' || validActionWrite(data))
+        && (kind != 'reports' || validReportWrite(data))
+        && (kind != 'plans' || validPlanWrite(data));
+    }
     match /{kind}/{recordId} {
-      allow get: if kind in ['reports', 'actions', 'plans'] && (administrator() || canViewAll() || (activeOperator() && (!exists(/databases/$(database)/documents/$(kind)/$(recordId)) || owns(resource.data))));
-      allow list: if kind in ['reports', 'actions', 'plans'] && (administrator() || canViewAll() || (activeOperator() && owns(resource.data)));
-      allow create: if kind in ['reports', 'actions', 'plans'] && (administrator() ||
-        (kind != 'plans' && canEdit(kind == 'reports' ? 'edit_reports' : 'edit_actions')
+      allow get: if kind in ['reports', 'actions', 'plans'] && (administrator() || (readOperation(kind) && (!exists(/databases/$(database)/documents/$(kind)/$(recordId)) || (allowedUnit(resource.data) && (canViewAll() || owns(resource.data))))));
+      allow list: if kind in ['reports', 'actions', 'plans'] && (administrator() || (readOperation(kind) && allowedUnit(resource.data) && (canViewAll() || owns(resource.data))));
+      allow create: if kind in ['reports', 'actions', 'plans'] && validRecordWrite(kind, request.resource.data) && (administrator() ||
+        (kind != 'plans' && canEdit(kind == 'reports' ? 'edit_reports' : 'edit_actions') && allowedUnit(request.resource.data)
         && request.resource.data.ownerAccountId == request.auth.uid
         && request.resource.data.get('assignedAccountId', request.auth.uid) == request.auth.uid
         && (kind != 'actions' || request.resource.data.status != 'Cerrado')));
-      allow update: if kind in ['reports', 'actions', 'plans'] && (administrator() ||
-        (kind != 'plans' && canEdit(kind == 'reports' ? 'edit_reports' : 'edit_actions')
+      allow update: if kind in ['reports', 'actions', 'plans'] && validRecordWrite(kind, request.resource.data) && (administrator() ||
+        (kind != 'plans' && canEdit(kind == 'reports' ? 'edit_reports' : 'edit_actions') && allowedUnit(resource.data) && allowedUnit(request.resource.data)
         && owns(resource.data)
         && request.resource.data.get('ownerAccountId', '') == resource.data.get('ownerAccountId', '')
         && request.resource.data.get('assignedAccountId', '') == resource.data.get('assignedAccountId', '')
@@ -102,9 +157,10 @@ service cloud.firestore {
       allow update, delete: if false;
     }
     match /evidenceChunks/{chunkId} {
-      allow get: if administrator() || (activeOperator() &&
-        (resource.data.ownerAccountId == request.auth.uid ||
-        owns(get(/databases/$(database)/documents/$(resource.data.recordCollection)/$(resource.data.recordId)).data)));
+      allow get: if administrator() || (readOperation(resource.data.recordCollection)
+        && allowedUnit(get(/databases/$(database)/documents/$(resource.data.recordCollection)/$(resource.data.recordId)).data)
+        && (canViewAll() || owns(get(/databases/$(database)/documents/$(resource.data.recordCollection)/$(resource.data.recordId)).data)));
+      allow list: if administrator();
       allow create: if administrator() || (activeOperator()
         && request.resource.data.ownerAccountId == request.auth.uid
         && request.resource.data.recordCollection in ['reports', 'actions']
@@ -172,7 +228,54 @@ service cloud.firestore {
         && request.resource.data.createdBy == resource.data.createdBy
         && request.resource.data.createdAt == resource.data.createdAt
         && request.resource.data.updatedAt == request.time
-        && request.resource.data.revision == resource.data.revision + 1;
+        && request.resource.data.revision == resource.data.revision + 1
+        && (administrator() || request.resource.data.get('assignedAccountId', '') == resource.data.get('assignedAccountId', ''));
+    }
+    function validTopic() {
+      let data = request.resource.data;
+      return data.title is string && data.title.size() > 0
+        && data.status in ['Propuesta','Borrador','En revisión','Aprobado','Archivado']
+        && (data.status != 'Aprobado' || (suitePermission('training_approve')
+          && data.approver == request.auth.uid
+          && data.reviewedAt is string && data.reviewedAt.size() > 0
+          && data.objective is string && data.objective.size() > 0
+          && data.introduction is string && data.introduction.size() > 0
+          && data.development is string && data.development.size() > 0
+          && data.criticalPoints is list && data.criticalPoints.size() > 0
+          && data.reviewQuestions is list && data.reviewQuestions.size() > 0));
+    }
+    function validSchedule() {
+      let data = request.resource.data;
+      return data.status in ['Programada','Reprogramada','Cancelada','Ejecutada']
+        && data.date is string && data.date.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}')
+        && data.minutes is number && data.minutes > 0
+        && data.shift is string && data.shift.size() > 0
+        && data.department is string && data.department.size() > 0
+        && data.place is string && data.place.size() > 0
+        && data.instructorId is string && data.instructorId.size() > 0
+        && data.assignedAccountId == data.instructorId
+        && exists(/databases/$(database)/documents/talk_topics/$(data.topicId));
+    }
+    function validTalkSession() {
+      let data = request.resource.data;
+      let schedule = get(/databases/$(database)/documents/talk_schedules/$(data.scheduleId)).data;
+      let topic = get(/databases/$(database)/documents/talk_topic_versions/$(data.topicId + '--' + string(data.topicRevision))).data;
+      return data.status == 'Ejecutada'
+        && data.date is string && data.date.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}')
+        && data.minutes is number && data.minutes > 0
+        && data.attendees is list && data.attendees.size() > 0
+        && schedule.topicId == data.topicId && schedule.status != 'Cancelada'
+        && (administrator() || owns(schedule))
+        && data.assignedAccountId == schedule.instructorId
+        && topic.status == 'Aprobado' && data.topicRevision == topic.revision;
+    }
+    function validComplianceAssessment() {
+      let data = request.resource.data;
+      return data.state in ['Pendiente de evaluar','Cumple, con evidencia revisada','No cumple','No aplica, con justificación','Información insuficiente']
+        && data.department is string && data.department.size() > 0
+        && data.responsibleId is string && data.responsibleId.size() > 0
+        && get(/databases/$(database)/documents/standard_requirements/$(data.requirementId)).data.versionId == data.versionId
+        && (data.state != 'No aplica, con justificación' || (data.applicabilityJustification is string && data.applicabilityJustification.size() > 0));
     }
     match /regulatory_versions/{versionId} {
       allow read: if suiteMember();
@@ -197,17 +300,17 @@ service cloud.firestore {
     }
     match /talk_topics/{topicId} {
       allow read: if suiteMember();
-      allow create: if suitePermission('training_manage') && suiteCreate()
-        && request.resource.data.status in ['Propuesta','Borrador','En revisión','Aprobado','Archivado']
-        && (request.resource.data.status != 'Aprobado' || (suitePermission('training_approve') && request.resource.data.approver == request.auth.uid));
-      allow update: if suitePermission('training_manage') && suiteUpdate()
-        && request.resource.data.status in ['Propuesta','Borrador','En revisión','Aprobado','Archivado']
-        && (request.resource.data.status != 'Aprobado' || (suitePermission('training_approve') && request.resource.data.approver == request.auth.uid));
+      allow create: if suitePermission('training_manage') && suiteCreate() && validTopic()
+        && getAfter(/databases/$(database)/documents/talk_topic_versions/$(topicId + '--' + string(request.resource.data.revision))).data.topicId == topicId;
+      allow update: if suitePermission('training_manage') && suiteUpdate() && validTopic()
+        && getAfter(/databases/$(database)/documents/talk_topic_versions/$(topicId + '--' + string(request.resource.data.revision))).data.topicId == topicId;
       allow delete: if false;
     }
     match /talk_topic_versions/{versionId} {
       allow read: if suiteMember();
       allow create: if suitePermission('training_manage')
+        && versionId == request.resource.data.topicId + '--' + string(request.resource.data.revision)
+        && request.resource.data.diff(getAfter(/databases/$(database)/documents/talk_topics/$(request.resource.data.topicId)).data).affectedKeys().hasOnly(['topicId'])
         && getAfter(/databases/$(database)/documents/talk_topics/$(request.resource.data.topicId)).data.revision == request.resource.data.revision
         && request.resource.data.createdBy == getAfter(/databases/$(database)/documents/talk_topics/$(request.resource.data.topicId)).data.createdBy
         && request.resource.data.updatedAt == request.time;
@@ -216,21 +319,17 @@ service cloud.firestore {
     match /talk_schedules/{scheduleId} {
       allow get: if administrator() || (suiteMember() && (!exists(/databases/$(database)/documents/talk_schedules/$(scheduleId)) || owns(resource.data)));
       allow list: if administrator() || (suiteMember() && owns(resource.data));
-      allow create: if suitePermission('training_schedule') && suiteCreate()
-        && exists(/databases/$(database)/documents/talk_topics/$(request.resource.data.topicId));
-      allow update: if suitePermission('training_schedule') && (administrator() || owns(resource.data)) && suiteUpdate();
+      allow create: if suitePermission('training_schedule') && suiteCreate() && validSchedule();
+      allow update: if suitePermission('training_schedule') && (administrator() || owns(resource.data)) && suiteUpdate() && validSchedule();
       allow delete: if false;
     }
     match /talk_sessions/{sessionId} {
       allow get: if administrator() || (suiteMember() && (!exists(/databases/$(database)/documents/talk_sessions/$(sessionId)) || owns(resource.data)));
       allow list: if administrator() || (suiteMember() && owns(resource.data));
-      allow create: if suitePermission('training_attendance') && suiteCreate()
-        && request.resource.data.attendees is list
-        && request.resource.data.attendees.size() > 0
-        && exists(/databases/$(database)/documents/talk_schedules/$(request.resource.data.scheduleId))
-        && get(/databases/$(database)/documents/talk_schedules/$(request.resource.data.scheduleId)).data.topicId == request.resource.data.topicId
-        && get(/databases/$(database)/documents/talk_topics/$(request.resource.data.topicId)).data.status == 'Aprobado';
-      allow update: if suitePermission('training_attendance') && (administrator() || owns(resource.data)) && suiteUpdate();
+      allow create: if suitePermission('training_attendance') && suiteCreate() && validTalkSession();
+      allow update: if suitePermission('training_attendance') && (administrator() || owns(resource.data)) && suiteUpdate()
+        && request.resource.data.scheduleId == resource.data.scheduleId
+        && request.resource.data.topicId == resource.data.topicId && validTalkSession();
       allow delete: if false;
     }
     function reviewedCompliance(assessmentId) {
@@ -238,7 +337,12 @@ service cloud.firestore {
         (suitePermission('nom_validate')
         && getAfter(/databases/$(database)/documents/compliance_reviews/$(request.resource.data.evidenceReviewId)).data.assessmentId == assessmentId
         && getAfter(/databases/$(database)/documents/compliance_reviews/$(request.resource.data.evidenceReviewId)).data.requirementId == request.resource.data.requirementId
-        && getAfter(/databases/$(database)/documents/compliance_reviews/$(request.resource.data.evidenceReviewId)).data.reviewedBy == request.auth.uid);
+        && getAfter(/databases/$(database)/documents/compliance_reviews/$(request.resource.data.evidenceReviewId)).data.reviewedBy == request.auth.uid
+        && getAfter(/databases/$(database)/documents/compliance_reviews/$(request.resource.data.evidenceReviewId)).data.reviewedAt == request.time
+        && request.resource.data.evidenceReviewId == assessmentId + '--' + string(request.resource.data.revision)
+        && request.resource.data.evidence is list && request.resource.data.evidence.size() > 0
+        && request.resource.data.evaluatedBy == request.auth.uid
+        && request.resource.data.evaluatedAt is string);
     }
     match /compliance_reviews/{reviewId} {
       allow read: if suitePermission('nom_validate');
@@ -252,10 +356,9 @@ service cloud.firestore {
     match /compliance_assessments/{assessmentId} {
       allow get: if administrator() || (suiteMember() && (!exists(/databases/$(database)/documents/compliance_assessments/$(assessmentId)) || owns(resource.data)));
       allow list: if administrator() || (suiteMember() && owns(resource.data));
-      allow create: if suitePermission('nom_assess') && suiteCreate()
-        && exists(/databases/$(database)/documents/standard_requirements/$(request.resource.data.requirementId))
+      allow create: if suitePermission('nom_assess') && suiteCreate() && validComplianceAssessment()
         && reviewedCompliance(assessmentId);
-      allow update: if suitePermission('nom_assess') && (administrator() || owns(resource.data)) && suiteUpdate()
+      allow update: if suitePermission('nom_assess') && (administrator() || owns(resource.data)) && suiteUpdate() && validComplianceAssessment()
         && reviewedCompliance(assessmentId);
       allow delete: if false;
     }

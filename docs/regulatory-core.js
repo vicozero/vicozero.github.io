@@ -23,7 +23,7 @@ export function validateVersion(version){
 export function referenceSnapshot(version,requirement,{applicabilityNote='',consultedAt}={}){
  if(!consultedAt)throw Error('Indica la fecha de consulta.');
  validateVersion(version);
- if(requirement&&(!requirement.id||requirement.versionId!==version.versionId||!requirement.section||!requirement.verifiedAt||!requirement.verifiedBy||!officialSource(requirement.sourceUrl)))throw Error('El numeral no está verificado o pertenece a otra versión.');
+ if(requirement&&(!requirement.id||requirement.versionId!==version.versionId||!requirement.section||requirement.verified===false||!requirement.verifiedAt||!requirement.verifiedBy||/autom[aá]tic/i.test(requirement.verifiedBy)||!officialSource(requirement.sourceUrl)))throw Error('El numeral no está verificado o pertenece a otra versión.');
  return clone({standardId:version.standardId,versionId:version.versionId,identifier:version.identifier,name:version.name,status:version.status,section:requirement?.section||null,requirementId:requirement?.id||null,requirement:requirement?.text||null,sourceUrl:requirement?.sourceUrl||version.sourceUrl,verifiedAt:requirement?.verifiedAt||version.verifiedAt,consultedAt,applicabilityNote,referenceOnly:!requirement});
 }
 export function validateAssessment(record){

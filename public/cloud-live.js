@@ -1,4 +1,5 @@
 import {collection,doc,query,where,or,onSnapshot} from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
+import {and} from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
 
 // Realtime sync: listens to Firestore changes and asks the UI modules to reload
 // their data. Reloading is debounced and guarded by each module so it never
@@ -48,6 +49,15 @@ export function startLiveSync(db,me){
     :query(collection(db,'notices'),or(where('toAccountId','==',me.id),where('fromAccountId','==',me.id)))));
   unsubscribers.push(watch('noticeReads',collection(db,'noticeReads',me.id,'items')));
   for(const name of ['reports','actions','plans']){
+    if(!isAdmin&&perms[name]===false)continue;
+    if(!isAdmin&&me.restrictUnits&&me.allowedUnits?.length){
+      for(const unit of me.allowedUnits)for(const field of ['unit','area','unidad']){
+        const filters=[where(field,'==',unit)];
+        if(!seesAllRecords)filters.push(or(where('ownerAccountId','==',me.id),where('assignedAccountId','==',me.id)));
+        unsubscribers.push(watch(name,query(collection(db,name),and(...filters))));
+      }
+      continue;
+    }
     unsubscribers.push(watch(name,seesAllRecords
       ?collection(db,name)
       :query(collection(db,name),or(where('ownerAccountId','==',me.id),where('assignedAccountId','==',me.id)))));

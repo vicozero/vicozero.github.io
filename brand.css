@@ -57,3 +57,5 @@ html[data-theme=dark] .session-state--stale{background:#d9a44122;color:#e5bd6a}
 .session-dialog .editor-footer{padding:12px 22px 18px;margin:0;display:flex;gap:10px;justify-content:flex-end}
 @media(max-width:1200px){.session-text{display:none}}
 @media(max-width:800px){.session-timer{padding:5px 8px;gap:6px}.session-clock{font-size:11px;min-width:58px}.session-dialog{width:96vw}.session-table th,.session-table td{padding:8px 7px;font-size:11px}}
+
+.sync.local,.sync[data-mode=local]{color:#a86a00}.sync.local:before{background:#d39b2b!important}[data-storage=local] .sync{color:#a86a00}[data-storage=local] header .header-tools::after{content:"MODO LOCAL · sin sincronización central";font-size:9px;font-weight:700;color:#a86a00;background:#fff4de;border:1px solid #e6c98a;border-radius:999px;padding:4px 8px;white-space:nowrap}

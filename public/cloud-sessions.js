@@ -29,9 +29,9 @@ function mountInHeader(el,before){
 }
 
 export async function startCloudSession(db,me){
-  if(!['member','operator','admin'].includes(me.role))return async()=>{};
+  if(!['member','operator','supervisor','admin'].includes(me.role))return async()=>{};
   const ref=doc(collection(db,'sessions'));
-  let synced=false,lastSaveOk=false,syncError=null;
+  let synced=false,lastSaveOk=false,syncError=null,creating=null;
   const clock=createSessionClock();
   const el=document.createElement('span');
   el.className='session-timer';
@@ -56,18 +56,22 @@ export async function startCloudSession(db,me){
   }
   async function ensureSession(){
     if(synced||stopped)return synced;
+    if(creating)return creating;
+    creating=(async()=>{
     try{
       await setDoc(ref,{userId:me.id,startedAt:serverTimestamp(),updatedAt:serverTimestamp(),activeMs:0,closed:false});
+      if(stopped)await updateDoc(ref,{activeMs:Math.floor(clock.close().activeMs),updatedAt:serverTimestamp(),closed:true});
       synced=true;lastSaveOk=true;syncError=null;if(!stopped)paint();return true;
     }catch(error){
       syncError=error;lastSaveOk=false;if(!stopped)paint();
       console.error('No se pudo registrar la sesión en la nube.',error);
-      try{alert('No se pudo registrar tu sesión en la nube: '+(error.code||error.message||error));}catch{}
       return false;
     }
+    })();
+    try{return await creating;}finally{creating=null;}
   }
-  const initialSync=await ensureSession();
-  if(!initialSync) console.warn('La sesión quedó en modo solo local para este usuario.');
+  // Offline writes may wait for connectivity; opening the workspace must remain responsive.
+  ensureSession().catch(error=>console.warn('Registro de presencia pendiente.',error));
   function touch(){if(!stopped){clock.activity();paint();}}
   for(const event of ['pointerdown','keydown','touchstart'])document.addEventListener(event,touch,{passive:true});
   async function save(closed=false){
@@ -92,8 +96,7 @@ export async function startCloudSession(db,me){
     for(const event of ['pointerdown','keydown','touchstart'])document.removeEventListener(event,touch);
     document.removeEventListener('visibilitychange',onVisibility);
     window.removeEventListener('pagehide',flush);
-    await save(true);
-    el.remove();
+    try{await save(true);}finally{el.remove();}
   };
 }
 
@@ -150,7 +153,7 @@ export function installSessionReport(db,me){
   const nameOf=id=>{const p=profiles.find(x=>x.id===id);return p?{name:p.name||id,email:p.email||''}:{name:id,email:''};};
   const startMs=row=>row.startedAt?.toMillis?.()||0;
   const seenMs=row=>row.updatedAt?.toMillis?.()||0;
-  const elapsed=row=>{const start=startMs(row);return start?Math.max(0,(row.closed?seenMs(row):Date.now())-start):0;};
+  const elapsed=row=>{const start=startMs(row),seen=seenMs(row);return start?Math.max(0,((row.closed||!seen||Date.now()-seen>=ONLINE_MS)?seen:Date.now())-start):0;};
   function stateOf(row){
     if(row.closed)return{key:'closed',label:'Desconectado'};
     const seen=seenMs(row);
@@ -160,7 +163,7 @@ export function installSessionReport(db,me){
   function visible(){
     if(history)return sessions.slice().sort((a,b)=>startMs(b)-startMs(a));
     const latest=new Map();
-    for(const row of sessions){const prev=latest.get(row.userId);if(!prev||startMs(row)>startMs(prev))latest.set(row.userId,row);}
+    for(const row of sessions){const prev=latest.get(row.userId),online=stateOf(row).key==='online',previousOnline=prev&&stateOf(prev).key==='online';if(!prev||(online&&!previousOnline)||(online===previousOnline&&startMs(row)>startMs(prev)))latest.set(row.userId,row);}
     return [...latest.values()].sort((a,b)=>{
       const sa=stateOf(a).key==='online'?0:1,sb=stateOf(b).key==='online'?0:1;
       return sa-sb||startMs(b)-startMs(a);
@@ -199,7 +202,7 @@ export function installSessionReport(db,me){
       item.badge.textContent=stateOf(item.row).label;
       item.badge.className='session-state session-state--'+stateOf(item.row).key;
     }
-    countEl.textContent=String(view.filter(item=>stateOf(item.row).key==='online').length);
+    countEl.textContent=String(new Set(sessions.filter(row=>stateOf(row).key==='online').map(row=>row.userId)).size);
     updatedEl.textContent=new Date().toLocaleTimeString('es-MX');
   }
   async function load(){

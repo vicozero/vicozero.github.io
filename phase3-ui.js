@@ -9,6 +9,7 @@
   }
 
   ready(function(){
+    if(window.SM_UI?.installed)return;
     const body = document.body;
     const toggle = document.getElementById('menuToggle');
     const sidebar = document.getElementById('sidebar');
@@ -20,26 +21,45 @@
       backdrop = document.createElement('div');
       backdrop.className = 'mobile-backdrop';
       document.body.appendChild(backdrop);
-      backdrop.addEventListener('click', function(){ body.classList.remove('sidebar-open'); });
+      backdrop.addEventListener('click', closeMenu);
     }
+
+    function closeMenu(){
+      body.classList.remove('nav-open','sidebar-open');
+      toggle?.setAttribute('aria-expanded','false');
+    }
+    function labelNavigation(){
+      sidebar?.querySelectorAll('nav button, nav a').forEach(btn=>{
+        if(!btn.title)btn.title=btn.textContent.trim();
+        if(!btn.getAttribute('aria-label'))btn.setAttribute('aria-label',btn.textContent.trim());
+      });
+    }
+    labelNavigation();
+    if(sidebar)new MutationObserver(labelNavigation).observe(sidebar.querySelector('nav'),{childList:true,subtree:true});
 
     if (toggle) {
       toggle.addEventListener('click', function(e){
         e.preventDefault();
+        // workspace.js has a legacy click handler; a single controller owns the menu.
+        e.stopImmediatePropagation();
         if (window.innerWidth <= 800) {
-          body.classList.toggle('sidebar-open');
+          body.classList.remove('sidebar-open');
+          const open=body.classList.toggle('nav-open');
+          toggle.setAttribute('aria-expanded',String(open));
         } else {
+          closeMenu();
           body.classList.toggle('sidebar-collapsed');
+          toggle.setAttribute('aria-expanded',String(!body.classList.contains('sidebar-collapsed')));
           try { localStorage.setItem(KEY, body.classList.contains('sidebar-collapsed') ? '1' : '0'); } catch (e) {}
         }
-      });
+      },true);
     }
 
-    document.querySelectorAll('#sidebar nav button').forEach(function(btn){
-      btn.addEventListener('click', function(){
-        if (window.innerWidth <= 800) body.classList.remove('sidebar-open');
-      });
+    sidebar?.querySelector('nav')?.addEventListener('click',function(e){
+      if(e.target.closest('button,a'))closeMenu();
     });
+    document.addEventListener('keydown',e=>{if(e.key==='Escape')closeMenu();});
+    window.addEventListener('resize',closeMenu);
 
     const tools = document.querySelector('.header-tools');
     const searchInput = document.getElementById('search');
@@ -59,6 +79,7 @@
     }
 
     window.SM_UI = window.SM_UI || {};
+    window.SM_UI.installed=true;
     window.SM_UI.loading = function(show){
       let ov = document.querySelector('.loading-overlay');
       if (show) {

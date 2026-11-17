@@ -1,5 +1,6 @@
 (function(root){
- const groups=[['inspection','Inspecciones',5],['leadership','Liderazgo',6],['pst','Evaluación PST',3],['unsafe','Actos / condiciones',6],['talk','Pláticas RIT',5],['epp','Inspección EPP',5],['veo','Verificación de Estándares',5],['observation','Observaciones preventivas',6],['incident','Incidentes y accidentes',3],['training','Capacitación',4]];
+ // Additional modules contribute only when the administrator explicitly programs a target.
+ const groups=[['inspection','Inspecciones',5],['leadership','Liderazgo',6],['pst','Evaluación PST',3],['unsafe','Actos / condiciones',6],['talk','Pláticas RIT',5],['epp','Inspección EPP',5],['veo','Verificación de Estándares',0],['observation','Observaciones preventivas',0],['incident','Incidentes y accidentes',0],['training','Capacitación',0]];
  const norm=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().replace(/\s+/g,' ').toLowerCase();
  const date=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'America/Mexico_City',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
  function actionStatus(a,today=date()){return a.status==='Cerrado'?'Cerrado':a.status==='Por verificar'?'Por verificar':a.due<today?'Vencido':'Pendiente'}

@@ -1,5 +1,5 @@
 /* Sierra Madre Seguridad Operativa - Service Worker (PWA) */
-const CACHE_NAME = 'sm-seguridad-v7';
+const CACHE_NAME = 'sm-seguridad-v8';
 const APP_SHELL = [
   '/',
   '/index.html',
@@ -20,6 +20,7 @@ const APP_SHELL = [
   '/workspace.js',
   '/progress-core.js',
   '/normative-library.js',
+  '/library-page.js',
   '/normative-catalog.json',
   '/regulatory-core.js',
   '/training-suite.js',
@@ -28,6 +29,10 @@ const APP_SHELL = [
   '/safety-talk-topics.json',
   '/integration.js',
   '/phase3-ui.js',
+  '/formats.js',
+  '/extended-formats.js',
+  '/report-pdf.js',
+  '/workspace-pdf.js',
   '/assets/sierra-madre.png',
   '/assets/icons/icon-192.png',
   '/assets/icons/icon-512.png',
@@ -44,7 +49,7 @@ self.addEventListener('install', (event) => {
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k))))
+    caches.keys().then((keys) => Promise.all(keys.filter((k) => k.startsWith('sm-seguridad-') && k !== CACHE_NAME).map((k) => caches.delete(k))))
   );
   self.clients.claim();
 });
@@ -54,28 +59,24 @@ self.addEventListener('fetch', (event) => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
-
-  if (req.mode === 'navigate') {
-    event.respondWith(
-      fetch(req).then((res) => {
-        const copy = res.clone();
-        caches.open(CACHE_NAME).then((c) => c.put(req, copy)).catch(() => {});
-        return res;
-      }).catch(() => caches.match(req).then((r) => r || caches.match('/index.html') || caches.match('/biblioteca-nom.html')))
-    );
-    return;
-  }
-
-  event.respondWith(
-    caches.match(req).then((cached) => {
-      const fetchPromise = fetch(req).then((res) => {
-        if (res && res.ok) {
-          const copy = res.clone();
-          caches.open(CACHE_NAME).then((c) => c.put(req, copy)).catch(() => {});
-        }
-        return res;
-      }).catch(() => cached);
-      return cached || fetchPromise;
-    })
-  );
+  // Operational responses and account data must never enter a shared static cache.
+  if(url.pathname.startsWith('/api/')||url.search)return;
+  const isAsset=url.pathname.startsWith('/assets/');
+  if(!APP_SHELL.includes(url.pathname)&&!isAsset)return;
+  event.respondWith((async()=>{
+    try{
+      const response=await fetch(req);
+      if(response.ok){
+        const cache=await caches.open(CACHE_NAME);
+        await cache.put(req,response.clone());
+      }
+      return response;
+    }catch{
+      const cache=await caches.open(CACHE_NAME);
+      const cached=await cache.match(req);
+      if(cached)return cached;
+      // Do not substitute an HTML document for a missing module, image or PDF.
+      return new Response('Sin conexión. Este recurso no está disponible en el dispositivo.',{status:503,headers:{'Content-Type':'text/plain; charset=utf-8'}});
+    }
+  })());
 });

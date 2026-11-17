@@ -17,10 +17,10 @@ Documentadas a partir de `progress-core.js` (función `matrix`) y `supervisor.js
 | unsafe | Actos / condiciones | 6 |
 | talk | Pláticas RIT | 5 |
 | epp | Inspección EPP | 5 |
-| veo | Verificación de Estándares | 5 |
-| observation | Observaciones preventivas | 6 |
-| incident | Incidentes y accidentes | 3 |
-| training | Capacitación | 4 |
+| veo | Verificación de Estándares | 0 (asignación explícita) |
+| observation | Observaciones preventivas | 0 (asignación explícita) |
+| incident | Incidentes y accidentes | 0 (asignación explícita) |
+| training | Capacitación | 0 (asignación explícita) |
 
 Las metas son configurables por persona en `plan.targets[id]`. Si no se define, se usa el target por defecto del grupo.
 
@@ -51,7 +51,7 @@ Para cada supervisor/persona con plan o reportes en el periodo:
 ## KPI 2 (Supervisor)
 
 - Grupos: los 10 grupos (6 originales + 4 nuevos).
-- Meta total por defecto: 5 + 6 + 3 + 6 + 5 + 5 + 5 + 6 + 3 + 4 = **48 actividades/mes**.
+- Meta original por defecto: 5 + 6 + 3 + 6 + 5 + 5 = **30 actividades/mes**. Los módulos adicionales suman únicamente las metas asignadas expresamente en el programa. Se conservan las metas explícitas de programas existentes.
 
 ## Acciones correctivas (por persona)
 
@@ -69,4 +69,4 @@ Para cada supervisor/persona con plan o reportes en el periodo:
 
 ## Nota sobre los nuevos formatos
 
-Los formatos agregados (VEO, Observación, Incidente, Capacitación) se registran en `SAFETY.groups` con sus metas, pero la función `matrix` en `progress-core.js` usa los grupos definidos en ese archivo (`inspection`, `leadership`, `pst`, `unsafe`, `talk`, `epp`). Para que los nuevos formatos alimenten los KPI, es necesario actualizar `progress-core.js` para incluir los nuevos grupos (`veo`, `observation`, `incident`, `training`) y sus metas. Esto queda como pendiente de integración.
+Los formatos agregados (VEO, Observación, Incidente, Capacitación) están incluidos en la matriz y comparten metas por defecto de cero en `SAFETY.groups` y `progress-core.js`. El administrador puede programar sus metas en KPI 2; agregar un módulo no cambia por sí solo los compromisos de los programas históricos.
