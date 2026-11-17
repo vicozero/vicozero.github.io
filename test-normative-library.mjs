@@ -7,7 +7,10 @@ const {window:w}=dom;
 globalThis.MutationObserver=w.MutationObserver;globalThis.Event=w.Event;
 const catalog=JSON.parse(fs.readFileSync('normative-catalog.json','utf8'));
 try{
+ w.document.querySelector('main').append(w.document.createElement('footer'));
  await installNormativeLibrary({catalog,document:w.document});
+ const mChildren=[...w.document.querySelector('main').children];
+ assert(mChildren.indexOf(w.document.getElementById('normativeLibrary'))<mChildren.indexOf(w.document.querySelector('footer')));
  w.document.querySelector('[data-normative-view]').click();
  assert(!w.document.getElementById('normativeLibrary').hidden);
  const search=w.document.getElementById('nomQuery');search.value='soldadura';search.dispatchEvent(new w.Event('input'));

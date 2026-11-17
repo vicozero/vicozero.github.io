@@ -6,7 +6,7 @@ export async function installTrainingSuite({store,me,directory=[],topics,documen
  let materials=new Map(topics.map(t=>[t.id,t])),schedules=[],sessions=[];
  const root=dom.createElement('section');root.id='trainingSuite';root.hidden=true;
  root.innerHTML=`<div class="panel"><div class="eyebrow">PLÁTICAS DE SEGURIDAD Y CAPACITACIÓN</div><h2>Planeación, materiales y asistencia</h2><p>Los 52 temas son una propuesta editable. Un tema breve no equivale por sí mismo a una capacitación formal acreditada.</p><div class="filter-bar"><input id="talkQuery" type="search" aria-label="Buscar tema" placeholder="Buscar tema o mes…"><input id="talkMonth" type="month" aria-label="Periodo"><button class="secondary" id="talkRefresh">Actualizar</button><button class="secondary" id="talkExport">Temario para Excel (.csv)</button></div><p id="talkStatus" role="status"></p><div id="talkIndicators" class="metrics"></div><h3>Calendario del periodo</h3><div id="talkCalendar"></div><h3>Temario anual y materiales</h3><div id="talkTopics"></div><h3>Ejecuciones y asistencia</h3><div id="talkSessions"></div></div>`;
- dom.querySelector('main').append(root);
+ const main=dom.querySelector('main'),footer=main.querySelector('footer');if(footer)main.insertBefore(root,footer);else main.append(root);
  const nav=dom.createElement('button');nav.dataset.trainingSuiteView='talks';nav.textContent='Pláticas · Programa anual';dom.querySelector('#sidebar nav').append(nav);
  const by=id=>dom.getElementById(id),notify=message=>by('talkStatus').textContent=message;
  by('talkMonth').value=new Date().toISOString().slice(0,7);

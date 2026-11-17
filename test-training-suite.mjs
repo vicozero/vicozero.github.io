@@ -11,7 +11,10 @@ const store={permission:()=>true,list:async name=>structuredClone(memory[name]),
 const settle=()=>new Promise(r=>setTimeout(r,0));
 const submit=async form=>{form.dispatchEvent(new w.Event('submit',{bubbles:true,cancelable:true}));await settle();};
 try{
+ w.document.querySelector('main').append(w.document.createElement('footer'));
  await installTrainingSuite({store,me:{id:'qa-admin',role:'admin'},directory:[{id:'qa-admin',name:'Instructor QA'}],topics,document:w.document});
+ const mChildren=[...w.document.querySelector('main').children];
+ assert(mChildren.indexOf(w.document.getElementById('trainingSuite'))<mChildren.indexOf(w.document.querySelector('footer')));
  w.document.querySelector('[data-training-suite-view]').click();await settle();
  assert.equal(w.document.querySelectorAll('[data-talk-edit]').length,52);
  const id=topics[0].id;w.document.querySelector('[data-talk-edit="'+id+'"]').click();
