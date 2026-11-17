@@ -6,7 +6,7 @@
 **Rama:** `fase1-validada-2026-11-17` · **código validado:** `fb1795d` (etiqueta `fase1-validada-2026-11-17-final`)  
 **Commits posteriores (sin tocar código validado):** `7b5aa65` (documentación), `4b10d9e` (lockfile), `318eca1` (prueba de seguridad), `714dcb6` (preparación final), `5fa55c9` (varios administradores y transferencia segura), `3a98d00` (herramientas en cabecera y panel)  
 **HEAD actual:** `3a98d00` · **Caché PWA:** `sm-seguridad-v10`  
-**Estado:** **PREPARADO PERO DETENIDO.** No se publicó, no se migró, no se crearon usuarios y no se modificaron datos productivos.
+**Estado:** **AUTORIZADO PARA PUBLICACIÓN — en ejecución.** Autorización expresa recibida el 17 de noviembre de 2026. No se migró, no se crearon usuarios y no se modificaron datos productivos.
 
 ---
 
@@ -175,7 +175,7 @@ Precondición: sesión autenticada, sitio `https://vicozero.github.io/`, caché 
 
 **Razón:** las reglas nuevas son más estrictas en varios puntos (unidades/permisos, `validRecordWrite`, inmutabilidad de `assignedAccountId`, validaciones de pláticas/NOM, `evidenceChunks`). El frontend antiguo de producción no fue probado contra ellas; publicar reglas primero podría bloquear escrituras legítimas del frontend antiguo. El frontend nuevo sí fue probado contra las reglas nuevas, y bajo las reglas antiguas (más permisivas) solo pierde temporalmente funciones puntuales: escaneo de fragmentos huérfanos (`orphan_scan_unavailable`) y rol `supervisor`. Por eso el orden correcto es **web → reglas**, con la ventana mínima posible.
 
-**No ejecutar hasta autorización expresa:**
+**Autorizado el 17-11-2026. Secuencia a ejecutar:**
 
 ```powershell
 # 0) Verificación (solo lectura / local)
@@ -183,7 +183,7 @@ git checkout fase1-validada-2026-11-17
 git status
 git rev-parse HEAD
 npm.cmd run check
-node sync-copies.mjs          # debe reportar 55 archivos / 112 copias, hashes MATCH
+node sync-copies.mjs          # debe reportar 56 archivos / 112 copias, hashes MATCH
 
 # 1) Frontend primero
 git push public-pages HEAD:main
@@ -260,18 +260,18 @@ Notas:
 
 ## 11. Bloqueos y autorización requerida
 
-Bloqueos actuales:
+**Autorización recibida el 17 de noviembre de 2026** para publicar frontend y reglas. Estado de bloqueos:
 
-1. Sin autorización expresa para publicar frontend y reglas.
-2. Sin cuentas de prueba autorizadas; el encargado principal puede crear administradores desde la UI, pero la validación debe ejecutarla el dueño en su propia sesión.
+1. ~~Sin autorización expresa para publicar frontend y reglas~~ → **AUTORIZADO**.
+2. Sin cuentas de prueba autorizadas; el encargado principal puede crear administradores desde la UI, pero la validación debe ejecutarla el dueño en su propia sesión. **No se crean cuentas desde esta automatización.**
 3. ~~Sin decisión sobre versionar `package-lock.json`~~ → **RESUELTO**: versionado en `4b10d9e` y `npm ci` verificado.
 
 Resuelto en esta pasada: dependencias coherentes y sin secretos, lockfile versionado, instalación reproducible, prueba de seguridad del reporte (1/1 PASS), orden de publicación y reversión no destructiva, guía breve de navegador, confirmación de proyecto Firebase, caché PWA v10 y modelo multi-admin con herramientas visibles en cabecera y panel.
 
-Se solicita autorización para:
+Secuencia autorizada:
 
 - `git push public-pages HEAD:main` desde `fase1-validada-2026-11-17`.
 - `firebase deploy --only firestore:rules,storage:rules --project sierra-madre-seguridad` **inmediatamente después**.
-- Crear la cuenta operativa de prueba `qa-op-…` (el administrador dueño ejecuta su propia validación).
+- Crear la cuenta operativa de prueba `qa-op-…`: **fuera de alcance de esta automatización**; la ejecuta el dueño en su propia sesión.
 
-**Hasta recibirla: no se ejecuta ningún despliegue, publicación de reglas, creación de usuarios ni migración.**
+**No se ejecutan migraciones, restauraciones, creación de usuarios reales ni Fase 2.**
