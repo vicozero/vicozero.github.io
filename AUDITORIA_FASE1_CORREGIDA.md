@@ -184,3 +184,22 @@ node --check firestore.rules   # (reglas validadas por el emulador al cargarlas)
 | Datos productivos | **Sin cambios.** Pruebas en emulador `demo-sierra-madre` y archivos aislados; sin migración, restauración ni publicación de reglas. |
 
 **Conclusión de cierre:** la Fase 1 queda lista para publicación pero **detenida a la espera de autorización expresa**. No se ejecutó `git push`, `firebase deploy` ni ninguna acción sobre datos reales. Se requieren cuentas de prueba autorizadas para cerrar las validaciones manuales antes de publicar.
+
+---
+
+## 13. Verificación de prepublicación (segunda pasada, 17-Nov-2026)
+
+| Concepto | Resultado |
+|---|---|
+| Commit validado | `fb1795d` sin cambios de código; etiqueta `fase1-validada-2026-11-17-final`. Sin `push`. |
+| Rama | `fase1-validada-2026-11-17` contiene 98 archivos (79 modificados + 19 nuevos). Espejos raíz/`docs/`/`public/` coinciden por SHA-256 en 9 archivos clave. |
+| Artefactos sin versionar | 8. Solo `package-lock.json` es indispensable (instalación reproducible); los demás son herramientas puntuales NOM/respaldos. No se agregó ninguno al commit validado. |
+| Dependencias | Lockfile v3 coherente con `package.json`; instaladas `@firebase/rules-unit-testing 5.0.2`, `firebase 12.19.0`, `firebase-tools 15.36.0`. `functions/` sin lockfile y fuera de alcance. |
+| Remoto `public-pages/main` | `312da55`; relación `0  1` con el commit validado, sin divergencia inesperada (`merge-base --is-ancestor` OK). `origin/main` divergente (1/59), no usado para publicar. |
+| Firebase | `projectId sierra-madre-seguridad` en config web y en `firebase-migration-config.json` (gitignored, `productionSwitchEnabled: false`); emulador solo con `demo-sierra-madre`. Sin `.firebaserc`: exigir `--project` explícito. |
+| Orden de publicación | **Corregido:** frontend primero y reglas inmediatamente después. Las reglas nuevas son más estrictas (unidad/permisos, pláticas/NOM, `evidenceChunks`); el frontend antiguo no fue probado contra ellas. Reversión en orden inverso: reglas primero, frontend después. |
+| Caché PWA | Corrección documental: **`sm-seguridad-v8`** (no v7). |
+| Cuentas de prueba | Procedimiento seguro preparado (sección 6 del checklist), **no ejecutado**. Admin no creable desde UI: debe validar el administrador dueño en su sesión. Sin contraseñas solicitadas ni almacenadas. |
+| Validaciones manuales | Instrucciones exactas en la sección 7 del checklist. Siguen **pendientes/no aprobadas**. |
+
+Detalle completo en `CHECKLIST_PUBLICACION_FASE1.md`. Sin despliegue, reglas publicadas, usuarios creados ni datos modificados.

@@ -1,14 +1,29 @@
 # Checklist de publicación — Fase 1 (Sierra Madre Seguridad)
 
-**Fecha:** 17 de noviembre de 2026  
+**Fecha:** 17 de noviembre de 2026 (verificación de prepublicación, segunda pasada)  
 **Proyecto:** `centinela/`  
 **Sitio actual:** `https://vicozero.github.io/`  
-**Rama de restauración:** `fase1-validada-2026-11-17` (creada desde `main` @ `312da55`) — etiqueta `fase1-validada-2026-11-17-final`  
-**Estado:** **PREPARADO PARA PUBLICACIÓN — NO DESPLEGADO.** Requiere autorización expresa antes de cualquier `push`, `firebase deploy` o migración.
+**Rama:** `fase1-validada-2026-11-17` · **commit validado de código:** `fb1795da5fe7593043f08fb530d39162a7e413b9`  
+**Etiqueta del estado validado:** `fase1-validada-2026-11-17-final` → `fb1795d`  
+**Estado:** **PREPARADO PERO DETENIDO.** No se publicó, no se migró, no se crearon usuarios y no se modificaron datos productivos.
 
 ---
 
-## 1. Estado de pruebas
+## 1. Estado del repositorio
+
+| Concepto | Resultado |
+|---|---|
+| Rama activa | `fase1-validada-2026-11-17` |
+| `HEAD` | Commit de documentación de esta pasada; **código validado inalterado en** `fb1795d` (etiqueta `fase1-validada-2026-11-17-final`). |
+| Contenido de la rama | **98 archivos** respecto a `312da55`: **79 modificados + 19 nuevos** esenciales. Incluye `firestore.rules`, `storage.rules`, `cloud-portal.js`, `firebase-auth.js`, `sw.js`, `brand.css`, `library-page.js` y sus copias, `verify-migration-backup.mjs`, `migrate-verified-workspace.mjs`, `test-*.mjs`, informes y este checklist. |
+| Árbol de trabajo | Limpio: 0 modificados, 0 en staging. 8 artefactos sin versionar (sección 3). |
+| Espejos `docs/` / `public/` | Verificado por hash SHA-256 en 9 archivos clave (`cloud-portal.js`, `firebase-auth.js`, `brand.css`, `sw.js`, `index.html`, `library-page.js`, `workspace.js`, `training-suite.js`, `normative-catalog.json`): **raíz = docs = public**. |
+| Service worker | Caché **`sm-seguridad-v8`** (corrección: el informe anterior decía v7). |
+| Operaciones realizadas | Solo lectura: `git status`, `git log`, `git diff`, `git ls-remote`, `npm ls`, hashes. **Sin `push`, sin `firebase deploy`, sin migración.** |
+
+---
+
+## 2. Estado de pruebas
 
 | Concepto | Resultado |
 |---|---|
@@ -16,168 +31,197 @@
 | Pruebas adicionales con Emulator | **2/2 PASS** — `test-phase1-extras.mjs`, `test-suite-store.mjs` |
 | Pruebas locales (regresión + enfocadas) | **17/17 PASS** |
 | **Total Fase 1** | **23 PASS · 0 FAIL · 0 BLOCKED** |
-| Sincronización `docs/` y `public/` | **OK** — 55 archivos web, 112 copias; hashes coinciden en source / `docs/` / `public/` |
-| Carga del sitio publicado actual | **OK** — título `Sierra Madre · Programa de Seguridad`, pantalla de acceso, **0 errores de consola** (navegador, sin sesión) |
-| Cambios de código desde la validación | **Ninguno.** No se repitieron pruebas ya aprobadas, conforme a la restricción. |
+| Carga del sitio live (sin sesión) | OK — título correcto, pantalla de acceso, 0 errores de consola |
+| Repetición de pruebas | **No se repitió ninguna.** No se modificó código relacionado con las pruebas aprobadas. |
 
-Detalle de cobertura ya aprobada (no repetir salvo cambio de código relacionado):
-
-- Reglas Firestore/Storage: propiedad, unidad/área, permiso por operación, `revision + 1`, inmutabilidad, adjuntos y evidencias fragmentadas.
-- Portal: conservación de `photos` en ediciones parciales, recuperación de fragmentos, avisos `_missingPhotoChunks` / `_photoRecoveryError`, homónimos sin reasignación, resolvedor por UID, `/api/inconsistencies` **200 para admin / 403 para operador**.
-- Respaldos: huella SHA-256, duplicados, campos sensibles, `planImport` con `preview:true` y **cero escrituras**.
-- Formatos: 15 formatos + 3 operativos (VEO/INC/TRN), borrador → finalización → bloqueo → reapertura.
-- Exportaciones: PDF operativo y de matriz/acciones; CSV con BOM UTF-8, acentos, comillas dobles, neutralización de fórmulas y CRLF (`test-phase1-csv.mjs`).
+Cobertura ya aprobada: reglas Firestore/Storage (propiedad, unidad, permisos, `revision + 1`, inmutabilidad), portal (fotos conservadas, fragmentos, homónimos, UID, `/api/inconsistencies` 200/403), respaldos (SHA-256, duplicados, campos sensibles, preview sin escrituras), 15 formatos + 3 operativos, PDF y CSV (`test-phase1-csv.mjs`).
 
 ---
 
-## 2. Validaciones manuales
+## 3. Dependencias y archivos esenciales
 
-### Completadas
+### Lockfile y dependencias
 
-| Validación | Evidencia |
+| Verificación | Resultado |
 |---|---|
-| Carga del sitio live en navegador | `https://vicozero.github.io/` abre correctamente, sin errores en consola. |
-| Pantalla de acceso | Se muestra el formulario de inicio de sesión; no hay sesión autenticada previa. |
-| Revisión estática de credenciales | Sin llaves privadas, tokens ni hashes reales. Único valor sensible-aparente: la **API key pública web de Firebase** (`AIza…`) en `firebase-auth.js`, `docs/firebase-auth.js` y `public/firebase-auth.js`, necesaria y diseñada para ser pública. Las coincidencias de `passwordHash` son nombres de campo / lógica de exclusión. |
-| Versionado | 79 archivos modificados + 19 archivos nuevos esenciales (informes, pruebas, módulos `library-page.js`, utilidades de migración/verificación) incluidos en el punto de restauración. `firebase-migration-config.json`, `.qa/`, `.firebase/` y `node_modules/` quedan fuera por `.gitignore`. |
+| `package-lock.json` | `lockfileVersion: 3`, `name: sierra-madre-security-validation`. Declaraciones del root idénticas a `package.json`. |
+| Versiones resueltas = instaladas | `@firebase/rules-unit-testing` **5.0.2** (`^5.0.0`), `firebase` **12.19.0** (`^12.0.0`), `firebase-tools` **15.36.0** (`^15.0.0`). Coinciden con `npm ls --depth=0`. |
+| Estado de instalación | Consistente. No se instaló ni actualizó nada en esta pasada. |
+| **Bloqueo** | `package-lock.json` está **sin versionar** (322 KB). Un clone limpio no puede usar `npm ci`; solo `npm install`. Requiere decisión de inclusión antes de publicar. No se agregó para no alterar el commit validado sin autorización. |
+| `functions/` | `functions/package.json` declara Node 20, `firebase-admin ^12`, `firebase-functions ^5`. **No existe `functions/package-lock.json`**. Las Cloud Functions **no** están en el alcance de esta publicación. |
 
-### Pendientes / bloqueadas
+### Artefactos sin versionar (8)
 
-| Validación | Estado | Motivo |
+| Archivo | ¿Indispensable? | Uso / decisión |
 |---|---|---|
-| Descarga real de **PDF** desde navegador autenticado | **PENDIENTE — requiere cuenta de prueba autorizada** | No se proporcionaron credenciales. El modo local usa cuentas creadas dentro de la app y **no equivale** a una cuenta cloud autorizada. La generación de PDF ya pasó en `test-operational-pdf.mjs` y `test-workspace.mjs`. |
-| Descarga real de **CSV** desde navegador autenticado | **PENDIENTE — requiere cuenta de prueba autorizada** | Misma razón. El contenido/escapado está cubierto por `test-phase1-csv.mjs`. |
-| Revisión **visual** de la importación de respaldos en modo previsualización | **PENDIENTE — requiere sesión autenticada** | El comportamiento sin escrituras está probado en `test-phase1-backup-preview.mjs`; falta la comprobación visual de avisos/UI. |
-| `/api/inconsistencies` con cuenta **administradora** | **PENDIENTE en live** (cubierto en emulador: 200) | Requiere cuenta admin autorizada en el proyecto real. |
-| Negación de `/api/inconsistencies` a usuario **sin permisos** | **PENDIENTE en live** (cubierto en emulador: 403) | Requiere cuenta no admin autorizada. |
-| Avisos visuales de modo local / sin conexión en dispositivo real | **PENDIENTE** | Cubierto estáticamente y por suite; requiere dispositivo con la build actual (ver nota de caché PWA). |
+| `package-lock.json` | **SÍ, para instalación reproducible** | Pin de dependencias. Pendiente de decisión de inclusión (bloqueo anterior). |
+| `archive-verified-backup.mjs` | No | Script puntual de archivado; importa `verify-migration-backup.mjs` y `firebase-tools/lib/auth.js`. No referenciado por `package.json`, build ni publicación. |
+| `download-nom-pdfs.mjs` | No | Descarga puntual de PDFs del catálogo NOM; no referenciado. |
+| `enrich_talks.py`, `extract_nom_meta.py`, `extract_nom_meta2.py`, `verify_noms.py`, `verify_noms2.py` | No | Herramientas de generación/verificación del catálogo (requieren Python + PyMuPDF `fitz`). No intervienen en build, instalación, pruebas ni publicación. |
+| `firebase-migration-config.json` | No (y no debe versionarse) | Configuración local de migración; protegida por `.gitignore`. |
 
-> **No se declaran aprobadas** las validaciones anteriores. Emulator demuestra la lógica; el navegador autenticado demuestra el flujo real. Ambas son necesarias antes de dar por cerrada la publicación.
-
----
-
-## 3. Archivos que deberán publicarse
-
-**Fuentes de la Fase 1 (raíz de `centinela/`):**
-
-- `firestore.rules` — validaciones de campos críticos compatibles (estado terminal), sin desactivar seguridad.
-- `storage.rules` — autorización de evidencias/adjuntos (cambios previos de Fase 1).
-- `cloud-portal.js` — recuperación de evidencias, homónimos, UID, `/api/inconsistencies`, conservación de fotos.
-- `firebase-auth.js` — previsualización de importación, bloqueo de campos sensibles, indicadores de modo local.
-- `brand.css` — distintivo visual de modo local.
-- `verify-migration-backup.mjs` — verificación de respaldos y `planImport`.
-- `migrate-verified-workspace.mjs` — migración explícita (solo con autorización).
-- `library-page.js`, `docs/library-page.js`, `public/library-page.js` — módulo de biblioteca normativa (sincronizado).
-
-**Espejos web:** las copias en `docs/` y `public/` de los 55 archivos web (112 copias). El sitio publicado se sirve desde esos espejos; **no publicar si `node sync-copies.mjs` no reporta coincidencia de hashes.**
-
-**Pruebas y documentación incluidas en el punto de restauración:** `test-*.mjs` (incluidas `test-phase1-extras.mjs`, `test-phase1-backup-preview.mjs`, `test-phase1-csv.mjs`), `AUDITORIA_FASE1_2026-11-17.md`, `AUDITORIA_FASE1_CORREGIDA.md` y este checklist.
-
-**No incluidos / no publicar:** `firebase-migration-config.json` (gitignored; contiene configuración local de migración), `.qa/`, `.firebase/`, `node_modules/`, `output/`, `*.log`, ni los artefactos puntuales no versionados (`archive-verified-backup.mjs`, `download-nom-pdfs.mjs`, `enrich_talks.py`, `extract_nom_meta*.py`, `verify_noms*.py`, `package-lock.json`). Permanecen en disco, pero no forman parte del estado validado.
+No existen workflows de CI (`.github/`) ni `.firebaserc` en el repositorio.
 
 ---
 
-## 4. Orden correcto del despliegue
+## 4. Estado del remoto y divergencias
 
-**Precondición:** autorización expresa del usuario. Hasta entonces, **no ejecutar ninguno de estos comandos**.
-
-1. **Verificar el punto de restauración**
-   ```powershell
-   git checkout fase1-validada-2026-11-17
-   git status               # debe estar limpio
-   git log -1 --oneline     # commit validado
-   ```
-2. **Comprobar el árbol web**
-   ```powershell
-   npm run check
-   node sync-copies.mjs     # 55 archivos / 112 copias, hashes MATCH
-   ```
-3. **(Solo si se autoriza) Publicar reglas de Firebase** — antes que el web, porque el portal nuevo depende de ellas:
-   ```powershell
-   firebase deploy --only firestore:rules,storage:rules --project sierra-madre-seguridad
-   ```
-   Verificación: reglas activas = las del commit validado; sin migración ni escritura de datos.
-4. **Validaciones manuales autenticadas** (sección 2) con cuentas de prueba autorizadas. Si fallan, **no publicar el web** y ejecutar la reversión de reglas.
-5. **Publicar GitHub Pages**
-   ```powershell
-   git push public-pages HEAD:main
-   ```
-   Destino: `https://vicozero.github.io/`. El `HEAD` debe ser el commit de la rama `fase1-validada-2026-11-17`.
-6. **Smoke post-despliegue:** cargar el sitio, iniciar sesión con cuenta autorizada, verificar contador de sesiones, descargar un PDF y un CSV, abrir previsualización de respaldo y consultar `/api/inconsistencies` con admin y con no-admin. Revisar consola (0 errores).
-7. **Caché PWA:** el service worker está en `sm-seguridad-v7`. Si un dispositivo muestra pantalla antigua (p. ej. contador ausente), cerrar/reabrir, recarga forzada, borrar datos del sitio o reinstalar la PWA. **No** incrementar la versión de caché sin un cambio de código que lo justifique.
+| Remoto | Resultado |
+|---|---|
+| `public-pages/main` (lectura con `git ls-remote`) | `312da5543536ba2741fb7179a48eb6db6b3026ed` — **idéntico** al commit base anterior a Fase 1. |
+| Relación con el commit validado | `git rev-list --left-right --count 312da55...fb1795d` → **`0  1`**: el remoto no tiene commits ausentes en la rama; la rama tiene exactamente 1 commit nuevo (Fase 1). `git merge-base --is-ancestor` → **OK (exit 0)**. **Sin divergencia inesperada.** |
+| `origin/main` (solo informativo) | `76ef8c8` (`Enhance portal backgrounds with safety imagery`). Divergencia `1  59`: 1 commit solo en origin, 59 solo en la rama local. **No se usa para publicación**; no hacer `push` a `origin`. |
+| Referencia local `public-pages/main` | Coincide con el remoto (`312da55`). No hay desactualización oculta. |
 
 ---
 
-## 5. Procedimiento de reversión
+## 5. Configuración de Firebase
 
-### A. Web (GitHub Pages) — reversión Immediate
+| Archivo | Configuración confirmada |
+|---|---|
+| `firebase.json` | Reglas `firestore.rules` y `storage.rules`; `functions` con `source: functions`, `codebase: default`; emuladores Firestore 8087, Storage 9199, Functions 5001, UI deshabilitada, `singleProjectMode: true`. **Sin bloque `hosting`**: el frontend se publica en GitHub Pages, no en Firebase Hosting. |
+| `firebase-auth.js` (y copias) | `projectId: sierra-madre-seguridad`, `authDomain: sierra-madre-seguridad.firebaseapp.com`, `storageBucket: sierra-madre-seguridad.firebasestorage.app`, `appId: 1:260475494499:web:…`. Proyecto previsto, sinmezcla con el proyecto de emulador `demo-sierra-madre`. |
+| `firebase-migration-config.json` (gitignored) | `projectId: sierra-madre-seguridad`, `databaseId: (default)`, `authorizationModel: server-managed-role`, `productionSwitchEnabled: false`, migración en estado `pending-backup-…`. **No se leyó ni expuso el valor de `initialAdministrator`.** |
+| `.firebaserc` | **Ausente.** Todo comando CLI debe llevar `--project sierra-madre-seguridad` explícitamente. Riesgo de apuntar al proyecto equivocado si se omite. |
+| Reglas | Probadas solo en emulador. No se publicaron. |
+
+---
+
+## 6. Preparación segura de cuentas de prueba (NO ejecutada)
+
+**Principios:** el usuario dueño autoriza y ejecuta la creación; el asistente no solicita, recibe, guarda ni reutiliza contraseñas; no se usan credenciales personales ni se crean cuentas reales sin autorización.
+
+1. **Cuenta no administradora (creable desde la UI):** tras autorización, en la app → *Usuarios y permisos* → **+ Registrar usuario**. Usar un correo de prueba desechable del dominio autorizado, p. ej. `qa-op-20261117@<dominio-autorizado>`. Generar la contraseña **localmente** con `[guid]::NewGuid().ToString('N')`; escribirla solo en el formulario; no pegarla en chat, correos, archivos ni `localStorage`. Rol: **operador / usuario operativo**, sin administración; desactivar permisos de `reports`/`actions`/`plans` si la UI lo permite (es el caso que debe dar 403).
+2. **Cuenta administradora:** la UI **no permite crear un segundo administrador** («La administración principal se transfiere desde la configuración central…»). Por tanto, la validación admin debe hacerla **el administrador dueño en su propia sesión**, tecleando su contraseña él mismo. No se comparte ni se almacena. No se modifica `security/authority` ni `initialAdministrator`.
+3. **Higiene:** tras las pruebas, desactivar/eliminar la cuenta `qa-op-…` desde la misma vista. No crear registros operativos de prueba: las cinco validaciones son de solo lectura (la previsualización se cancela).
+4. **Si no se autoriza la creación:** las validaciones siguen pendientes y **no se declaran aprobadas**. El modo local no sustituye a una cuenta cloud.
+
+---
+
+## 7. Procedimiento para validación en navegador (instrucciones, no ejecutadas)
+
+Precondición: sesión autenticada, sitio `https://vicozero.github.io/`, caché PWA v8 cargada (si aparece UI antigua: recarga forzada / borrar datos del sitio).
+
+1. **PDF autenticado**
+   - Vista *Seguimiento de acciones* → botón **`↧ PDF`** (`#actionsPdf`). Esperar `Sierra-Madre-acciones-AAAA-MM.pdf`; abrirlo y comprobar que es un PDF válido con datos.
+   - Vista *Avances* → **`↧ Reporte de avances PDF`** (`#progressPdf`). Esperar `Sierra-Madre-avances-AAAA-MM.pdf`.
+   - Opcional: desde una acción individual, el botón de PDF de esa acción (`#singleActionPdf`).
+2. **CSV autenticado**
+   - *Seguimiento de acciones* → **`↧ CSV`** (`#actionsCsv`) → `Sierra-Madre-acciones-AAAA-MM.csv`.
+   - *Avances* → **`↧ Exportar CSV`** (`#progressCsv`) → `Sierra-Madre-avances-AAAA-MM.csv`.
+   - *Pláticas* → **`Temario para Excel (.csv)`** → `Sierra-Madre-temario.csv`.
+   - Comprobar BOM UTF-8 (acentos legibles en Excel), CRLF y que celdas tipo `=SUM(A1)` aparecen neutralizadas con `'` delante.
+3. **Previsualización de importación sin escrituras (solo admin)**
+   - Abrir el diálogo de perfil/ajustes del administrador → botón **«Importar datos locales a la nube»**.
+   - Aparece un aviso: *«Previsualización (sin escribir): A agregar / Omitidos / Conflictos… ¿Continuar con la importación?»*.
+   - **Hacer clic en Cancelar en ese `confirm()`**. No pulsar Aceptar bajo ningún concepto.
+   - Verificar que el mensaje muestra conteos coherentes y que los conteos de formatos/acciones/planes del portal son idénticos antes y después. `importLocalWorkspace(..., {preview:true})` no emite PUT/POST.
+4. **Reporte de inconsistencias con admin**
+   - En la consola del navegador de la sesión administradora:
+     ```js
+     const r = await fetch('/api/inconsistencies');
+     console.log(r.status);              // esperado: 200
+     console.log(await r.json());        // claves: generatedAt, homonyms, issues, orphanChunks, counts
+     ```
+   - `/api/inconsistencies` es interceptado por `cloud-portal.js` (`window.fetch`): **no existe backend HTTP en GitHub Pages**. Revisar `counts` y que `issues`/`orphanChunks` sean informativos; no reasignar nada automáticamente.
+5. **Rechazo para usuario sin permisos**
+   - Repetir el mismo comando en la sesión `qa-op-…`: esperado **403** y cuerpo `{"error":"Permiso administrativo requerido."}`.
+   - Comprobar además que las secciones `admin-only` no son visibles.
+6. **Cierre:** registrar en este checklist fecha, cuenta usada (sin contraseña), resultado de cada punto y cualquier error de consola.
+
+> Si alguno falla: no publicar (o ejecutar reversión si ya se publicó) y documentar el bloqueo. No se marcan como aprobadas hasta ejecutarse.
+
+---
+
+## 8. Secuencia de publicación y reversión (corregida)
+
+### 8.1 Orden de publicación — **frontend primero, reglas después**
+
+**Razón:** las reglas nuevas son más estrictas en several puntos (unidades/permisos, `validRecordWrite`, inmutabilidad de `assignedAccountId`, validaciones de pláticas/NOM, `evidenceChunks`). El frontend antiguo de producción no fue probado contra ellas; publicar reglas primero podría bloquear escrituras legítimas del frontend antiguo. El frontend nuevo sí fue probado contra las reglas nuevas, y bajo las reglas antiguas (más permisivas) solo pierde temporalmente funciones puntuales: escaneo de fragmentos huérfanos (`orphan_scan_unavailable`) y rol `supervisor`. Por eso el orden correcto es **web → reglas**, con la ventana mínima posible.
+
+**No ejecutar hasta autorización expresa:**
 
 ```powershell
-# Volver al commit anterior conocido (el que estaba en producción antes de Fase 1)
-git push public-pages 312da55:main
+# 0) Verificación (solo lectura / local)
+git checkout fase1-validada-2026-11-17
+git status
+git rev-parse HEAD
+npm.cmd run check
+node sync-copies.mjs          # debe reportar 55 archivos / 112 copias, hashes MATCH
+
+# 1) Frontend primero
+git push public-pages HEAD:main
+
+# 2) Reglas inmediatamente después (ventana de incompatibilidad mínima)
+firebase deploy --only firestore:rules,storage:rules --project sierra-madre-seguridad
+
+# 3) Smoke autenticado de los cinco puntos de la sección 7 + consola sin errores
 ```
 
-- Esto repone `https://vicozero.github.io/` en el estado previo al despliegue de Fase 1.
-- Es un `push` de una rama local a `main` del remoto `public-pages`; **no borra datos** de Firebase.
-- Tráfico DNS/CDN: GitHub Pages suele reflejar en minutos. Verificar con recarga forzada y, si aplica, nueva versión de caché del service worker.
+**No publicar Cloud Functions:** no están en el alcance y su lockfile falta.
 
-### B. Reglas de Firebase — reversión (solo si se publicaron)
+### 8.2 Reversión — **reglas primero, frontend después**
 
 ```powershell
-# 1) Recuperar las reglas anteriores desde el commit base
+# 1) Reglas: volver a las versiones de 312da55
 git show 312da55:firestore.rules > firestore.rules.rollback
 git show 312da55:storage.rules   > storage.rules.rollback
-
-# 2) Restaurarlas temporalmente en el árbol de trabajo y desplegar
 Copy-Item firestore.rules.rollback firestore.rules -Force
 Copy-Item storage.rules.rollback   storage.rules   -Force
 firebase deploy --only firestore:rules,storage:rules --project sierra-madre-seguridad
-
-# 3) Volver al estado validado y limpiar temporales
 git checkout fase1-validada-2026-11-17 -- firestore.rules storage.rules
 Remove-Item firestore.rules.rollback, storage.rules.rollback
+
+# 2) Frontend: reponer el sitio previo
+git push public-pages 312da55:main
 ```
 
-- Si el despliegue de reglas falla a mitad, repetir el paso 2; las reglas son declarativas y **idempotentes**.
-- **No** revertir datos: no se migró ni restauró nada, por lo que no existe un "estado de datos anterior" que reponer por este despliegue.
-- Si el problema es de permisos sobre registros nuevos, revisar primero `/api/inconsistencies` y evidencias; **no** reasignar automáticamente.
-
-### C. Datos
-
-- No aplica reversión de datos de este despliegue: **no se escribieron registros productivos**.
-- Cualquier restauración futura debe hacerse desde un respaldo verificado con `verify-migration-backup.mjs`, en modo previsualización primero, y con autorización explícita.
+- Las reglas son declarativas e idempotentes: si el despliegue falla a mitad, repetir el paso 1.
+- Tras reponer el frontend, la caché **`sm-seguridad-v8`** puede seguir sirviendo assets nuevos: recarga forzada, borrar datos del sitio o reinstalar la PWA.
+- **No hay reversión de datos**: no se migró ni escribió nada productivo.
+- Si el problema aparece solo en módulos de capacitación/NOM, sospechar de las validaciones nuevas de `talk_topics`/`talk_schedules`/`talk_sessions`/`compliance_assessments` y revertir reglas antes que el frontend.
 
 ---
 
-## 6. Riesgos identificados
+## 9. Riesgos de publicación
 
 | Nivel | Riesgo | Mitigación |
 |---|---|---|
-| **MEDIO** | Reglas probadas en emulador con datos aislados, no con volumen/casos límite de producción. | Publicar reglas solo con autorización; verificar `/api/inconsistencies` con datos reales antes de cualquier reasignación. |
-| **MEDIO** | Validaciones manuales autenticadas pendientes (PDF/CSV, preview, admin/no-admin). | No dar por cerrada la publicación hasta ejecutarlas con cuentas autorizadas; reversión sección 5 si fallan. |
-| **MEDIO** | Caché PWA `sm-seguridad-v7` puede servir pantalla antigua tras publicar. | Recarga forzada / borrar datos del sitio / reinstalar; no cambiar versión sin cambio de código. |
-| **BAJO** | `/api/inconsistencies` depende de permiso `list` de `evidenceChunks` solo para admin. | Ya restringido; no se elimina nada automáticamente. |
-| **BAJO** | Modo local no equivale a entorno multiusuario protegido. | Señalizado en UI (`SM_LOCAL_MODE`, `data-storage="local"`); no usar para datos reales. |
-| **BAJO** | Homónimos / unidades históricas ambiguas. | El portal no reasigna automáticamente; queda para conciliación administrativa. |
-| **INFORMATIVO** | API key pública de Firebase en el código. | Es una Web API key pública por diseño; la seguridad depende de las reglas, no de ocultarla. No hay secretos privados en el repositorio. |
+| **ALTO si se invierte el orden** | Reglas nuevas + frontend antiguo → escrituras denegadas por validaciones de unidad/permisos y de pláticas/NOM. | Publicar **frontend primero, reglas después** (sección 8.1). |
+| **MEDIO** | Ventana breve de frontend nuevo bajo reglas antiguas: reporte de huérfanos degradado y rol `supervisor` sin efectos. | Encadenar ambos comandos sin pausa; verificar después. |
+| **MEDIO** | Validaciones manuales autenticadas pendientes (PDF/CSV/preview/admin/no-admin). | Ejecutar sección 7 con cuentas autorizadas; si fallan, reversión sección 8.2. |
+| **MEDIO** | Reglas probadas solo en emulador `demo-sierra-madre`, no con volumen real. | Autorización expresa; revisar `/api/inconsistencies` con datos reales antes de cualquier reasignación. |
+| **MEDIO** | `package-lock.json` sin versionar → `npm ci` imposible en clone limpio. | Decidir su inclusión antes de publicar; no alterar el commit validado sin autorización. |
+| **MEDIO** | Ausencia de `.firebaserc`: riesgo de desplegar reglas en proyecto equivocado. | Usar siempre `--project sierra-madre-seguridad`. |
+| **BAJO** | Caché PWA v8 en dispositivos con assets antiguos (contador ausente). | Recarga forzada / borrar datos / reinstalar; no cambiar versión sin cambio de código. |
+| **BAJO** | `origin/main` divergente (1/59). | Publicar **solo** a `public-pages`; nunca hacer push a `origin`. |
+| **BAJO** | `functions/` sin lockfile y fuera de alcance. | No desplegar functions en esta publicación. |
+| **INFORMATIVO** | API key pública de Firebase en el código. | Pública por diseño; la seguridad depende de las reglas. Sin secretos privados en el repo. |
 
 ---
 
-## 7. Confirmación de datos productivos
+## 10. Confirmación de datos productivos
 
-- **No se modificaron registros productivos.** Todas las pruebas se ejecutaron contra Firebase Emulator (`demo-sierra-madre`, Firestore 8087 / Storage 9199) o contra archivos locales aislados.
-- **No se realizaron migraciones automáticas** ni restauraciones. `migrate-verified-workspace.mjs` y `verify-migration-backup.mjs` quedan como herramientas, sin ejecución sobre producción.
-- **No se publicaron reglas de Firebase** ni se desplegó el sitio. El sitio live solo se abrió en modo lectura para la comprobación de carga.
+- **No se modificaron registros productivos.** Pruebas en emulador (`demo-sierra-madre`, 8087/9199) y archivos aislados.
+- **No se crearon usuarios reales**, no se usaron credenciales personales y no se solicitaron contraseñas.
+- **No se realizaron migraciones ni restauraciones**; `migrate-verified-workspace.mjs` y `verify-migration-backup.mjs` siguen como herramientas sin ejecutar sobre producción.
+- **No se publicaron reglas ni se desplegó el sitio.** `public-pages/main` sigue en `312da55`.
 - **No se inició la Fase 2.**
 
 ---
 
-## 8. Autorización requerida
+## 11. Bloqueos y autorización requerida
 
-Este documento se entrega con el estado **listo pero detenido**. Se solicita autorización expresa para:
+Bloqueos actuales:
 
-1. Publicar `firestore.rules` y `storage.rules` en `sierra-madre-seguridad`.
-2. Ejecutar `git push public-pages HEAD:main` desde la rama `fase1-validada-2026-11-17`.
-3. Proporcionar cuentas de prueba autorizadas (administradora y no administradora) para completar las validaciones manuales pendientes.
+1. Sin autorización expresa para publicar frontend y reglas.
+2. Sin cuentas de prueba autorizadas; el administrador no puede ser creado desde la UI (debe usar su sesión dueña).
+3. Sin decisión sobre versionar `package-lock.json` (recomendado para `npm ci`).
 
-**Hasta recibir esa autorización: no se ejecuta ningún despliegue, publicación de reglas ni migración.**
+Se solicita autorización para:
+
+- `git push public-pages HEAD:main` desde `fase1-validada-2026-11-17`.
+- `firebase deploy --only firestore:rules,storage:rules --project sierra-madre-seguridad` **inmediatamente después**.
+- Crear la cuenta operativa de prueba `qa-op-…` (el administrador dueño ejecuta su propia validación).
+
+**Hasta recibirla: no se ejecuta ningún despliegue, publicación de reglas, creación de usuarios ni migración.**
