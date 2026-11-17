@@ -187,19 +187,20 @@ node --check firestore.rules   # (reglas validadas por el emulador al cargarlas)
 
 ---
 
-## 13. Verificación de prepublicación (segunda pasada, 17-Nov-2026)
+## 13. Verificación de prepublicación (cierre, 17-Nov-2026)
 
 | Concepto | Resultado |
 |---|---|
 | Commit validado | `fb1795d` sin cambios de código; etiqueta `fase1-validada-2026-11-17-final`. Sin `push`. |
 | Rama | `fase1-validada-2026-11-17` contiene 98 archivos (79 modificados + 19 nuevos). Espejos raíz/`docs/`/`public/` coinciden por SHA-256 en 9 archivos clave. |
-| Artefactos sin versionar | 8. Solo `package-lock.json` es indispensable (instalación reproducible); los demás son herramientas puntuales NOM/respaldos. No se agregó ninguno al commit validado. |
-| Dependencias | Lockfile v3 coherente con `package.json`; instaladas `@firebase/rules-unit-testing 5.0.2`, `firebase 12.19.0`, `firebase-tools 15.36.0`. `functions/` sin lockfile y fuera de alcance. |
+| Artefactos sin versionar | 7; ninguno indispensable. `package-lock.json` y la nueva prueba ya están versionados; el resto son herramientas puntuales NOM/respaldos. |
+| Dependencias | **Verificado y resuelto.** Lockfile v3 coherente con `package.json`; sin credenciales ni secretos (solo nombres de dependencias/URLs). `@firebase/rules-unit-testing 5.0.2`, `firebase 12.19.0`, `firebase-tools 15.36.0`. Versionado en commit exclusivo `4b10d9e`; `npm ci` en directorio aislado → 687 paquetes, exit 0, mismas versiones. Históricos `fb1795d`/`7b5aa65` y etiqueta intactos. `functions/` sin lockfile y fuera de alcance. |
+| Seguridad del reporte | `/api/inconsistencies` se intercepta en `cloud-portal.js` (`window.fetch`) con `isAdmin` de `security/authority`; **no es autoridad**. La autoridad real está en `firestore.rules` (list de `reports`/`actions`/`plans` y de `evidenceChunks` solo admin; `readOperation`/`allowedUnit`/`canViewAll`/`owns`) y `storage.rules` (`recordAllowed`). Nueva prueba `test-phase1-admin-report-security.mjs`: **1/1 PASS** en emulador (admin con acceso; operador sin permisos y anónimo denegados). |
 | Remoto `public-pages/main` | `312da55`; relación `0  1` con el commit validado, sin divergencia inesperada (`merge-base --is-ancestor` OK). `origin/main` divergente (1/59), no usado para publicar. |
 | Firebase | `projectId sierra-madre-seguridad` en config web y en `firebase-migration-config.json` (gitignored, `productionSwitchEnabled: false`); emulador solo con `demo-sierra-madre`. Sin `.firebaserc`: exigir `--project` explícito. |
-| Orden de publicación | **Corregido:** frontend primero y reglas inmediatamente después. Las reglas nuevas son más estrictas (unidad/permisos, pláticas/NOM, `evidenceChunks`); el frontend antiguo no fue probado contra ellas. Reversión en orden inverso: reglas primero, frontend después. |
-| Caché PWA | Corrección documental: **`sm-seguridad-v8`** (no v7). |
+| Orden de publicación | **Corregido:** frontend primero y reglas inmediatamente después (ventana mínima). Las reglas nuevas son más estrictas (unidad/permisos, pláticas/NOM, `evidenceChunks`); el frontend antiguo no fue probado contra ellas. Reversión en orden inverso: reglas primero, frontend después. **Sin `--force` ni rewind:** rollback con `git revert --no-commit 312da55..HEAD` + push en avance. |
+| Caché PWA | Producción `312da55:sw.js` = v7; rama validada = **`sm-seguridad-v8`**. El `activate` elimina cachés `sm-seguridad-*` distintas de la activa, así que v8 **no impide** la actualización. |
 | Cuentas de prueba | Procedimiento seguro preparado (sección 6 del checklist), **no ejecutado**. Admin no creable desde UI: debe validar el administrador dueño en su sesión. Sin contraseñas solicitadas ni almacenadas. |
 | Validaciones manuales | Instrucciones exactas en la sección 7 del checklist. Siguen **pendientes/no aprobadas**. |
 
-Detalle completo en `CHECKLIST_PUBLICACION_FASE1.md`. Sin despliegue, reglas publicadas, usuarios creados ni datos modificados.
+Detalle completo en `CHECKLIST_PUBLICACION_FASE1.md` (secciones 1–11, con guía breve de navegador). Commits añadidos sin tocar código validado: `7b5aa65`, `4b10d9e`, `318eca1`. Sin despliegue, reglas publicadas, usuarios creados ni datos modificados.
