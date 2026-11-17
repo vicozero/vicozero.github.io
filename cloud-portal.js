@@ -5,9 +5,11 @@ import {getAuth,createUserWithEmailAndPassword,signOut} from 'https://www.gstati
 export async function connectPortal(app,user,perms,database=null){
  const db=database||getFirestore(app),authority=await getDoc(doc(db,'security','authority')),profile=await getDoc(doc(db,'profiles',user.uid));
  if(!profile.exists()||profile.data().active!==true)throw Error('Tu cuenta no está autorizada. Contacta al administrador.');
- const isAdmin=authority.exists()&&authority.data().administratorUid===user.uid;
- const me={...profile.data(),id:user.uid,role:isAdmin?'admin':profile.data().role,isOwner:isAdmin};
- if(!isAdmin&&me.role==='admin')throw Error('La administración de esta cuenta ha cambiado. Solicita revisar su perfil.');
+ const principalUid=authority.exists()?authority.data().administratorUid:null;
+ const isPrincipal=!!principalUid&&principalUid===user.uid;
+ const isAdmin=isPrincipal||profile.data().role==='admin';
+ const me={...profile.data(),id:user.uid,role:isAdmin?'admin':profile.data().role,isOwner:isPrincipal,isPrincipal};
+ if(!isAdmin&&profile.data().role==='admin')throw Error('Tu perfil requiere revisión. Contacta al encargado de la administración.');
  me.permissions={...(perms[me.role]||perms.member),...(me.permissions||{})};
  if(isAdmin)me.permissions={...perms.admin};
  const allProfiles=await getDocs(collection(db,'profiles'));
@@ -95,8 +97,12 @@ export async function connectPortal(app,user,perms,database=null){
      if(col==='directory')return response((await currentDirectory()).map(u=>({id:u.id,name:u.name,unit:u.unit||'',role:u.role})));
      if(col==='users'){
        if(!isAdmin)return response({error:'Permiso administrativo requerido.'},403);
-       if(method==='GET')return response((await getDocs(collection(db,'profiles'))).docs.map(d=>({...d.data(),id:d.id})));
-       if(method==='DELETE'){if(id===me.id)throw Error('No puedes desactivar tu propia cuenta administrativa.');await updateDoc(doc(db,'profiles',id),{active:false});return response({ok:true});}
+       if(method==='GET')return response((await getDocs(collection(db,'profiles'))).docs.map(d=>({...d.data(),id:d.id,isOwner:d.id===principalUid})));
+       if(method==='DELETE'){
+         if(id===principalUid)throw Error('No puedes desactivar la cuenta del encargado principal. Transfiere la administración primero.');
+         if(id===me.id)throw Error('No puedes desactivar tu propia cuenta administrativa.');
+         await updateDoc(doc(db,'profiles',id),{active:false});return response({ok:true});
+       }
        if(!['POST','PUT'].includes(method))return response({error:'Método no permitido.'},405);
        const profiles=(await getDocs(collection(db,'profiles'))).docs;
        const email=String(body.email||'').trim().toLowerCase();
@@ -107,7 +113,7 @@ export async function connectPortal(app,user,perms,database=null){
        if(existing&&existing.data().email?.toLowerCase()!==email)throw Error('El correo de acceso debe cambiarse mediante Firebase Authentication antes de actualizar el perfil.');
        let uid=existing?.id;
        if(existing&&body.password)throw Error('Para cambiar una contraseña existente, usa Recuperar contraseña en el acceso. Los permisos se guardan dejando este campo vacío.');
-       if(body.role==='admin'&&!(isAdmin&&existing?.id===me.id))throw Error('La administración principal se transfiere desde la configuración central. Selecciona operador o usuario operativo.');
+       if(body.role==='admin'&&!isPrincipal)throw Error('Solo el encargado principal puede asignar el rol de administrador.');
        if(!uid){
          if(!body.password||body.password.length<8)throw Error('La contraseña inicial requiere al menos 8 caracteres.');
          const secondary=initializeApp(app.options,'create-user-'+crypto.randomUUID());
@@ -117,8 +123,8 @@ export async function connectPortal(app,user,perms,database=null){
        const saved=await runTransaction(db,async tx=>{
          const ref=doc(db,'profiles',uid),snap=await tx.get(ref),prior=snap.exists()?snap.data():null;
          if((body.revision||0)!==(prior?.revision||0))throw Error('CONFLICT');
-         if(uid===me.id&&(fields.active===false||fields.role!=='admin'))throw Error('Transfiere la administración antes de cambiar el rol o desactivar esta cuenta.');
-         const record=clean({...prior,...fields,email,id:uid,isOwner:uid===me.id,revision:(prior?.revision||0)+1,created:prior?.created||new Date().toISOString(),updated:new Date().toISOString()});
+         if(uid===principalUid&&(fields.active===false||fields.role!=='admin'))throw Error('Transfiere la administración antes de cambiar el rol o desactivar la cuenta del encargado principal.');
+         const record=clean({...prior,...fields,email,id:uid,isOwner:uid===principalUid,revision:(prior?.revision||0)+1,created:prior?.created||new Date().toISOString(),updated:new Date().toISOString()});
          tx.set(ref,record);return record;
        });
        return response(saved);

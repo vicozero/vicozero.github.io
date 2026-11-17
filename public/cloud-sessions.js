@@ -1,4 +1,4 @@
-import {doc,collection,setDoc,updateDoc,serverTimestamp,getDocs} from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
+import {doc,collection,setDoc,updateDoc,serverTimestamp,getDocs,getDoc,runTransaction} from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
 import {createSessionClock} from './session-clock.js';
 
 const ONLINE_MS=90000;
@@ -26,6 +26,39 @@ function mountInHeader(el,before){
   const anchor=tools.querySelector(before)||tools.querySelector('.sign-out');
   if(anchor)anchor.insertAdjacentElement('beforebegin',el);
   else tools.prepend(el);
+}
+
+function mountAdminTool(el){
+  const panel=document.getElementById('adminToolsActions')||document.getElementById('adminTools');
+  if(panel){ panel.append(el); return; }
+  mountInHeader(el,'#noticeBell');
+}
+
+export async function transferAdministration(db,me,email,helpers={}){
+  const ask=helpers.prompt||globalThis.prompt;
+  const confirmChange=helpers.confirm||globalThis.confirm;
+  const notify=helpers.alert||globalThis.alert;
+  const reload=helpers.reload||(()=>location.reload());
+  const address=ask('Correo de la cuenta activa que recibirá la administración:');
+  if(!address)return false;
+  const profiles=(await getDocs(collection(db,'profiles'))).docs;
+  const target=profiles.find(p=>p.data().active&&p.data().email?.toLowerCase()===address.trim().toLowerCase());
+  if(!target||target.id===me.id)throw Error('Selecciona otra cuenta activa del equipo.');
+  if(!confirmChange('Transferir la encargatura a '+target.data().name+' ('+address+')? Conservarás tus permisos de administrador, pero ya no podrás transferir la autoridad.'))return false;
+  await runTransaction(db,async tx=>{
+    const timestamp=new Date().toISOString();
+    const targetSnap=await tx.get(doc(db,'profiles',target.id));
+    const targetPrior=targetSnap.exists()?targetSnap.data():{};
+    const cleanTarget=Object.fromEntries(Object.entries(targetPrior).filter(([,value])=>value!==undefined));
+    const principalSnap=await tx.get(doc(db,'profiles',me.id));
+    const principalPrior=principalSnap.exists()?principalSnap.data():{};
+    const cleanPrincipal=Object.fromEntries(Object.entries(principalPrior).filter(([,value])=>value!==undefined));
+    tx.update(doc(db,'security','authority'),{administratorUid:target.id,updatedAt:serverTimestamp()});
+    tx.set(doc(db,'profiles',target.id),{...cleanTarget,id:target.id,role:'admin',active:true,revision:(Number(cleanTarget.revision)||0)+1,updated:timestamp});
+    tx.set(doc(db,'profiles',me.id),{...cleanPrincipal,id:me.id,role:'admin',active:true,revision:(Number(cleanPrincipal.revision)||0)+1,updated:timestamp});
+  });
+  reload();
+  return true;
 }
 
 export async function startCloudSession(db,me){
@@ -102,23 +135,24 @@ export async function startCloudSession(db,me){
 
 export function installSessionReport(db,me){
   if(me.role!=='admin')return;
+  const inPanel=!!(document.getElementById('adminToolsActions')||document.getElementById('adminTools'));
   const button=document.createElement('button');
-  button.className='theme-button';button.type='button';button.textContent='Sesiones';
+  button.id='adminSessionsButton';
+  button.className=inPanel?'secondary':'theme-button';button.type='button';button.textContent=inPanel?'Sesiones activas':'Sesiones';
   button.title='Ver quién está conectado y cuánto tiempo lleva en línea';
-  mountInHeader(button,'#noticeBell');
-  const transfer=document.createElement('button');
-  transfer.className='theme-button';transfer.type='button';transfer.textContent='Cambiar encargado';
-  mountInHeader(transfer,'#noticeBell');
-  transfer.onclick=async()=>{
-    const email=prompt('Correo de la cuenta activa que recibirá la administración:');if(!email)return;
-    try{
-      const profiles=(await getDocs(collection(db,'profiles'))).docs;
-      const target=profiles.find(p=>p.data().active&&p.data().email?.toLowerCase()===email.trim().toLowerCase());
-      if(!target||target.id===me.id)throw Error('Selecciona otra cuenta activa del equipo.');
-      if(!confirm('Transferir la administración a '+target.data().name+' ('+email+') y retirar tu acceso administrativo?'))return;
-      await updateDoc(doc(db,'security','authority'),{administratorUid:target.id,updatedAt:serverTimestamp()});location.reload();
-    }catch(error){alert('No se pudo transferir: '+error.message);}
-  };
+  mountAdminTool(button);
+  const transfer=me.isPrincipal?document.createElement('button'):null;
+  if(transfer){
+    transfer.id='transferAuthorityButton';
+    transfer.className=inPanel?'secondary':'theme-button';transfer.type='button';transfer.textContent='Cambiar encargado';
+    transfer.title='Transferir la administración a otra cuenta activa';
+    mountAdminTool(transfer);
+    transfer.onclick=async()=>{
+      try{
+        await transferAdministration(db,me);
+      }catch(error){alert('No se pudo transferir: '+error.message);}
+    };
+  }
 
   const dialog=document.createElement('dialog');
   dialog.className='session-dialog';
@@ -232,7 +266,12 @@ export function installSessionReport(db,me){
   };
   for(const el of dialog.querySelectorAll('[data-session-close]'))el.onclick=()=>dialog.close();
 
-  setInterval(()=>{if(dialog.open)paint();},1000);
-  setInterval(()=>{if(dialog.open)refresh();},30000);
-  window.addEventListener('sm:live',event=>{if(event.detail&&event.detail.collection==='sessions'&&dialog.open)refresh();});
+  const timers=[setInterval(()=>{if(dialog.open)paint();},1000),setInterval(()=>{if(dialog.open)refresh();},30000)];
+  const onLive=event=>{if(event.detail&&event.detail.collection==='sessions'&&dialog.open)refresh();};
+  window.addEventListener('sm:live',onLive);
+  return ()=>{
+    timers.forEach(timer=>clearInterval(timer));
+    window.removeEventListener('sm:live',onLive);
+    button.remove();transfer?.remove();dialog.remove();
+  };
 }

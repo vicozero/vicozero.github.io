@@ -59,3 +59,10 @@ html[data-theme=dark] .session-state--stale{background:#d9a44122;color:#e5bd6a}
 @media(max-width:800px){.session-timer{padding:5px 8px;gap:6px}.session-clock{font-size:11px;min-width:58px}.session-dialog{width:96vw}.session-table th,.session-table td{padding:8px 7px;font-size:11px}}
 
 .sync.local,.sync[data-mode=local]{color:#a86a00}.sync.local:before{background:#d39b2b!important}[data-storage=local] .sync{color:#a86a00}[data-storage=local] header .header-tools::after{content:"MODO LOCAL · sin sincronización central";font-size:9px;font-weight:700;color:#a86a00;background:#fff4de;border:1px solid #e6c98a;border-radius:999px;padding:4px 8px;white-space:nowrap}
+
+.admin-tools{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin:16px 0;padding:14px 16px;border:1px solid var(--line);border-radius:8px;background:var(--surface-soft)}
+.admin-tools h3{margin:2px 0 0;font-size:16px;letter-spacing:-.2px}
+.admin-tools p{margin:3px 0 0;font-size:12px;color:var(--muted)}
+.admin-tools .eyebrow{font-size:9px}
+.admin-tools-actions{display:flex;flex-wrap:wrap;gap:8px}
+.admin-tools-actions button{white-space:nowrap}

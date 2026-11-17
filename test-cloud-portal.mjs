@@ -19,6 +19,7 @@ try{
   await setDoc(doc(db,'profiles',own),{id:own,name:'Admin test',role:'admin',active:true});
   await setDoc(doc(db,'profiles','operator'),{id:'operator',email:'operator@example.test',name:'Operator test',role:'operator',active:true,revision:0});
   await setDoc(doc(db,'profiles','supervisor'),{id:'supervisor',name:'Supervisor test',role:'supervisor',active:true,revision:0});
+  await setDoc(doc(db,'profiles','secondary'),{id:'secondary',email:'secondary@example.test',name:'Secondary admin',role:'admin',active:true,revision:0});
  });
  const perms={admin:{},operator:{edit_reports:true,edit_actions:true,send_notices:true}};
  const db=env.authenticatedContext('operator').firestore();
@@ -58,6 +59,17 @@ try{
  result=await window.fetch('/api/users/'+own,{method:'DELETE'});assert.equal(result.status,403);
  result=await window.fetch('/api/assign',{method:'POST',body:JSON.stringify({collection:'reports',id:'test-record',accountId:'supervisor'})});assert.equal(result.status,200);
  result=await window.fetch('/api/reports/test-record');const reassigned=await result.json();assert.equal(reassigned.ownerAccountId,'supervisor');assert.equal(reassigned.supervisor,'Supervisor test');assert.equal(reassigned.revision,2);
+ await connectPortal({}, {uid:'secondary'},perms,env.authenticatedContext('secondary').firestore());
+ result=await window.fetch('/api/users');assert.equal(result.status,200);
+ const secondaryView=await result.json();
+ assert.equal(secondaryView.find(u=>u.id===own).isOwner,true);
+ assert.equal(secondaryView.find(u=>u.id==='secondary').isOwner,false);
+ const operatorUser=secondaryView.find(u=>u.id==='operator');
+ result=await window.fetch('/api/users',{method:'POST',body:JSON.stringify({id:'operator',email:'operator@example.test',name:'Operator renamed',role:'operator',active:true,unit:'Taller',revision:operatorUser.revision})});
+ assert.equal(result.status,200,JSON.stringify(await result.clone().json()));
+ const savedBySecondary=await result.json();
+ result=await window.fetch('/api/users',{method:'POST',body:JSON.stringify({...savedBySecondary,role:'admin'})});
+ assert.equal(result.status,403);
  await connectPortal({}, {uid:'supervisor'},perms,env.authenticatedContext('supervisor').firestore());
  result=await window.fetch('/api/reports/test-record');assert.equal(result.status,200);assert.equal((await result.json()).id,'test-record');
  await connectPortal({}, {uid:'operator'},perms,db);

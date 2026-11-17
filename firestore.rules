@@ -7,10 +7,21 @@ service cloud.firestore {
         && request.auth.uid == 'Kgwk4gK0yxYJQMZZaggIyl2xtnh2'
         && !exists(/databases/$(database)/documents/security/authority);
     }
-    function administrator() {
+    // The principal owner is the only account allowed to transfer the authority document.
+    function principalAdministrator() {
       return request.auth != null
         && exists(/databases/$(database)/documents/security/authority)
         && request.auth.uid == get(/databases/$(database)/documents/security/authority).data.administratorUid;
+    }
+    // Additional administrators have full operational access but cannot transfer ownership.
+    function activeAdminProfile() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/profiles/$(request.auth.uid))
+        && get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data.active == true
+        && get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data.role == 'admin';
+    }
+    function administrator() {
+      return principalAdministrator() || activeAdminProfile();
     }
     match /security/authority {
       allow get: if request.auth != null;
@@ -18,7 +29,7 @@ service cloud.firestore {
         && request.resource.data.keys().hasOnly(['administratorUid', 'updatedAt'])
         && request.resource.data.administratorUid == request.auth.uid
         && request.resource.data.updatedAt == request.time;
-      allow update: if administrator()
+      allow update: if principalAdministrator()
         && request.resource.data.keys().hasOnly(['administratorUid', 'updatedAt'])
         && request.resource.data.administratorUid is string
         && request.resource.data.administratorUid.size() > 0
@@ -44,8 +55,14 @@ service cloud.firestore {
       allow get: if administrator() || activeOperator() || (request.auth != null && request.auth.uid == uid);
       allow list: if administrator() || activeOperator();
       allow create, update: if administrator()
-        && (request.resource.data.role in ['member', 'operator', 'supervisor'] || (uid == get(/databases/$(database)/documents/security/authority).data.administratorUid && request.resource.data.role == 'admin'))
-        && request.resource.data.active is bool;
+        && request.resource.data.role in ['member', 'operator', 'supervisor', 'admin']
+        && request.resource.data.active is bool
+        && (uid != get(/databases/$(database)/documents/security/authority).data.administratorUid
+          || (request.resource.data.role == 'admin' && request.resource.data.active == true))
+        && (request.resource.data.role != 'admin'
+          || principalAdministrator()
+          || (exists(/databases/$(database)/documents/profiles/$(uid))
+            && get(/databases/$(database)/documents/profiles/$(uid)).data.role == 'admin'));
       allow delete: if false;
     }
     function owns(record) {

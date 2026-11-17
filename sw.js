@@ -1,5 +1,5 @@
 /* Sierra Madre Seguridad Operativa - Service Worker (PWA) */
-const CACHE_NAME = 'sm-seguridad-v8';
+const CACHE_NAME = 'sm-seguridad-v9';
 const APP_SHELL = [
   '/',
   '/index.html',
