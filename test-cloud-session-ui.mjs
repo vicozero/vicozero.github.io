@@ -31,9 +31,12 @@ resolveCreate();await new Promise(resolve=>setTimeout(resolve,0));
 failUpdate=true;await assert.rejects(close,/offline/);assert(!document.querySelector('.session-timer'));
 
 const cleanupPrincipal=installSessionReport({}, {id:'principal',role:'admin',isPrincipal:true});
-assert(document.getElementById('adminSessionsButton'),'Principal should see the sessions tool');
-assert(document.getElementById('transferAuthorityButton'),'Principal should see the transfer tool');
-assert(document.getElementById('adminSessionsButton').closest('#adminTools'),'Tools should be mounted inside the Users panel');
+for(const id of ['headerSessionsButton','adminSessionsButton','headerTransferAuthorityButton','transferAuthorityButton'])assert(document.getElementById(id),'Principal should see '+id);
+assert(document.getElementById('headerSessionsButton').closest('.header-tools'),'Header sessions button should be mounted in the header');
+assert(document.getElementById('headerTransferAuthorityButton').closest('.header-tools'),'Header transfer button should be mounted in the header');
+assert(document.getElementById('adminSessionsButton').closest('#adminTools'),'Panel sessions button should be mounted inside the Users panel');
+assert(document.getElementById('transferAuthorityButton').closest('#adminTools'),'Panel transfer button should be mounted inside the Users panel');
+assert.equal(document.getElementById('headerSessionsButton').className,'theme-button');
 assert.equal(document.getElementById('adminSessionsButton').className,'secondary');
 
 let reloaded=false;
@@ -55,13 +58,13 @@ for(const profile of ['target','principal']){
   assert.equal(record.revision,1);
 }
 cleanupPrincipal();
-assert(!document.getElementById('adminSessionsButton'));
+for(const id of ['headerSessionsButton','adminSessionsButton','headerTransferAuthorityButton','transferAuthorityButton'])assert(!document.getElementById(id),'Cleanup should remove '+id);
 assert(!document.querySelector('.session-dialog'));
 
 const cleanupSecondary=installSessionReport({}, {id:'secondary',role:'admin',isPrincipal:false});
-assert(document.getElementById('adminSessionsButton'),'Secondary admin should see the sessions tool');
-assert(!document.getElementById('transferAuthorityButton'),'Secondary admin must not see the transfer tool');
+for(const id of ['headerSessionsButton','adminSessionsButton'])assert(document.getElementById(id),'Secondary admin should see '+id);
+for(const id of ['headerTransferAuthorityButton','transferAuthorityButton'])assert(!document.getElementById(id),'Secondary admin must not see '+id);
 cleanupSecondary();
 
 dom.window.close();delete globalThis.sessionTestAdapter;
-console.log('Sesiones UI: supervisor, inicio sin conexión, cierre durante sincronización, transferencia transaccional, limpieza y panel por rol: OK');
+console.log('Sesiones UI: supervisor, inicio sin conexión, cierre durante sincronización, transferencia transaccional, botones en cabecera y panel, limpieza y permisos por rol: OK');

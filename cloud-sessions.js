@@ -135,23 +135,30 @@ export async function startCloudSession(db,me){
 
 export function installSessionReport(db,me){
   if(me.role!=='admin')return;
-  const inPanel=!!(document.getElementById('adminToolsActions')||document.getElementById('adminTools'));
-  const button=document.createElement('button');
-  button.id='adminSessionsButton';
-  button.className=inPanel?'secondary':'theme-button';button.type='button';button.textContent=inPanel?'Sesiones activas':'Sesiones';
-  button.title='Ver quién está conectado y cuánto tiempo lleva en línea';
-  mountAdminTool(button);
-  const transfer=me.isPrincipal?document.createElement('button'):null;
-  if(transfer){
-    transfer.id='transferAuthorityButton';
-    transfer.className=inPanel?'secondary':'theme-button';transfer.type='button';transfer.textContent='Cambiar encargado';
-    transfer.title='Transferir la administración a otra cuenta activa';
-    mountAdminTool(transfer);
-    transfer.onclick=async()=>{
+  const makeSessionsButton=(id,className,label)=>{
+    const el=document.createElement('button');
+    el.id=id;el.className=className;el.type='button';el.textContent=label;
+    el.title='Ver quién está conectado y cuánto tiempo lleva en línea';
+    return el;
+  };
+  const makeTransferButton=(id,className)=>{
+    const el=document.createElement('button');
+    el.id=id;el.className=className;el.type='button';el.textContent='Cambiar encargado';
+    el.title='Transferir la administración a otra cuenta activa';
+    el.onclick=async()=>{
       try{
         await transferAdministration(db,me);
       }catch(error){alert('No se pudo transferir: '+error.message);}
     };
+    return el;
+  };
+  const sessionsButtons=[makeSessionsButton('headerSessionsButton','theme-button','Sesiones'),makeSessionsButton('adminSessionsButton','secondary','Sesiones activas')];
+  const transferButtons=me.isPrincipal?[makeTransferButton('headerTransferAuthorityButton','theme-button'),makeTransferButton('transferAuthorityButton','secondary')]:[];
+  mountInHeader(sessionsButtons[0],'#noticeBell');
+  mountAdminTool(sessionsButtons[1]);
+  if(transferButtons.length){
+    mountInHeader(transferButtons[0],'#noticeBell');
+    mountAdminTool(transferButtons[1]);
   }
 
   const dialog=document.createElement('dialog');
@@ -249,15 +256,17 @@ export function installSessionReport(db,me){
     try{await load();}catch(error){updatedEl.textContent='sin conexión';console.warn('No se pudieron actualizar las sesiones',error);}
   }
 
-  button.onclick=async()=>{
-    button.disabled=true;
-    try{
-      history=false;historyBtn.setAttribute('aria-pressed','false');historyBtn.textContent='Ver historial';
-      await load();
-      if(!dialog.open)dialog.showModal();
-    }catch(error){alert('No se pudieron cargar las sesiones: '+error.message);}
-    finally{button.disabled=false;}
-  };
+  for(const button of sessionsButtons){
+    button.onclick=async()=>{
+      sessionsButtons.forEach(el=>{el.disabled=true;});
+      try{
+        history=false;historyBtn.setAttribute('aria-pressed','false');historyBtn.textContent='Ver historial';
+        await load();
+        if(!dialog.open)dialog.showModal();
+      }catch(error){alert('No se pudieron cargar las sesiones: '+error.message);}
+      finally{sessionsButtons.forEach(el=>{el.disabled=false;});}
+    };
+  }
   historyBtn.onclick=()=>{
     history=!history;
     historyBtn.setAttribute('aria-pressed',String(history));
@@ -272,6 +281,6 @@ export function installSessionReport(db,me){
   return ()=>{
     timers.forEach(timer=>clearInterval(timer));
     window.removeEventListener('sm:live',onLive);
-    button.remove();transfer?.remove();dialog.remove();
+    [...sessionsButtons,...transferButtons].forEach(el=>el.remove());dialog.remove();
   };
 }

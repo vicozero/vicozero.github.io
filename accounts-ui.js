@@ -26,7 +26,6 @@
     document.querySelectorAll('nav [data-view]').forEach(btn=>{ const v=btn.dataset.view; const k=navMap[v]; if(!k) return; btn.hidden = !p[k]; });
     // sections and admin-only elements based on granular perms
     if(!p.users){ document.querySelectorAll('[data-view="users"]').forEach(el=>el.hidden=true); }
-    const adminTools=by('adminTools'); if(adminTools)adminTools.hidden=!p.users;
     if(!p.team){ document.querySelectorAll('[data-view="team"]').forEach(el=>el.hidden=true); }
     if(!p.view_all){ by('supervisorFilter').value=''; by('supervisorFilter').disabled=true; by('supervisorFilter').placeholder='Mis registros'; const sb=by('scopeBar')||document.querySelector('.scope-bar'); if(sb) sb.hidden=true; }
     if(!p.assign){ const ar=by('assignRecords'); if(ar) ar.hidden=true; }

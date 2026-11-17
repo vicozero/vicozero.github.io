@@ -31,6 +31,7 @@ function build(isPrincipal){
 const principal=build(true);
 assert(principal.by('adminTools'),'El panel de herramientas debe existir');
 assert.equal(principal.by('adminTools').hidden,false,'El panel debe mostrarse a administradores');
+assert.equal(principal.by('adminTools').hasAttribute('hidden'),false,'El panel no debe llevar el atributo hidden en el HTML');
 assert(principal.by('usersTable').textContent.includes('Editar'));
 assert(principal.by('usersTable').textContent.includes('Eliminar'));
 assert(principal.by('usersTable').textContent.includes('Encargado principal'));
