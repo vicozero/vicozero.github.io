@@ -4,8 +4,8 @@
 **Proyecto:** `centinela/`  
 **Sitio actual:** `https://vicozero.github.io/`  
 **Rama:** `fase1-validada-2026-11-17` · **código validado:** `fb1795d` (etiqueta `fase1-validada-2026-11-17-final`)  
-**Commits posteriores (sin tocar código validado):** `7b5aa65` (documentación), `4b10d9e` (lockfile), `318eca1` (prueba de seguridad), `714dcb6` (preparación final), `5fa55c9` (varios administradores y transferencia segura), `3a98d00` (herramientas en cabecera y panel), `e18f916`/`264db0a`/`84a56a6` (documentación), `0a565ea` (fix de visibilidad de secciones)  
-**HEAD actual:** `0a565ea` · **Caché PWA:** `sm-seguridad-v11`  
+**Commits posteriores (sin tocar código validado):** `7b5aa65` (documentación), `4b10d9e` (lockfile), `318eca1` (prueba de seguridad), `714dcb6` (preparación final), `5fa55c9` (varios administradores y transferencia segura), `3a98d00` (herramientas en cabecera y panel), `e18f916`/`264db0a`/`84a56a6` (documentación), `0a565ea` (fix de visibilidad de secciones), `6d77298` (cierre del editor al guardar/finalizar y campo de persona observada)  
+**HEAD funcional:** `6d77298` · **Caché PWA:** `sm-seguridad-v12`  
 **Estado:** **PUBLICACIÓN PARCIAL — pendiente de Storage.** Frontend publicado y reglas de Firestore desplegadas el 17-11-2026. Las reglas de Storage quedan bloqueadas porque el proyecto no tiene Firebase Storage dado de alta (requiere un paso manual en consola). No se migró, no se crearon usuarios y no se modificaron datos productivos. Ver sección 12.
 
 ---
@@ -15,13 +15,13 @@
 | Concepto | Resultado |
 |---|---|
 | Rama activa | `fase1-validada-2026-11-17` |
-| `HEAD` | `0a565ea` (fix de visibilidad de secciones). Código validado inalterado en `fb1795d`; etiqueta `fase1-validada-2026-11-17-final` **sin mover**. |
-| Frontend publicado | `public-pages/main`: `312da55` → `264db0a` → `84a56a6` → `0a565ea`, push en avance, **sin `--force`**. Verificado en `https://vicozero.github.io/`: HTTP 200, `adminTools` presente y `sm-seguridad-v11` activo. |
+| `HEAD` | `6d77298` (cierre del editor al guardar/finalizar y persona observada). Código validado inalterado en `fb1795d`; etiqueta `fase1-validada-2026-11-17-final` **sin mover**. |
+| Frontend publicado | `public-pages/main`: `312da55` → `264db0a` → `84a56a6` → `0a565ea` → `6d77298`, push en avance, **sin `--force`**. Verificado en `https://vicozero.github.io/`: HTTP 200, `adminTools` presente y `sm-seguridad-v12` activo. |
 | Reglas desplegadas | **Firestore: OK** (compiló y se liberó en `sierra-madre-seguridad`). **Storage: BLOQUEADO** — el proyecto no tiene Firebase Storage dado de alta; el deploy se detuvo en preverificación sin escribir nada. |
 | Contenido de la rama | **102 archivos** respecto a `312da55`: **80 modificados + 22 nuevos** esenciales. Incluye `firestore.rules`, `storage.rules`, `cloud-portal.js`, `firebase-auth.js`, `sw.js`, `brand.css`, `library-page.js` y sus copias, `verify-migration-backup.mjs`, `migrate-verified-workspace.mjs`, `test-*.mjs`, informes y este checklist. |
 | Árbol de trabajo | Limpio: 0 modificados, 0 en staging. 7 artefactos sin versionar (sección 3). |
 | Espejos `docs/` / `public/` | Verificado por hash SHA-256 en 9 archivos clave (`cloud-portal.js`, `firebase-auth.js`, `brand.css`, `sw.js`, `index.html`, `library-page.js`, `workspace.js`, `training-suite.js`, `normative-catalog.json`): **raíz = docs = public**. |
-| Service worker | Caché **`sm-seguridad-v11`** (v8 en el código validado `fb1795d`; v9 y v10 tras el modelo multi-admin; v11 tras el fix de visibilidad). |
+| Service worker | Caché **`sm-seguridad-v12`** (v8 en el código validado `fb1795d`; v9 y v10 tras el modelo multi-admin; v11 tras el fix de visibilidad; v12 tras el cierre del editor y el campo de persona observada). |
 | Operaciones realizadas | Solo lectura + verificaciones aisladas: `git status/log/diff/ls-remote`, `npm ls`, hashes, `npm ci` en directorio temporal, prueba de seguridad en emulador. **Sin `push`, sin `firebase deploy`, sin migración, sin `--force`.** |
 
 ---
@@ -116,7 +116,7 @@ Cobertura ya aprobada: reglas Firestore/Storage (propiedad, unidad, permisos, `r
 
 ## 7. Procedimiento para validación en navegador (instrucciones, no ejecutadas)
 
-Precondición: sesión autenticada, sitio `https://vicozero.github.io/`, caché PWA v11 cargada (si aparece UI antigua: recarga forzada / borrar datos del sitio).
+Precondición: sesión autenticada, sitio `https://vicozero.github.io/`, caché PWA v12 cargada (si aparece UI antigua: recarga forzada / borrar datos del sitio).
 
 ### Guía rápida (marcar al ejecutar)
 
@@ -224,7 +224,7 @@ Notas:
 - `git revert --no-commit 312da55..HEAD` produce exactamente el árbol de `312da55` mediante commits inversos; el push resultante es un **avance** y no reescribe historia.
 - **Prohibido:** `git push --force`, `git push public-pages 312da55:main`, `git reset --hard` seguido de push, o cualquier actualización no fast-forward de `public-pages/main`.
 - Si el despliegue es interrumpido a mitad, repetir el paso 1: las reglas son declarativas e idempotentes.
-- Tras reponer el frontend, la caché **`sm-seguridad-v11`** puede seguir sirviendo assets nuevos: recarga forzada, borrar datos del sitio o reinstalar la PWA. El `activate` del SW elimina todas las cachés `sm-seguridad-*` distintas de la activa, por lo que v11 **no bloquea** la actualización: basta con que el SW nuevo se active.
+- Tras reponer el frontend, la caché **`sm-seguridad-v12`** puede seguir sirviendo assets nuevos: recarga forzada, borrar datos del sitio o reinstalar la PWA. El `activate` del SW elimina todas las cachés `sm-seguridad-*` distintas de la activa, por lo que v12 **no bloquea** la actualización: basta con que el SW nuevo se active.
 - **No hay reversión de datos**: no se migró ni escribió nada productivo.
 - Si el problema aparece solo en módulos de capacitación/NOM, sospechar de las validaciones nuevas de `talk_topics`/`talk_schedules`/`talk_sessions`/`compliance_assessments` y revertir reglas antes que el frontend.
 - Para volver a Fase 1 tras una reversión: publicar de nuevo el frontend desde `fase1-validada-2026-11-17` como commit en avance, no rewindear.
@@ -242,7 +242,7 @@ Notas:
 | **MEDIO** | Reglas probadas solo en emulador `demo-sierra-madre`, no con volumen real. | Autorización expresa; revisar `/api/inconsistencies` con datos reales antes de cualquier reasignación. |
 | **BAJO (resuelto)** | `package-lock.json` sin versionar impedía `npm ci`. | Versionado en `4b10d9e`; `npm ci` verificado en entorno aislado. |
 | **MEDIO** | Ausencia de `.firebaserc`: riesgo de desplegar reglas en proyecto equivocado. | Usar siempre `--project sierra-madre-seguridad`. |
-| **BAJO** | Caché PWA v11 en dispositivos con assets antiguos (herramientas o secciones ausentes). | El `activate` borra cachés `sm-seguridad-*` antiguas; recarga forzada / borrar datos / reinstalar si persiste. |
+| **BAJO** | Caché PWA v12 en dispositivos con assets antiguos (herramientas o secciones ausentes). | El `activate` borra cachés `sm-seguridad-*` antiguas; recarga forzada / borrar datos / reinstalar si persiste. |
 | **BAJO** | `origin/main` divergente (1/59). | Publicar **solo** a `public-pages`; nunca hacer push a `origin`. |
 | **BAJO** | `functions/` sin lockfile y fuera de alcance. | No desplegar functions en esta publicación. |
 | **INFORMATIVO** | API key pública de Firebase en el código. | Pública por diseño; la seguridad depende de las reglas. Sin secretos privados en el repo. |
@@ -268,7 +268,7 @@ Notas:
 2. Sin cuentas de prueba autorizadas; el encargado principal puede crear administradores desde la UI, pero la validación debe ejecutarla el dueño en su propia sesión. **No se crean cuentas desde esta automatización.**
 3. ~~Sin decisión sobre versionar `package-lock.json`~~ → **RESUELTO**: versionado en `4b10d9e` y `npm ci` verificado.
 
-Resuelto en esta pasada: dependencias coherentes y sin secretos, lockfile versionado, instalación reproducible, prueba de seguridad del reporte (1/1 PASS), orden de publicación y reversión no destructiva, guía breve de navegador, confirmación de proyecto Firebase, caché PWA v11, modelo multi-admin con herramientas visibles en cabecera y panel, y secciones de pláticas y biblioteca dentro del flujo principal.
+Resuelto en esta pasada: dependencias coherentes y sin secretos, lockfile versionado, instalación reproducible, prueba de seguridad del reporte (1/1 PASS), orden de publicación y reversión no destructiva, guía breve de navegador, confirmación de proyecto Firebase, caché PWA v12, modelo multi-admin con herramientas visibles en cabecera y panel, secciones de pláticas y biblioteca dentro del flujo principal, cierre del editor al guardar/finalizar y campo de persona observada en Liderazgo visible.
 
 Secuencia autorizada:
 
@@ -286,8 +286,8 @@ Resultado: ver **sección 12**.
 
 | Acción | Resultado |
 |---|---|
-| `git push public-pages HEAD:main` | **OK** — `312da55..264db0a` → `84a56a6` → `0a565ea`, fast-forward, sin `--force`. `git ls-remote` confirma `0a565eaa6f2d1cc38adc981e765aaa99e826f077`. |
-| Verificación del sitio | **OK** — `https://vicozero.github.io/` responde 200; el HTML contiene `adminTools`. (`adminSessionsButton` se crea dinámicamente, no aparece en el HTML estático.) `sw.js` sirve **`sm-seguridad-v11`** tras el fix de visibilidad (antes v10). |
+| `git push public-pages HEAD:main` | **OK** — `312da55..264db0a` → `84a56a6` → `0a565ea` → `6d77298`, fast-forward, sin `--force`. `git ls-remote` confirma `6d77298e8ef50b8fbfb8e3ef87219deaa4e8fd6b`. |
+| Verificación del sitio | **OK** — `https://vicozero.github.io/` responde 200; el HTML contiene `adminTools`. (`adminSessionsButton` se crea dinámicamente, no aparece en el HTML estático.) `sw.js` sirve **`sm-seguridad-v12`**; `formats.js` y `supervisor.js` sirven el cambio de cierre/persona observada (verificado con parámetro de caché). |
 | `firebase deploy --only firestore:rules --project sierra-madre-seguridad` | **OK** — «rules file compiled successfully» + «released rules to cloud.firestore» + «Deploy complete!». |
 | `firebase deploy --only firestore:rules,storage:rules --project sierra-madre-seguridad` | **FALLÓ en preverificación, sin escrituras** — «Firebase Storage has not been set up on project sierra-madre-seguridad». Por eso se aisló Firestore, que sí estaba listo. |
 | Proyecto | **Correcto** — ID `sierra-madre-seguridad`, número `260475494499`, coincide con `projectId`, `appId` y `messagingSenderId` de la config web. |
@@ -314,3 +314,12 @@ Tras la publicación se detectó que ambos botones abrían su sección, pero el 
 - **Validación afectada**: `npm.cmd run check` PASS; `node test-normative-library.mjs` y `node test-training-suite.mjs` PASS. No se repitieron las 24 pruebas ya aprobadas.
 - **Verificación en vivo**: `sw.js`, `normative-library.js` y `training-suite.js` sirven la versión corregida; al abrir ambas vistas quedan dentro del viewport (`y≈219`). Los botones internos («Consultar ficha» y «Consultar material») muestran su contenido correctamente.
 - Sin cambios en reglas, cuentas, datos ni Fase 2.
+
+### Ajuste posterior: cierre del editor y persona observada
+
+Solicitud del usuario: al guardar avances debe cerrarse la ventana y mostrarse «Avance Guardado»; al finalizar debe cerrarse y mostrarse «Finalizado». Además, «Liderazgo visible» debe permitir escribir el nombre de la persona observada.
+
+- **Corrección** (`6d77298`): `supervisor.js` cierra `#editor` después de persistir en ambos flujos, con los mensajes exactos; `formats.js` añade el campo obligatorio `person` / «Persona observada» a `leadership`, junto a «Actividad observada». La tabla de interacciones conserva su propia columna «Persona con quien se interactuó».
+- **Validación afectada**: `npm.cmd run check`, nueva prueba aislada `test-save-close-flow.mjs`, `test-dom.mjs`, `test-all-forms.mjs` y `test-operational-forms.mjs`: todos PASS. No se repitieron las 24 pruebas ya aprobadas.
+- **Verificación en vivo**: `sw.js` sirve `sm-seguridad-v12`; `formats.js` y `supervisor.js` contienen los dos mensajes y el nuevo campo. `public-pages/main` = `6d77298`, push en avance sin `--force`; `origin/main` intacto.
+- Nota: los borradores antiguos de «Liderazgo visible» que se reabran deberán completar el nuevo campo obligatorio antes de finalizarse. Sin cambios en reglas, cuentas, datos ni Fase 2.
