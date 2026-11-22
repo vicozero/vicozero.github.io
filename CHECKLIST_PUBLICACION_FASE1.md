@@ -336,4 +336,13 @@ Solicitud del usuario con dos archivos de Excel (`INSPECCIÓN ÁREA DE TRABAJO P
 
 **Validación afectada**: `npm.cmd run check`, `node test-inspection-excel-formats.mjs`, `node test-dom.mjs`, `node test-all-forms.mjs`, validación directa de `validateSafetyReport` para los nuevos tipos: todos PASS. Sin repeticiones de las 24 pruebas ya aprobadas. Sin cambios en reglas, cuentas, datos ni Fase 2.
 
-**Estado de publicación**: pendiente de autorización. Los cambios están implementados y validados localmente; no se ha hecho push ni deploy para este ajuste.
+**Estado de publicación**: **OK — publicado el 22-11-2026**.
+
+| Acción | Resultado |
+|---|---|
+| Autorización | Recibida del usuario el 22-11-2026. |
+| Commit | `653f39c` — «Agregar campos de Excel y nuevas inspecciones de planta y mina». |
+| `git push public-pages HEAD:main` | **OK** — `d99a521..653f39c`, fast-forward, sin `--force`. `git ls-remote` confirma `653f39cb6da425c185a0edc4811224f83cac2137`. |
+| `origin/main` | Intacto en `76ef8c864c02bf30488a3493e1e379b6210eb262`. |
+| Verificación en vivo | **OK** — `https://vicozero.github.io/` responde 200; `sw.js` sirve **`sm-seguridad-v13`** (Last-Modified 22:45:46 GMT); `formats.js` y `supervisor.js` contienen los ocho marcadores del cambio (dos tipos nuevos, comentario de hallazgo, meses de experiencia, rótulo de sección y manejo de `comment`). Verificado con parámetro de caché. |
+| Reglas / cuentas / datos / Fase 2 | **Sin cambios.** El push fue solo de frontend. Storage sigue pendiente del alta del bucket (ver sección 12). |
