@@ -323,3 +323,17 @@ Solicitud del usuario: al guardar avances debe cerrarse la ventana y mostrarse �
 - **Validación afectada**: `npm.cmd run check`, nueva prueba aislada `test-save-close-flow.mjs`, `test-dom.mjs`, `test-all-forms.mjs` y `test-operational-forms.mjs`: todos PASS. No se repitieron las 24 pruebas ya aprobadas.
 - **Verificación en vivo**: `sw.js` sirve `sm-seguridad-v12`; `formats.js` y `supervisor.js` contienen los dos mensajes y el nuevo campo. `public-pages/main` = `6d77298`, push en avance sin `--force`; `origin/main` intacto.
 - Nota: los borradores antiguos de «Liderazgo visible» que se reabran deberán completar el nuevo campo obligatorio antes de finalizarse. Sin cambios en reglas, cuentas, datos ni Fase 2.
+
+### Ajuste posterior: campos de Excel y nuevas inspecciones (22-11-2026)
+
+Solicitud del usuario con dos archivos de Excel (`INSPECCIÓN ÁREA DE TRABAJO PLANTA.xlsx` y `FORMATOS MINA.xlsx`):
+
+- **Hallazgos de inspección**: se añadió el campo obligatorio `inspection` / «Inspección / referencia» y la columna `comment` / «Comentario del hallazgo» en la tabla de hallazgos.
+- **Evaluación de PST**: se añadieron `experienceMonths` / «Meses de experiencia del trabajador» y `jobExperienceMonths` / «Meses de experiencia en el puesto», junto a los campos de años existentes.
+- **CAPTURA EN CAMPO**: se añadieron dos formatos nuevos, `areaPlanta` / «Inspección planta» (checklist de 28 puntos del Excel de planta, con sección de equipos) y `areaMina` / «Inspección mina» (checklist de 29 puntos del Excel de mina). Ambos comparten el grupo `inspection`, por lo que no cambian las metas KPI.
+
+**Cambios**: `formats.js`, `supervisor.js` (rotulo de sección y manejo de `comment`), `worker/validate-report.js`, `worker/report-rules.js` (regenerado), `worker/app.js`, `worker/index.js`, `sw.js` (caché **`sm-seguridad-v13`**), copias `docs/` y `public/` sincronizadas (56 archivos / 112 copias), `test-dom.mjs` (17 formatos) y nueva prueba aislada `test-inspection-excel-formats.mjs`.
+
+**Validación afectada**: `npm.cmd run check`, `node test-inspection-excel-formats.mjs`, `node test-dom.mjs`, `node test-all-forms.mjs`, validación directa de `validateSafetyReport` para los nuevos tipos: todos PASS. Sin repeticiones de las 24 pruebas ya aprobadas. Sin cambios en reglas, cuentas, datos ni Fase 2.
+
+**Estado de publicación**: pendiente de autorización. Los cambios están implementados y validados localmente; no se ha hecho push ni deploy para este ajuste.
