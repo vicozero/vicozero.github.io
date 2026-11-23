@@ -116,7 +116,7 @@ Línea base: `e0110f11e7f1eafaa5f52b7c4a12332654a21233` (FASE 2 cerrada localmen
 ## FASE 9 — Integración, optimización y consistencia
 
 - `npm.cmd run check`: PASS.
-- `npm.cmd test`: PASS, 23 suites tras el cierre técnico (22 en la publicación inicial).
+- `npm.cmd test`: PASS, 24 suites tras la validación autenticada (22 en la publicación inicial, 23 en el primer cierre).
 - `npm.cmd run test:rules`: PASS, 6 suites (reglas, portal, departamentos, suite, Storage y reporte admin) tras el cierre técnico; 4 en la publicación inicial.
 - Espejos: `npm.cmd run sync` → 61 archivos web, 122 copias; verificación SHA-256 61/61 archivos en raíz, `docs/` y `public/` sin discrepancias.
 - Scripts y estilos nuevos incluidos en `index.html`, `phase3.css`, `sw.js` y `package.json`.
@@ -124,18 +124,18 @@ Línea base: `e0110f11e7f1eafaa5f52b7c4a12332654a21233` (FASE 2 cerrada localmen
 - `origin/main`: `76ef8c864c02bf30488a3493e1e379b6210eb262` (sin cambios).
 - `public-pages/main`: `3818b776ea7d75a33e987a6df2ac2d3e08960d87`; push fast-forward `e0110f1..3818b77`, sin `--force`.
 - Despliegue: reglas compilaron y 4 índices se desplegaron en `sierra-madre-seguridad` con Firebase CLI autenticado.
-- Verificación en vivo de la publicación inicial: `sw.js` con `CACHE_NAME = 'sm-seguridad-v15'`, módulos avanzados HTTP 200 y `Cache-Control: max-age=600`. El cierre técnico posterior elevó la caché a v16.
+- Verificación en vivo de la publicación inicial: `sw.js` con `CACHE_NAME = 'sm-seguridad-v15'`, módulos avanzados HTTP 200 y `Cache-Control: max-age=600`. Los cierres posteriores elevaron la caché a v16 y v17.
 - Los 7 artefactos sin versionar se conservan: `archive-verified-backup.mjs`, `download-nom-pdfs.mjs`, `enrich_talks.py`, `extract_nom_meta.py`, `extract_nom_meta2.py`, `verify_noms.py`, `verify_noms2.py`.
 
 ## Estado de autorizaciones y dependencias
 
 - Autorización recibida: «autorizo , continua», aplicada a publicación en `public-pages` y despliegue de reglas/índices.
 - Ejecutado: commit, push a `public-pages/main` y deploy de Firestore. No se tocó `origin`, no se usó `--force` y no se crearon Functions.
-- Sitio en vivo verificado con parámetro de caché: PWA v15 en la publicación inicial y v16 en el cierre técnico; módulos avanzados disponibles.
-- Firebase Storage sigue sin bucket: la creación con el token autorizado devolvió `403 accountDisabled`. No se evadió facturación.
-- Validación navegada con cuenta real del propietario queda pendiente y no se simula.
+- Sitio en vivo verificado con parámetro de caché: PWA v15 inicial, v16 en el primer cierre y v17 tras corregir la navegación; módulos avanzados disponibles.
+- Firebase Storage sigue sin bucket (`403 accountDisabled`), pero el propietario descartó facturación: ya no es dependencia. No se evadió facturación.
+- Validación navegada con cuenta real del propietario: realizada, sin cuentas QA ni simulación.
 - Publicaciones futuras solo a `public-pages`, sin `--force`, nunca a `origin`, con autorización expresa.
-- Clasificación final: **LISTO CON DEPENDENCIAS** (desplegado; facturación y sesión real pendientes).
+- Clasificación final: **LISTO PARA PUBLICACIÓN** (desplegado y validado con sesión real).
 
 ## Cierre técnico adicional (23-11-2026)
 
@@ -146,3 +146,14 @@ Línea base: `e0110f11e7f1eafaa5f52b7c4a12332654a21233` (FASE 2 cerrada localmen
 - `storage.rules` alineada con `firestore.rules` (S-07): principal + perfil admin activo, `activeOperator`, `allowedUnitIds`, `canViewAll`/`canRead`/`canEdit`, evidencia inmutable y avisos restringidos. Verificada con emulador Storage.
 - `npm.cmd run test:rules` ampliado a 6 suites con emuladores Firestore y Storage: 6/6 PASS. PWA elevada a `sm-seguridad-v16`; `npm.cmd run check` PASS; `npm.cmd run sync` 61 archivos / 122 copias.
 - Verificación en vivo tras la propagación: `sw.js` v16, módulos actualizados, 0 errores de consola y 0 solicitudes `/api/` en la portada pública.
+
+## Validación navegada autenticada (23-11-2026)
+
+- El propietario inició sesión con su cuenta real. `AUTH`: UID `Kgwk4gK0yxYJQMZZaggIyl2xtnh2`, correo `vicozero559@gmail.com`, rol `admin`, activo, 15/15 permisos en `true`. Pantalla de acceso oculta y `body.dataset.role = admin`.
+- Recorrido sin escrituras por `dashboard`, `notices`, `users`, `departments`, `reports`, `actions`, `progress`, `team` y `program`: 0 errores de consola. Datos observados: 5 formatos (1 finalizado), 1 acción vencida, 4 avisos con adjuntos, 0 departamentos.
+- Defecto encontrado: las cuatro vistas de «GESTIÓN AVANZADA» lanzaban `TypeError: Cannot read properties of undefined (reading '0')` en `supervisor.js` y no abrían. Causa: `supervisor.js` se carga después y sobrescribe `globalThis.navigate` con una función que solo conoce vistas históricas.
+- Corrección en `advanced-ui.js` (`openView` local con marca `__smAdvanced`, reinstalación en `sm:auth`, delegación histórica) y en `supervisor.js` (delegación de `advanced*` a `SMAdvancedUI.navigate` y ocultado de secciones avanzadas). Nueva suite `test-advanced-navigation-conflict.mjs`.
+- `npm.cmd run check`: PASS. `npm.cmd test`: 24/24 PASS. `npm.cmd run test:rules`: 6/6 PASS. `npm.cmd run sync`: 61 archivos / 122 copias; SHA-256 61/61 sin discrepancias.
+- Commit `93e23e373ea086ca1425263d46fee3dbad671609`: PWA `sm-seguridad-v17` y navegación avanzada corregida; push fast-forward a `public-pages/main`, sin `--force`, `origin/main` intacto.
+- Tras la propagación se repitió la navegación en navegador con la sesión real: cuatro vistas avanzadas y nueve históricas sin `TypeError` y consola en 0 errores. Sin datos modificados.
+- Clasificación: **LISTO PARA PUBLICACIÓN**. Storage/facturación descartados por decisión del propietario.

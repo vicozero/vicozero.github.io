@@ -79,7 +79,8 @@
 
 - `firestore.rules` está desplegado y es la autoridad real (`rules compiled successfully` + `released rules to cloud.firestore`).
 - `storage.rules` **está alineado y probado en emulador**, pero **no desplegado**: el proyecto no tiene bucket. La creación con el token autorizado devolvió `403 accountDisabled` («billing account … disabled in state absent»). No se intentó evadir facturación.
-- Para activarlo:
+- **Decisión del propietario (23-11-2026):** Storage y facturación quedan descartados; no son dependencia del sistema ni bloquean la clasificación `LISTO PARA PUBLICACIÓN`.
+- Para activarlo en el futuro, si se decidiera lo contrario:
   1. Habilitar la facturación del proyecto Firebase. Sin esto, la API de Storage rechaza la creación del bucket.
   2. Dar de alta Storage con bucket `sierra-madre-seguridad.firebasestorage.app` en ubicación `US` (alineada con Firestore `nam5`). La ubicación es **irreversible**: verificarla antes de confirmar.
   3. Con `JAVA_HOME\bin` en PATH: `.\node_modules\.bin\firebase.cmd deploy --only storage:rules --project sierra-madre-seguridad`.

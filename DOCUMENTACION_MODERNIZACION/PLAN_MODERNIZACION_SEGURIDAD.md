@@ -1,7 +1,7 @@
 # Plan de Modernización — Seguridad Industrial Sierra Madre
 
-**Versión:** 1.3 · **Fecha:** 23-11-2026  
-**Estado:** FASES 1-9 ejecutadas, publicadas en `public-pages/main` y desplegadas en Firestore; cierre técnico con v16; clasificación `LISTO CON DEPENDENCIAS`  
+**Versión:** 1.4 · **Fecha:** 23-11-2026  
+**Estado:** FASES 1-9 ejecutadas, publicadas en `public-pages/main` y desplegadas en Firestore; validadas con la sesión real del propietario; PWA v17; clasificación `LISTO PARA PUBLICACIÓN`  
 **Documento de entrada:** `AUDITORIA_SISTEMA_SEGURIDAD.md`
 
 ---
@@ -175,6 +175,7 @@ F1 (hecha)
 8. `firebase deploy --only firestore:rules,firestore:indexes --project sierra-madre-seguridad --non-interactive`: reglas compilaron y 4 índices se desplegaron. Storage requiere bucket previo y sigue sin activarse.
 9. Informe final, bitácora y plan actualizados con el resultado real; cierre documentado sin tocar `origin`.
 10. Cierre técnico del 23-11-2026: corregidas las llamadas `/api/` sin sesión, alineada `storage.rules` con Firestore, PWA elevada a `sm-seguridad-v16`; 23 suites y 6 suites de reglas PASS; `origin/main` intacto.
+11. Validación navegada autenticada: corregido el conflicto de navegación con `supervisor.js`, PWA `sm-seguridad-v17`, commit `93e23e3` publicado en `public-pages/main`; 24 suites y 6 suites de reglas PASS; 0 errores de consola en las 13 vistas recorridas. Storage/facturación descartados por decisión del propietario.
 
 ---
 
@@ -182,11 +183,11 @@ F1 (hecha)
 
 | Riesgo | Fase afectada | Acción |
 |---|---|---|
-| Storage sin bucket y facturación desactivada | F8 / evidencia nueva | API `403 accountDisabled`; requiere habilitar facturación y crear bucket en `US`. No es bloqueante para F2-F7 |
-| Sin sesión del dueño | Validación navegador autenticada | Documentar como pendiente; no crear cuentas desde automatización |
+| Storage sin bucket y facturación desactivada | F8 / evidencia nueva | Decisión del propietario: descartado. No dependencia; las reglas quedan listas si algún día se activa |
+| Sin sesión del dueño | Validación navegador autenticada | Cerrado: sesión real del propietario, sin cuentas QA ni simulación |
 | `pdf-lib` ausente en el harness | F6 | Instalar dependencia de prueba o cargar `assets/pdf-lib.min.js` en el test; no tocar la app |
 | Importador operativo inexistente | F2 | No migrar datos hasta tener D-01/D-02 resueltos y verificados |
-| Definiciones Storage/Firestore divergentes | F8 | Alineadas en `storage.rules`; despliegue pendiente del bucket |
+| Definiciones Storage/Firestore divergentes | F8 | Alineadas en `storage.rules` y probadas en emulador; no desplegadas y descartadas por decisión del propietario |
 
 ---
 
@@ -200,19 +201,20 @@ Esta sección documenta la ejecución real sin sustituir el detalle histórico d
 | F4 | Hallazgos con riesgo y semáforo, escalamiento crítico, tabla/Kanban, filtros, vencidos, PDF/Excel | `firestore.rules`, `advanced-ui.js`, pruebas avanzadas |
 | F5 | Centro ejecutivo, 10 KPIs, gráficos y matriz expandible por departamento; borradores excluidos de realizadas | `computeKpis()`, `complianceMatrix()`, `test-advanced-core.mjs` |
 | F6 | PDF carta de supervisión, reporte mensual ejecutivo, Excel, calendario y reprogramación con motivo e historial | `advanced-pdf.js`, `test-advanced-pdf.mjs` |
-| F7 | Responsive 800/480px, foco visible, movimiento reducido, PWA v16 con caché estática; sin `/api/` sin sesión | `phase3.css`, `sw.js`, `advanced-ui.js`, `test-pwa.mjs`, `test-advanced-ui-auth-gate.mjs` |
+| F7 | Responsive 800/480px, foco visible, movimiento reducido, PWA v17 con caché estática; sin `/api/` sin sesión y navegación avanzada estable | `phase3.css`, `sw.js`, `advanced-ui.js`, `supervisor.js`, `test-pwa.mjs`, `test-advanced-ui-auth-gate.mjs`, `test-advanced-navigation-conflict.mjs` |
 | F8 | Reglas e índices aditivos, permisos explícitos, alertas internas por riesgo y auditoría de solo lectura administrativa | `firestore.rules`, `firestore.indexes.json`, `cloud-portal.js`, `test-firestore-rules.mjs` |
 | F9 | Integración y regresión completa; espejos sincronizados y verificados | `npm.cmd run check`, `npm.cmd test`, `npm.cmd run test:rules`, `sync-copies.mjs` |
 
-### Dependencias abiertas y cierre de las ejecutadas
+### Cierre de dependencias
 
-1. **Storage / facturación (abierta):** no hay bucket y la creación devolvió `403 accountDisabled`. Requiere habilitar facturación y crear `sierra-madre-seguridad.firebasestorage.app` en `US`; luego `firebase deploy --only storage:rules`. No se evadió facturación.
-2. **Validación navegada autenticada (abierta):** requiere sesión real del propietario. No se crearon cuentas QA reales ni se evadieron accesos.
+1. **Storage / facturación (cerrada por decisión del propietario):** no hay bucket y la creación devolvió `403 accountDisabled`; no se habilitó facturación ni se evadió. Las reglas están alineadas y probadas para activarlas en el futuro si se decide.
+2. **Validación navegada autenticada (cerrada):** sesión real del propietario, 13 vistas recorridas, 0 errores de consola. No se crearon cuentas QA ni se evadieron accesos.
 3. **Despliegue de reglas/índices (cerrado):** `firestore.rules` y los 4 índices se desplegaron en `sierra-madre-seguridad` con compilación exitosa.
 4. **Publicación (cerrada):** ejecutada en `public-pages/main` con autorización expresa, sin `--force` y nunca a `origin`; propagación verificada en vivo.
 5. **S-07, autoridad Storage (cerrada):** `storage.rules` alineada con el administrador principal y los perfiles admin activos; verificada en emulador.
 6. **Llamadas `/api/` sin sesión (cerrada):** portada pública sin 404; puerta `sm:auth` con nueva suite de regresión.
+7. **Conflicto de navegación con `supervisor.js` (cerrada):** vistas avanzadas delegadas y PWA v17 publicada; suite de regresión y validación en navegador con sesión real.
 
 ### Clasificación final
 
-**LISTO CON DEPENDENCIAS.** La implementación, las pruebas, la publicación, el despliegue y el cierre técnico están completos; solo permanecen dos acciones externas del propietario: facturación/bucket de Storage y validación con su sesión real. No se activó Storage ni se simuló una sesión real.
+**LISTO PARA PUBLICACIÓN.** La implementación, las pruebas, la publicación, el despliegue, el cierre técnico y la validación navegada con la sesión real están completos. Storage/facturación fueron descartados por decisión del propietario. No se activaron Storage, Functions ni envíos externos, no se modificaron datos de producción y no se usó `--force` ni `origin`.
