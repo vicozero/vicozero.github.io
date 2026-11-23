@@ -1,7 +1,7 @@
 # Plan de Modernización — Seguridad Industrial Sierra Madre
 
-**Versión:** 1.2 · **Fecha:** 22-11-2026  
-**Estado:** FASES 1-9 ejecutadas, publicadas en `public-pages/main` y desplegadas en Firestore; clasificación `LISTO CON DEPENDENCIAS`  
+**Versión:** 1.3 · **Fecha:** 23-11-2026  
+**Estado:** FASES 1-9 ejecutadas, publicadas en `public-pages/main` y desplegadas en Firestore; cierre técnico con v16; clasificación `LISTO CON DEPENDENCIAS`  
 **Documento de entrada:** `AUDITORIA_SISTEMA_SEGURIDAD.md`
 
 ---
@@ -174,6 +174,7 @@ F1 (hecha)
 7. Verificación en vivo con parámetro de caché: `sw.js` sirve `sm-seguridad-v15`; `index.html` y módulos avanzados responden 200 (`Cache-Control: max-age=600`).
 8. `firebase deploy --only firestore:rules,firestore:indexes --project sierra-madre-seguridad --non-interactive`: reglas compilaron y 4 índices se desplegaron. Storage requiere bucket previo y sigue sin activarse.
 9. Informe final, bitácora y plan actualizados con el resultado real; cierre documentado sin tocar `origin`.
+10. Cierre técnico del 23-11-2026: corregidas las llamadas `/api/` sin sesión, alineada `storage.rules` con Firestore, PWA elevada a `sm-seguridad-v16`; 23 suites y 6 suites de reglas PASS; `origin/main` intacto.
 
 ---
 
@@ -181,11 +182,11 @@ F1 (hecha)
 
 | Riesgo | Fase afectada | Acción |
 |---|---|---|
-| Storage sin bucket | F8 / evidencia nueva | Decisión del dueño; no es bloqueante para F2-F7 |
+| Storage sin bucket y facturación desactivada | F8 / evidencia nueva | API `403 accountDisabled`; requiere habilitar facturación y crear bucket en `US`. No es bloqueante para F2-F7 |
 | Sin sesión del dueño | Validación navegador autenticada | Documentar como pendiente; no crear cuentas desde automatización |
 | `pdf-lib` ausente en el harness | F6 | Instalar dependencia de prueba o cargar `assets/pdf-lib.min.js` en el test; no tocar la app |
 | Importador operativo inexistente | F2 | No migrar datos hasta tener D-01/D-02 resueltos y verificados |
-| Definiciones Storage/Firestore divergentes | F8 | Alinear antes de activar Storage |
+| Definiciones Storage/Firestore divergentes | F8 | Alineadas en `storage.rules`; despliegue pendiente del bucket |
 
 ---
 
@@ -199,17 +200,19 @@ Esta sección documenta la ejecución real sin sustituir el detalle histórico d
 | F4 | Hallazgos con riesgo y semáforo, escalamiento crítico, tabla/Kanban, filtros, vencidos, PDF/Excel | `firestore.rules`, `advanced-ui.js`, pruebas avanzadas |
 | F5 | Centro ejecutivo, 10 KPIs, gráficos y matriz expandible por departamento; borradores excluidos de realizadas | `computeKpis()`, `complianceMatrix()`, `test-advanced-core.mjs` |
 | F6 | PDF carta de supervisión, reporte mensual ejecutivo, Excel, calendario y reprogramación con motivo e historial | `advanced-pdf.js`, `test-advanced-pdf.mjs` |
-| F7 | Responsive 800/480px, foco visible, movimiento reducido, PWA v15 con caché estática y sin `/api/` | `phase3.css`, `sw.js`, `test-pwa.mjs` |
+| F7 | Responsive 800/480px, foco visible, movimiento reducido, PWA v16 con caché estática; sin `/api/` sin sesión | `phase3.css`, `sw.js`, `advanced-ui.js`, `test-pwa.mjs`, `test-advanced-ui-auth-gate.mjs` |
 | F8 | Reglas e índices aditivos, permisos explícitos, alertas internas por riesgo y auditoría de solo lectura administrativa | `firestore.rules`, `firestore.indexes.json`, `cloud-portal.js`, `test-firestore-rules.mjs` |
 | F9 | Integración y regresión completa; espejos sincronizados y verificados | `npm.cmd run check`, `npm.cmd test`, `npm.cmd run test:rules`, `sync-copies.mjs` |
 
 ### Dependencias abiertas y cierre de las ejecutadas
 
-1. **Storage (abierta):** no hay bucket operativo confirmado. No se activaron cargas dependientes de Storage; requiere decisión del propietario.
+1. **Storage / facturación (abierta):** no hay bucket y la creación devolvió `403 accountDisabled`. Requiere habilitar facturación y crear `sierra-madre-seguridad.firebasestorage.app` en `US`; luego `firebase deploy --only storage:rules`. No se evadió facturación.
 2. **Validación navegada autenticada (abierta):** requiere sesión real del propietario. No se crearon cuentas QA reales ni se evadieron accesos.
 3. **Despliegue de reglas/índices (cerrado):** `firestore.rules` y los 4 índices se desplegaron en `sierra-madre-seguridad` con compilación exitosa.
 4. **Publicación (cerrada):** ejecutada en `public-pages/main` con autorización expresa, sin `--force` y nunca a `origin`; propagación verificada en vivo.
+5. **S-07, autoridad Storage (cerrada):** `storage.rules` alineada con el administrador principal y los perfiles admin activos; verificada en emulador.
+6. **Llamadas `/api/` sin sesión (cerrada):** portada pública sin 404; puerta `sm:auth` con nueva suite de regresión.
 
 ### Clasificación final
 
-**LISTO CON DEPENDENCIAS.** La implementación, las pruebas, la publicación y el despliegue están completos; solo permanecen las dos acciones del propietario listadas arriba. No se activó Storage ni se simuló una sesión real.
+**LISTO CON DEPENDENCIAS.** La implementación, las pruebas, la publicación, el despliegue y el cierre técnico están completos; solo permanecen dos acciones externas del propietario: facturación/bucket de Storage y validación con su sesión real. No se activó Storage ni se simuló una sesión real.

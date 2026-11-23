@@ -255,7 +255,17 @@
       render();
     }catch(error){console.warn('Carga avanzada diferida',error)}
   }
-  function start(){if(!ensureShell())return;load();setTimeout(load,600);window.addEventListener('sm:live',event=>{if(['findings','inspectionTemplates','advanceAlerts','auditTrail','reports','actions'].includes(event.detail?.collection))load()});document.addEventListener('click',event=>{const b=event.target.closest('[data-view]');if(b&&b.dataset.view.startsWith('advanced'))navigate(b.dataset.view)})}
+  function start(){
+    if(!ensureShell())return;
+    const refresh=()=>{load();setTimeout(load,600)};
+    window.addEventListener('sm:live',event=>{if(['findings','inspectionTemplates','advanceAlerts','auditTrail','reports','actions'].includes(event.detail?.collection))load()});
+    document.addEventListener('click',event=>{const b=event.target.closest('[data-view]');if(b&&b.dataset.view.startsWith('advanced'))navigate(b.dataset.view)});
+    if(globalThis.AUTH?.user){refresh();return;}
+    // La portada pública no debe consultar /api/ sin sesión: GitHub Pages devuelve 404.
+    let waited=0;
+    const wait=setInterval(()=>{if(globalThis.AUTH?.user||++waited>200){clearInterval(wait);if(globalThis.AUTH?.user)refresh()}},300);
+    window.addEventListener('sm:auth',()=>{clearInterval(wait);refresh()},{once:true});
+  }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
   window.SMAdvancedUI={state,load,render,navigate};
 })();

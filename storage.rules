@@ -1,47 +1,86 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
-    function admin() {
-      return request.auth != null && firestore.get(/databases/(default)/documents/security/authority).data.administratorUid == request.auth.uid;
+    // Alineado con firestore.rules: el principal y los perfiles admin activos mandan.
+    function principalAdministrator() {
+      return request.auth != null
+        && firestore.exists(/databases/(default)/documents/security/authority)
+        && firestore.get(/databases/(default)/documents/security/authority).data.administratorUid == request.auth.uid;
     }
-    function active() {
-      return request.auth != null && firestore.get(/databases/(default)/documents/profiles/$(request.auth.uid)).data.active == true;
+    function activeAdminProfile() {
+      return request.auth != null
+        && firestore.exists(/databases/(default)/documents/profiles/$(request.auth.uid))
+        && firestore.get(/databases/(default)/documents/profiles/$(request.auth.uid)).data.active == true
+        && firestore.get(/databases/(default)/documents/profiles/$(request.auth.uid)).data.role == 'admin';
+    }
+    function administrator() {
+      return principalAdministrator() || activeAdminProfile();
+    }
+    function activeProfile() {
+      return request.auth != null
+        && firestore.exists(/databases/(default)/documents/profiles/$(request.auth.uid))
+        && firestore.get(/databases/(default)/documents/profiles/$(request.auth.uid)).data.active == true;
+    }
+    function activeOperator() {
+      return activeProfile()
+        && firestore.get(/databases/(default)/documents/profiles/$(request.auth.uid)).data.role in ['member', 'operator', 'supervisor'];
+    }
+    function profile() {
+      return firestore.get(/databases/(default)/documents/profiles/$(request.auth.uid)).data;
     }
     function own(data) {
-      return data.get('ownerAccountId', '') == request.auth.uid || data.get('assignedAccountId', '') == request.auth.uid;
+      return data.get('ownerAccountId', '') == request.auth.uid
+        || data.get('assignedAccountId', '') == request.auth.uid;
     }
-    function unitAllowed(data) {
-      let profile = firestore.get(/databases/(default)/documents/profiles/$(request.auth.uid)).data;
-      return !profile.get('restrictUnits', false) || profile.get('allowedUnits', []).size() == 0
-        || data.get('unit', data.get('area', data.get('unidad', ''))) in profile.get('allowedUnits', []);
+    // FASE 2: textos históricos e IDs aditivos, igual que allowedUnit() en Firestore.
+    function allowedUnit(data) {
+      let legacy = profile().get('allowedUnits', []);
+      let ids = profile().get('allowedUnitIds', []);
+      return !profile().get('restrictUnits', false) || (legacy.size() == 0 && ids.size() == 0)
+        || data.get('unit', '') in legacy
+        || data.get('area', '') in legacy
+        || data.get('unidad', '') in legacy
+        || (ids.size() > 0 && data.get('departmentId', '') in ids);
+    }
+    function canViewAll() {
+      return profile().get('permissions', {}).get('view_all', false) == true;
+    }
+    function canRead(kind) {
+      return profile().get('permissions', {}).get(kind, true) == true;
+    }
+    function canEdit(kind) {
+      return profile().get('permissions', {}).get(kind, true) == true;
     }
     function recordAllowed(kind, id, edit) {
       let data = firestore.get(/databases/(default)/documents/$(kind)/$(id)).data;
-      let profile = firestore.get(/databases/(default)/documents/profiles/$(request.auth.uid)).data;
-      return admin() || (active() && unitAllowed(data)
-        && (own(data) || (!edit && profile.get('permissions', {}).get('view_all', false)))
-        && profile.get('permissions', {}).get(edit ? (kind == 'reports' ? 'edit_reports' : 'edit_actions') : kind, true));
+      return administrator() || (activeOperator() && allowedUnit(data)
+        && (own(data) || (!edit && canViewAll()))
+        && (edit ? canEdit(kind == 'reports' ? 'edit_reports' : 'edit_actions') : canRead(kind)));
     }
     function noticeAllowed(id) {
       let notice = firestore.get(/databases/(default)/documents/notices/$(id)).data;
-      return admin() || (active() && (notice.fromAccountId == request.auth.uid || notice.toAccountId == request.auth.uid));
+      return administrator() || (activeOperator()
+        && (notice.fromAccountId == request.auth.uid || notice.toAccountId == request.auth.uid));
     }
-    // Evidencias fotográficas por registro
+    // Evidencias fotográficas por registro: inmutables y limitadas a imágenes.
     match /evidence/{recordCollection}/{recordId}/{fileName} {
-      allow read: if recordCollection in ['reports', 'actions'] && recordAllowed(recordCollection, recordId, false);
-      allow create: if resource == null && recordCollection in ['reports', 'actions'] && recordAllowed(recordCollection, recordId, true)
+      allow read: if recordCollection in ['reports', 'actions']
+        && recordAllowed(recordCollection, recordId, false);
+      allow create: if resource == null && recordCollection in ['reports', 'actions']
+        && recordAllowed(recordCollection, recordId, true)
         && request.resource.size < 10 * 1024 * 1024
         && request.resource.contentType.matches('image/.*');
       allow update, delete: if false;
     }
-    // Avatares / imágenes de perfil
+    // Avatares: el propio perfil, activo, sin exponer a otros usuarios.
     match /avatars/{uid}/{fileName} {
-      allow read: if admin() || (active() && request.auth.uid == uid);
-      allow create, update: if active() && request.auth.uid == uid
+      allow read: if administrator() || (activeProfile() && request.auth.uid == uid);
+      allow create, update: if activeProfile() && request.auth.uid == uid
         && request.resource.size < 2 * 1024 * 1024
         && request.resource.contentType.matches('image/.*');
+      allow delete: if false;
     }
-    // Adjuntos de avisos
+    // Adjuntos de avisos: solo el emisor y los destinatarios de la notificación.
     match /notices/{noticeId}/{fileName} {
       allow read: if noticeAllowed(noticeId);
       allow create: if resource == null && noticeAllowed(noticeId)
@@ -50,7 +89,6 @@ service firebase.storage {
         && request.resource.contentType.matches('image/.*');
       allow update, delete: if false;
     }
-    // Denegar todo lo demás
     match /{allPaths=**} {
       allow read, write: if false;
     }

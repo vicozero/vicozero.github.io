@@ -116,23 +116,32 @@ Línea base: `e0110f11e7f1eafaa5f52b7c4a12332654a21233` (FASE 2 cerrada localmen
 ## FASE 9 — Integración, optimización y consistencia
 
 - `npm.cmd run check`: PASS.
-- `npm.cmd test`: PASS, 22 suites.
-- `npm.cmd run test:rules`: PASS, 4 suites (reglas, portal, departamentos y normatividad/capacitación).
-- Espejos: `npm.cmd run sync` → 56 archivos web, 122 copias; verificación SHA-256 61/61 archivos en raíz, `docs/` y `public/` sin discrepancias.
+- `npm.cmd test`: PASS, 23 suites tras el cierre técnico (22 en la publicación inicial).
+- `npm.cmd run test:rules`: PASS, 6 suites (reglas, portal, departamentos, suite, Storage y reporte admin) tras el cierre técnico; 4 en la publicación inicial.
+- Espejos: `npm.cmd run sync` → 61 archivos web, 122 copias; verificación SHA-256 61/61 archivos en raíz, `docs/` y `public/` sin discrepancias.
 - Scripts y estilos nuevos incluidos en `index.html`, `phase3.css`, `sw.js` y `package.json`.
 - Commit de publicación: `3818b776ea7d75a33e987a6df2ac2d3e08960d87` — `feat: modernizacion aditiva FASES 3-9 con reglas, PWA y documentacion final`.
 - `origin/main`: `76ef8c864c02bf30488a3493e1e379b6210eb262` (sin cambios).
 - `public-pages/main`: `3818b776ea7d75a33e987a6df2ac2d3e08960d87`; push fast-forward `e0110f1..3818b77`, sin `--force`.
 - Despliegue: reglas compilaron y 4 índices se desplegaron en `sierra-madre-seguridad` con Firebase CLI autenticado.
-- Verificación en vivo: `sw.js` con `CACHE_NAME = 'sm-seguridad-v15'`, módulos avanzados HTTP 200 y `Cache-Control: max-age=600`.
+- Verificación en vivo de la publicación inicial: `sw.js` con `CACHE_NAME = 'sm-seguridad-v15'`, módulos avanzados HTTP 200 y `Cache-Control: max-age=600`. El cierre técnico posterior elevó la caché a v16.
 - Los 7 artefactos sin versionar se conservan: `archive-verified-backup.mjs`, `download-nom-pdfs.mjs`, `enrich_talks.py`, `extract_nom_meta.py`, `extract_nom_meta2.py`, `verify_noms.py`, `verify_noms2.py`.
 
 ## Estado de autorizaciones y dependencias
 
 - Autorización recibida: «autorizo , continua», aplicada a publicación en `public-pages` y despliegue de reglas/índices.
 - Ejecutado: commit, push a `public-pages/main` y deploy de Firestore. No se tocó `origin`, no se usó `--force` y no se crearon Functions.
-- Sitio en vivo verificado con parámetro de caché: PWA v15 y módulos avanzados disponibles.
-- Firebase Storage sigue sin bucket operativo confirmado; no se activan cargas dependientes de Storage.
+- Sitio en vivo verificado con parámetro de caché: PWA v15 en la publicación inicial y v16 en el cierre técnico; módulos avanzados disponibles.
+- Firebase Storage sigue sin bucket: la creación con el token autorizado devolvió `403 accountDisabled`. No se evadió facturación.
 - Validación navegada con cuenta real del propietario queda pendiente y no se simula.
 - Publicaciones futuras solo a `public-pages`, sin `--force`, nunca a `origin`, con autorización expresa.
-- Clasificación final: **LISTO CON DEPENDENCIAS** (desplegado).
+- Clasificación final: **LISTO CON DEPENDENCIAS** (desplegado; facturación y sesión real pendientes).
+
+## Cierre técnico adicional (23-11-2026)
+
+- Defecto detectado en navegador real: la portada pública consultaba seis rutas `/api/` sin sesión y GitHub Pages respondía 404. Corrección: `advanced-ui.js` espera a `sm:auth`; `firebase-auth.js` emite el evento en `launch()`, `launchFirebaseAdmin()` y `launchLocal()`.
+- Nueva prueba `test-advanced-ui-auth-gate.mjs`: sin sesión no hay llamadas `/api/`; con `sm:auth` se cargan las seis colecciones. `npm.cmd test`: 23/23 PASS.
+- Consulta de infraestructura: `defaultBucket` → 404; Firestore en `nam5`; bucket planeado `sierra-madre-seguridad.firebasestorage.app` en `US`.
+- Intento autorizado de creación del bucket: `403 accountDisabled` («billing account … disabled in state absent»). Sin evasión, sin cambios de facturación.
+- `storage.rules` alineada con `firestore.rules` (S-07): principal + perfil admin activo, `activeOperator`, `allowedUnitIds`, `canViewAll`/`canRead`/`canEdit`, evidencia inmutable y avisos restringidos. Verificada con emulador Storage.
+- `npm.cmd run test:rules` ampliado a 6 suites con emuladores Firestore y Storage: 6/6 PASS. PWA elevada a `sm-seguridad-v16`; `npm.cmd run check` PASS; `npm.cmd run sync` 61 archivos / 122 copias.

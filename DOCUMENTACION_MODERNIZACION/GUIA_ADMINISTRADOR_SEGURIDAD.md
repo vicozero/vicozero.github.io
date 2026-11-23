@@ -78,12 +78,12 @@
 ## 6. Storage y reglas
 
 - `firestore.rules` está desplegado y es la autoridad real (`rules compiled successfully` + `released rules to cloud.firestore`).
-- `storage.rules` **no está desplegado**: el proyecto no tiene bucket dado de alta. Las reglas antiguas, más permisivas, siguen vigentes.
+- `storage.rules` **está alineado y probado en emulador**, pero **no desplegado**: el proyecto no tiene bucket. La creación con el token autorizado devolvió `403 accountDisabled` («billing account … disabled in state absent»). No se intentó evadir facturación.
 - Para activarlo:
-  1. Ir a la consola Firebase del proyecto y dar de alta Storage (decisión de ubicación **irreversible**).
-  2. Alinear la definición de administrador entre Storage y Firestore (hoy difiere: S-07).
+  1. Habilitar la facturación del proyecto Firebase. Sin esto, la API de Storage rechaza la creación del bucket.
+  2. Dar de alta Storage con bucket `sierra-madre-seguridad.firebasestorage.app` en ubicación `US` (alineada con Firestore `nam5`). La ubicación es **irreversible**: verificarla antes de confirmar.
   3. Con `JAVA_HOME\bin` en PATH: `.\node_modules\.bin\firebase.cmd deploy --only storage:rules --project sierra-madre-seguridad`.
-  4. Verificar y documentar el resultado.
+  4. Verificar y documentar el resultado. No hay que reescribir reglas: S-07 ya quedó cerrada.
 - Hasta entonces, las fotos viven inline en Firestore con fragmentos; no depositar evidencia nueva fuera de Firestore.
 
 ---

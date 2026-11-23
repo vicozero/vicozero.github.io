@@ -11,6 +11,7 @@ const initial='admin@sierra-madre-seguridad.app';
 const bootstrapDone='sierra-madre-bootstrap-complete';
 let started=false;
 let localSessionUser=null; // for local (non-Firebase) user sessions
+const announceAuth=()=>{try{globalThis.dispatchEvent?.(new Event('sm:auth'));}catch{}};
 
 // Theme
 const root=document.documentElement;
@@ -364,7 +365,7 @@ async function launch(user){
     const {connectPortal}=await import('./cloud-portal.js');
     const cloud=await connectPortal(app,user,DEFAULT_PERMS);
     globalThis.SM_CLOUD=cloud;
-    globalThis.AUTH={user:cloud.me};globalThis.ACCOUNT_USERS=cloud.users;globalThis.ACCOUNT_DIRECTORY=cloud.directory;
+    globalThis.AUTH={user:cloud.me};globalThis.ACCOUNT_USERS=cloud.users;globalThis.ACCOUNT_DIRECTORY=cloud.directory;announceAuth();
     globalThis.SM_SCOPE_ACCOUNT=cloud.me.role==='admin'||cloud.me.permissions.view_all?'':cloud.me.id;
     globalThis.smStorageKey=k=>k+'-'+user.uid;
     document.body.dataset.role=cloud.me.role;
@@ -414,7 +415,7 @@ async function legacyLaunch(user){
   }
   const me={id:user.uid,name:user.displayName||'Admin',email:user.email,unit:'Sierra Madre',role:'admin',active:true,isOwner:true,permissions:DEFAULT_PERMS.admin};
   installStore(me,true);
-  globalThis.AUTH={user:me};
+  globalThis.AUTH={user:me};announceAuth();
   globalThis.smStorageKey=k=>k+'-'+user.uid;
   globalThis.ACCOUNT_DIRECTORY=(readWS().users||[]).filter(x=>x.active!==false).map(x=>({id:x.id,name:x.name,unit:x.unit||'',departmentId:x.departmentId||'',role:x.role}));
   globalThis.ACCOUNT_USERS=(readWS().users||[]).map(publicUser);
@@ -439,7 +440,7 @@ async function launchLocal(user){
   if(started) return; started=true;
   const me={...user, permissions: effectivePerms(user)};
   installStore(me,false);
-  globalThis.AUTH={user:publicUser(me)};
+  globalThis.AUTH={user:publicUser(me)};announceAuth();
   globalThis.smStorageKey=k=>k+'-'+user.id;
   const ws=readWS();
   globalThis.ACCOUNT_DIRECTORY=(ws.users||[]).filter(x=>x.active!==false).map(x=>({id:x.id,name:x.name,unit:x.unit||'',departmentId:x.departmentId||'',role:x.role}));
