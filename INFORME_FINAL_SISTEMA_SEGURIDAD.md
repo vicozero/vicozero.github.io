@@ -2,8 +2,8 @@
 
 **Fecha:** 22-11-2026  
 **Alcance:** continuación autónoma desde FASE 2 cerrada; FASES 3-9, integración y verificación final.  
-**Clasificación:** **LISTO CON DEPENDENCIAS**.  
-**Publicación:** **no realizada**. Sin commits, push, deploy ni publicación.
+**Clasificación:** **LISTO CON DEPENDENCIAS** (desplegado; quedan validaciones operativas del propietario).  
+**Publicación:** realizada en `public-pages/main` con autorización expresa. Sin push a `origin`, sin `--force` y sin Functions.
 
 ---
 
@@ -74,14 +74,17 @@ Configuración usada para reglas: `JAVA_HOME=C:\Program Files\Android\Android St
 
 ## 6. Estado Git y recuperación
 
-- HEAD: `e0110f11e7f1eafaa5f52b7c4a12332654a21233`
-- `origin/main`: `76ef8c864c02bf30488a3493e1e379b6210eb262`
-- `public-pages/main`: `e0110f11e7f1eafaa5f52b7c4a12332654a21233`
-- Rama local: `fase1-validada-2026-11-17`
-- Cambios locales sin commitear: 72 entradas en `git status --porcelain`
+- HEAD / commit de publicación: `3818b776ea7d75a33e987a6df2ac2d3e08960d87`
+- Mensaje del commit: `feat: modernizacion aditiva FASES 3-9 con reglas, PWA y documentacion final`
+- `origin/main`: `76ef8c864c02bf30488a3493e1e379b6210eb262` (sin cambios)
+- `public-pages/main`: `3818b776ea7d75a33e987a6df2ac2d3e08960d87`
+- Push: `git push public-pages HEAD:main` (fast-forward `e0110f1..3818b77`, sin `--force`)
+- Despliegue Firebase: `firebase deploy --only firestore:rules,firestore:indexes --project sierra-madre-seguridad --non-interactive` → reglas compilaron y 4 índices desplegados.
+- Verificación en vivo con parámetro de caché: `sw.js` sirve `CACHE_NAME = 'sm-seguridad-v15'` y `advanced-core.js` responde 200; `Cache-Control: max-age=600`.
 - Punto de recuperación: `..\backups\centinela-pre-autonomo-20261122-2325`
 - `MANIFEST.sha256`: `B0808F193EFA2D3C876CE3A9767B620738521FF8659B9313E4AB3C8DA14F9A5D`
-- Los 7 artefactos sin versionar se conservan: `archive-verified-backup.mjs`, `download-nom-pdfs.mjs`, `enrich_talks.py`, `extract_nom_meta.py`, `extract_nom_meta2.py`, `verify_noms.py`, `verify_noms2.py`.
+- Los 7 artefactos siguen sin versionar y se conservan: `archive-verified-backup.mjs`, `download-nom-pdfs.mjs`, `enrich_talks.py`, `extract_nom_meta.py`, `extract_nom_meta2.py`, `verify_noms.py`, `verify_noms2.py`.
+- El working tree final conserva únicamente esos 7 artefactos; los documentos de cierre se consolidan en commit documental posterior al de publicación.
 
 Hashes SHA-256 de archivos clave:
 
@@ -98,14 +101,16 @@ Hashes SHA-256 de archivos clave:
 
 ## 7. Acciones que requieren el propietario
 
+La publicación y el despliegue ya se ejecutaron con autorización expresa; solo permanecen decisiones operativas del propietario:
+
 1. **Decidir sobre Firebase Storage.** Si se requiere carga de fotografías en la nube, hay que dar de alta un bucket y desplegar `storage.rules`. Hasta entonces esa función permanece desactivada.
 2. **Validar en navegador con cuenta real.** Revisar roles, permisos, cierres y notificaciones con una sesión autenticada del propietario.
-3. **Desplegar reglas e índices.** Con autorización expresa: `firebase deploy --only firestore:rules,firestore:indexes --project sierra-madre-seguridad`.
-4. **Autorizar la publicación.** Destino único `public-pages`, sin `--force` y nunca `origin`. Debe ser una autorización separada y explícita.
-5. **Revisar el informe y la bitácora.** Confirmar que la clasificación `LISTO CON DEPENDENCIAS` es aceptable antes de cualquier publicación.
+3. **Revisar informe, bitácora y plan.** Confirmar que la clasificación `LISTO CON DEPENDENCIAS` es aceptable para el estado ya publicado.
+
+No se crearon cuentas QA reales, no se simuló una sesión del propietario y no se activaron Storage, envíos externos ni Functions.
 
 ---
 
 ## 8. Conclusión
 
-El sistema está funcional y verificado en local con cobertura automatizada y reglas probadas en emulador. No se declara `LISTO PARA PUBLICACIÓN` porque persisten dependencias externas que solo el propietario puede resolver: Storage, validación navegada autenticada, despliegue de reglas/índices y autorización de publicación. Tampoco se declara `INCOMPLETO`: las fases 3-9 quedaron ejecutadas y documentadas.
+El sistema quedó implementado, verificado en local, publicado en `public-pages/main` y desplegado en Firestore (reglas e índices). La verificación en vivo confirmó la PWA `sm-seguridad-v15` y la disponibilidad de los módulos avanzados. La clasificación permanece **`LISTO CON DEPENDENCIAS`** porque solo quedan dos acciones del propietario: decidir sobre Storage y validar la navegación con su cuenta real. No se declara `LISTO PARA PUBLICACIÓN` mientras esas dependencias estén abiertas, aunque la publicación autorizada ya se ejecutó; tampoco se declara `INCOMPLETO` porque las fases 3-9 están ejecutadas, probadas, publicadas y documentadas.

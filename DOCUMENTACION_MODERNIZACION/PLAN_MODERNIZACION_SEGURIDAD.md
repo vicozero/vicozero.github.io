@@ -1,7 +1,7 @@
 # Plan de Modernización — Seguridad Industrial Sierra Madre
 
-**Versión:** 1.1 · **Fecha:** 22-11-2026  
-**Estado:** FASES 1-9 ejecutadas en local; publicación pendiente de autorización; clasificación `LISTO CON DEPENDENCIAS`  
+**Versión:** 1.2 · **Fecha:** 22-11-2026  
+**Estado:** FASES 1-9 ejecutadas, publicadas en `public-pages/main` y desplegadas en Firestore; clasificación `LISTO CON DEPENDENCIAS`  
 **Documento de entrada:** `AUDITORIA_SISTEMA_SEGURIDAD.md`
 
 ---
@@ -38,7 +38,7 @@
 
 ---
 
-### FASE 2 — Estructura de departamentos ✅ COMPLETADA EN LOCAL · ⛔ PUBLICACIÓN PENDIENTE
+### FASE 2 — Estructura de departamentos ✅ COMPLETADA Y PUBLICADA
 
 | # | Tarea | Prioridad | Dependencia |
 |---|---|---|---|
@@ -56,7 +56,7 @@
 
 **Criterio de salida:** catálogo consultable, registros antiguos intactos, conteos antes/después idénticos, cero duplicados, importador verificado con lectura de vuelta.
 
-**Cierre (22-11-2026):** las tareas 2.1-2.9 quedaron implementadas y validadas con `npm.cmd run check`, `npm.cmd run test:rules` (4 suites), pruebas aisladas y espejos sincronizados. No se aplicaron migraciones ni se modificaron registros de producción. Detalle en `INFORME_CIERRE_FASE2.md`. La publicación a `public-pages` requiere autorización expresa separada.
+**Cierre (22-11-2026):** las tareas 2.1-2.9 quedaron implementadas y validadas con `npm.cmd run check`, `npm.cmd run test:rules` (4 suites), pruebas aisladas y espejos sincronizados. No se aplicaron migraciones ni se modificaron registros de producción. Detalle en `INFORME_CIERRE_FASE2.md`. La publicación a `public-pages` se ejecutó con autorización expresa; resultado en la sección 4.
 
 ---
 
@@ -163,17 +163,17 @@ F1 (hecha)
 
 ---
 
-## 4. Orden de publicación (solo cuando se autorice)
+## 4. Orden de publicación (ejecutado el 22-11-2026 con autorización)
 
-1. Verificar `git status`, HEAD y remotos; confirmar que los 7 artefactos sin versionar siguen fuera de commits.
-2. `node sync-copies.mjs` → 56 archivos / 112 copias.
-3. Subir caché PWA en `sw.js` (`sm-seguridad-v14`, `v15`, …).
-4. Pruebas afectadas (no repetir las 24 ya aprobadas sin cambio).
-5. Commit con mensaje descriptivo.
-6. `git push public-pages HEAD:main` — **sin `--force`**, nunca a `origin`.
-7. Verificar en vivo con parámetro de caché: sitio 200, `sw.js`, módulos modificados.
-8. Si hay cambios de reglas: `firebase deploy --only firestore:rules --project sierra-madre-seguridad`, con `JAVA_HOME\bin` en PATH. Storage requiere bucket previo.
-9. Actualizar checklist y este plan con el resultado real.
+1. Verificado `git status`, HEAD y remotos; los 7 artefactos sin versionar quedaron fuera de commits.
+2. `npm.cmd run sync` → 56 archivos web y 122 copias; verificación SHA-256 61/61 sin discrepancias.
+3. Caché PWA en `sw.js`: `sm-seguridad-v15`.
+4. Pruebas: `npm.cmd run check`, `npm.cmd test` (22 suites) y `npm.cmd run test:rules` (4 suites): PASS.
+5. Commit `3818b776ea7d75a33e987a6df2ac2d3e08960d87` — `feat: modernizacion aditiva FASES 3-9 con reglas, PWA y documentacion final`.
+6. `git push public-pages HEAD:main`: fast-forward `e0110f1..3818b77`, **sin `--force`**, nunca a `origin`.
+7. Verificación en vivo con parámetro de caché: `sw.js` sirve `sm-seguridad-v15`; `index.html` y módulos avanzados responden 200 (`Cache-Control: max-age=600`).
+8. `firebase deploy --only firestore:rules,firestore:indexes --project sierra-madre-seguridad --non-interactive`: reglas compilaron y 4 índices se desplegaron. Storage requiere bucket previo y sigue sin activarse.
+9. Informe final, bitácora y plan actualizados con el resultado real; cierre documentado sin tocar `origin`.
 
 ---
 
@@ -203,13 +203,13 @@ Esta sección documenta la ejecución real sin sustituir el detalle histórico d
 | F8 | Reglas e índices aditivos, permisos explícitos, alertas internas por riesgo y auditoría de solo lectura administrativa | `firestore.rules`, `firestore.indexes.json`, `cloud-portal.js`, `test-firestore-rules.mjs` |
 | F9 | Integración y regresión completa; espejos sincronizados y verificados | `npm.cmd run check`, `npm.cmd test`, `npm.cmd run test:rules`, `sync-copies.mjs` |
 
-### Dependencias que siguen abiertas
+### Dependencias abiertas y cierre de las ejecutadas
 
-1. **Storage:** no hay bucket operativo confirmado. No se activaron cargas dependientes de Storage; requiere decisión del propietario.
-2. **Validación navegada autenticada:** requiere sesión real del propietario. No se crearon cuentas QA reales ni se evadieron accesos.
-3. **Despliegue de reglas/índices:** `firestore.rules` y `firestore.indexes.json` están listos, pero no se desplegaron.
-4. **Publicación:** pendiente de autorización expresa separada; destino único `public-pages`, sin `--force` y nunca `origin`.
+1. **Storage (abierta):** no hay bucket operativo confirmado. No se activaron cargas dependientes de Storage; requiere decisión del propietario.
+2. **Validación navegada autenticada (abierta):** requiere sesión real del propietario. No se crearon cuentas QA reales ni se evadieron accesos.
+3. **Despliegue de reglas/índices (cerrado):** `firestore.rules` y los 4 índices se desplegaron en `sierra-madre-seguridad` con compilación exitosa.
+4. **Publicación (cerrada):** ejecutada en `public-pages/main` con autorización expresa, sin `--force` y nunca a `origin`; propagación verificada en vivo.
 
 ### Clasificación final
 
-**LISTO CON DEPENDENCIAS.** La implementación local y las pruebas automatizadas están completas; la puesta en producción depende de las acciones del propietario listadas arriba.
+**LISTO CON DEPENDENCIAS.** La implementación, las pruebas, la publicación y el despliegue están completos; solo permanecen las dos acciones del propietario listadas arriba. No se activó Storage ni se simuló una sesión real.
