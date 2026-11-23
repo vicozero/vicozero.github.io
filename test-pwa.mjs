@@ -6,7 +6,7 @@ const html=fs.readFileSync('index.html','utf8');
 const css=fs.readFileSync('phase3.css','utf8');
 const manifest=JSON.parse(fs.readFileSync('manifest.webmanifest','utf8'));
 
-assert.match(sw,/sm-seguridad-v16/);
+assert.match(sw,/sm-seguridad-v17/);
 const shell=sw.slice(sw.indexOf('const APP_SHELL'),sw.indexOf('];',sw.indexOf('const APP_SHELL')));
 for(const file of ['advanced-core.js','advanced-pdf.js','advanced-ui.js'])assert(shell.includes(`'/${file}'`),`Falta ${file} en APP_SHELL`);
 assert(!shell.includes('/api/'),'/api/ no debe entrar en la caché estática');
@@ -29,4 +29,4 @@ assert.equal(manifest.lang,'es-MX');
 assert.equal(manifest.display,'standalone');
 assert.equal(manifest.scope,'/');
 assert(manifest.icons.some(icon=>icon.purpose==='maskable'));
-console.log('PWA y accesibilidad: caché v16 sin API ni sincronización insegura, shell responsive, foco visible y manifiesto válido: OK');
+console.log('PWA y accesibilidad: caché v17 sin API ni sincronización insegura, shell responsive, foco visible y manifiesto válido: OK');

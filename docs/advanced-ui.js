@@ -17,6 +17,33 @@
     advancedReports:['Reportes y calendario','PDF, Excel, programación y reprogramación.']
   };
 
+  // supervisor.js se carga dinámicamente después de este módulo y redefine
+  // globalThis.navigate. La navegación avanzada no debe depender de esa carga.
+  let legacyNavigate=null;
+  const isOurNavigate=fn=>!!(fn&&fn.__smAdvanced);
+  function rememberNavigate(fn){if(typeof fn==='function'&&!isOurNavigate(fn))legacyNavigate=fn}
+  function openView(view){
+    view=String(view);
+    if(view.startsWith('advanced')){
+      document.querySelectorAll('.advanced-view').forEach(section=>section.hidden=section.id!==view);
+      ['dashboard','reports','program','actions','progress','team','users','notices','departments'].forEach(id=>{const el=by(id);if(el)el.hidden=true});
+      document.querySelectorAll('[data-view]').forEach(button=>button.classList.toggle('active',button.dataset.view===view));
+      const title=VIEWS[view];if(title){if(by('pageTitle'))by('pageTitle').textContent=title[0];if(by('pageSubtitle'))by('pageSubtitle').textContent=title[1];if(by('crumb'))by('crumb').textContent=title[0]}
+      document.body.dataset.view=view;document.body.classList.remove('nav-open');
+      render(view);return;
+    }
+    document.querySelectorAll('.advanced-view').forEach(section=>section.hidden=true);
+    rememberNavigate(globalThis.navigate);
+    return (legacyNavigate||globalThis.navigate)?.(view);
+  }
+  function installNavigate(){
+    rememberNavigate(globalThis.navigate);
+    if(isOurNavigate(globalThis.navigate))return;
+    const wrapped=view=>openView(view);
+    wrapped.__smAdvanced=true;
+    globalThis.navigate=wrapped;
+  }
+
   function ensureShell(){
     let nav=document.querySelector('#sidebar nav');
     if(!nav)return false;
@@ -34,18 +61,7 @@
       section.innerHTML=`<div class="advanced-head"><span class="eyebrow">SIERRA MADRE · SEGURIDAD INDUSTRIAL</span><h2>${VIEWS[view][0]}</h2><p>${VIEWS[view][1]}</p></div><div id="${view}Body"></div>`;
       main.append(section);
     }
-    const base=globalThis.navigate;
-    globalThis.navigate=function(view){
-      document.querySelectorAll('.advanced-view').forEach(section=>section.hidden=section.id!==view);
-      if(view.startsWith('advanced')){
-        ['dashboard','reports','program','actions','progress','team','users','notices','departments'].forEach(id=>{const el=by(id);if(el)el.hidden=true});
-        document.querySelectorAll('[data-view]').forEach(button=>button.classList.toggle('active',button.dataset.view===view));
-        const title=VIEWS[view];if(title){if(by('pageTitle'))by('pageTitle').textContent=title[0];if(by('pageSubtitle'))by('pageSubtitle').textContent=title[1];if(by('crumb'))by('crumb').textContent=title[0]}
-        document.body.dataset.view=view;document.body.classList.remove('nav-open');
-        render(view);return;
-      }
-      return base?.(view);
-    };
+    installNavigate();
     return true;
   }
 
@@ -259,13 +275,14 @@
     if(!ensureShell())return;
     const refresh=()=>{load();setTimeout(load,600)};
     window.addEventListener('sm:live',event=>{if(['findings','inspectionTemplates','advanceAlerts','auditTrail','reports','actions'].includes(event.detail?.collection))load()});
-    document.addEventListener('click',event=>{const b=event.target.closest('[data-view]');if(b&&b.dataset.view.startsWith('advanced'))navigate(b.dataset.view)});
+    document.addEventListener('click',event=>{const b=event.target.closest('[data-view]');if(b&&b.dataset.view.startsWith('advanced'))openView(b.dataset.view)});
+    installNavigate();
     if(globalThis.AUTH?.user){refresh();return;}
     // La portada pública no debe consultar /api/ sin sesión: GitHub Pages devuelve 404.
     let waited=0;
     const wait=setInterval(()=>{if(globalThis.AUTH?.user||++waited>200){clearInterval(wait);if(globalThis.AUTH?.user)refresh()}},300);
-    window.addEventListener('sm:auth',()=>{clearInterval(wait);refresh()},{once:true});
+    window.addEventListener('sm:auth',()=>{clearInterval(wait);installNavigate();refresh()},{once:true});
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
-  window.SMAdvancedUI={state,load,render,navigate};
+  window.SMAdvancedUI={state,load,render,navigate:openView};
 })();
