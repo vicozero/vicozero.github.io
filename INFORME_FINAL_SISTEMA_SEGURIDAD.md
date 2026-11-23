@@ -129,3 +129,4 @@ El sistema quedó implementado, verificado con 23 suites y 6 suites de reglas, p
 - La creación del bucket con el token de Firebase CLI devolvió `403 accountDisabled` («The billing account for the owning project is disabled in state absent»). No se intentó evadir ni activar facturación.
 - `storage.rules` se alineó con `firestore.rules`: administrador principal o perfil `admin` activo, `activeOperator`, `allowedUnitIds`, `canViewAll`, `canRead`, `canEdit`, evidencia inmutable y adjuntos de avisos restringidos.
 - `npm.cmd run test:rules` ahora incluye emulador Storage y dos suites adicionales: 6/6 PASS. `npm.cmd test`: 23/23 PASS. `npm.cmd run check`: PASS. `npm.cmd run sync`: 61 archivos web / 122 copias.
+- Verificación en vivo posterior a la propagación: `sw.js` sirve `sm-seguridad-v16`, `advanced-ui.js` y `firebase-auth.js` reflejan el cierre técnico; la portada pública cargó con **0 errores de consola y 0 solicitudes `/api/`** en navegador real.

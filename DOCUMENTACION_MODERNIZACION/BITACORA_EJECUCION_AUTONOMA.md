@@ -145,3 +145,4 @@ Línea base: `e0110f11e7f1eafaa5f52b7c4a12332654a21233` (FASE 2 cerrada localmen
 - Intento autorizado de creación del bucket: `403 accountDisabled` («billing account … disabled in state absent»). Sin evasión, sin cambios de facturación.
 - `storage.rules` alineada con `firestore.rules` (S-07): principal + perfil admin activo, `activeOperator`, `allowedUnitIds`, `canViewAll`/`canRead`/`canEdit`, evidencia inmutable y avisos restringidos. Verificada con emulador Storage.
 - `npm.cmd run test:rules` ampliado a 6 suites con emuladores Firestore y Storage: 6/6 PASS. PWA elevada a `sm-seguridad-v16`; `npm.cmd run check` PASS; `npm.cmd run sync` 61 archivos / 122 copias.
+- Verificación en vivo tras la propagación: `sw.js` v16, módulos actualizados, 0 errores de consola y 0 solicitudes `/api/` en la portada pública.
