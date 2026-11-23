@@ -32,6 +32,19 @@ export function verifyBackup(backup) {
     }
     counts[collection] = records.length;
   }
+  // FASE 2: el catálogo es opcional para no invalidar respaldos anteriores.
+  const departments=backup.data.departments;
+  if(departments!==undefined){
+    if(!Array.isArray(departments))throw Error('Colección inválida: departments');
+    const ids=new Set();
+    for(const dep of departments){
+      if(!dep||typeof dep.id!=='string'||!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(dep.id))throw Error('Identificador de departamento inválido: '+(dep?.id||''));
+      if(ids.has(dep.id))throw Error('Identificador duplicado en departments: '+dep.id);
+      if(typeof dep.name!=='string'||!dep.name.trim())throw Error('Nombre ausente en departments: '+dep.id);
+      ids.add(dep.id);
+    }
+    counts.departments=departments.length;
+  }else counts.departments=0;
   const evidenceRefs=new Set();
   for(const report of backup.data.reports||[]){
     if(Array.isArray(report.photoChunkIds)) for(const id of report.photoChunkIds) evidenceRefs.add(id);
@@ -45,7 +58,7 @@ export function verifyBackup(backup) {
 
 export function planImport(backup, existing={}){
   const plan={add:[],skip:[],conflict:[],warnings:[]};
-  for(const collection of ['reports','actions','plans','notices','users']){
+  for(const collection of ['reports','actions','plans','notices','users','departments']){
     const incoming=Array.isArray(backup.data?.[collection])?backup.data[collection]:[];
     const currentIds=new Set((Array.isArray(existing[collection])?existing[collection]:[]).map(r=>r&&r.id).filter(Boolean));
     for(const record of incoming){

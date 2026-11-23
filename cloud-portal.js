@@ -8,16 +8,33 @@ export async function connectPortal(app,user,perms,database=null){
  const principalUid=authority.exists()?authority.data().administratorUid:null;
  const isPrincipal=!!principalUid&&principalUid===user.uid;
  const isAdmin=isPrincipal||profile.data().role==='admin';
- const me={...profile.data(),id:user.uid,role:isAdmin?'admin':profile.data().role,isOwner:isPrincipal,isPrincipal};
+ const me={...profile.data(),id:user.uid,role:isAdmin?'admin':profile.data().role,isOwner:isPrincipal,isPrincipal,departmentId:''};
  if(!isAdmin&&profile.data().role==='admin')throw Error('Tu perfil requiere revisión. Contacta al encargado de la administración.');
  me.permissions={...(perms[me.role]||perms.member),...(me.permissions||{})};
  if(isAdmin)me.permissions={...perms.admin};
  const allProfiles=await getDocs(collection(db,'profiles'));
  const directory=allProfiles.docs.map(d=>({...d.data(),id:d.id})).filter(u=>u.active);
+ // Catálogo remoto opcional: si aún no existe, se usa el catálogo embebido sin romper nada.
+ const departmentDocs=await getDocs(collection(db,'departments'));
+ const departments=departmentDocs.docs.map(d=>({...d.data(),id:d.id})).filter(d=>d.activo!==false).sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'es'));
+ if(departments.length&&globalThis.SMDepartments?.setCatalog)globalThis.SMDepartments.setCatalog(departments);
  const clean=x=>JSON.parse(JSON.stringify(x));
  const normalize=value=>String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().replace(/\s+/g,' ').toLowerCase();
+ // FASE 2: resolución aditiva de departamentos. Nunca sustituye department/unit/area/unidad.
+ const departmentCatalog=()=>Array.isArray(globalThis.SM_DEPARTMENTS)&&globalThis.SM_DEPARTMENTS.length?globalThis.SM_DEPARTMENTS:(globalThis.SAFETY?.departments||globalThis.SMDepartments?.defaults||[]);
+ const departmentId=value=>{const key=normalize(value);if(!key)return '';return departmentCatalog().find(d=>d.activo!==false&&(normalize(d.id)===key||normalize(d.name)===key||(d.aliases||[]).some(a=>normalize(a)===key)))?.id||''};
+ const departmentOf=record=>record&&typeof record==='object'?departmentId(record.departmentId||record.department||record.unit||record.area||record.unidad||''):'';
+ const departmentName=value=>{const key=departmentId(value);return key?(departmentCatalog().find(d=>d.id===key)?.name||key):String(value||'').trim()};
  const validDate=value=>/^\d{4}-\d{2}-\d{2}$/.test(value||'')&&!Number.isNaN(Date.parse(value))&&new Date(value).toISOString().slice(0,10)===value;
- const unitAllowed=record=>isAdmin||!me.restrictUnits||!me.allowedUnits?.length||me.allowedUnits.some(unit=>normalize(unit)===normalize(record.unit||record.area||record.unidad));
+ const unitAllowed=record=>{
+  if(isAdmin||!me.restrictUnits)return true;
+  const legacy=Array.isArray(me.allowedUnits)?me.allowedUnits:[],ids=Array.isArray(me.allowedUnitIds)?me.allowedUnitIds:[];
+  if(!legacy.length&&!ids.length)return true;
+  if(legacy.some(unit=>normalize(unit)===normalize(record.unit||record.area||record.unidad)))return true;
+  const did=record.departmentId||departmentOf(record);
+  return ids.length>0&&ids.includes(did);
+ };
+ me.departmentId=departmentOf(profile.data());
  const owns=record=>record.ownerAccountId===me.id||record.assignedAccountId===me.id;
  async function currentDirectory(){return (await getDocs(collection(db,'profiles'))).docs.map(d=>({...d.data(),id:d.id})).filter(p=>p.active===true);}
  function resolvePerson(people,record,idField,nameField){
@@ -38,19 +55,28 @@ export async function connectPortal(app,user,perms,database=null){
      if(!isAdmin)target=query(target,or(where('toAccountId','==',me.id),where('fromAccountId','==',me.id)));
    }else if(col==='sessions'){
      if(!isAdmin)target=query(target,where('userId','==',me.id));
+   }else if(col==='advanceAlerts'){
+     if(!isAdmin)target=query(target,where('toAccountId','==',me.id));
+   }else if(col==='inspectionTemplates'){
+     // Plantillas de lectura compartida: no tienen propietario ni unidad.
    }else if(!seesAllRecords){
      target=query(target,or(where('ownerAccountId','==',me.id),where('assignedAccountId','==',me.id)));
    }
    let documents;
-   if(['reports','actions','plans'].includes(col)&&!isAdmin&&me.restrictUnits&&me.allowedUnits?.length){
+   if(['reports','actions','plans','findings'].includes(col)&&!isAdmin&&me.restrictUnits&&((Array.isArray(me.allowedUnits)&&me.allowedUnits.length)||(Array.isArray(me.allowedUnitIds)&&me.allowedUnitIds.length))){
      // Legacy unit aliases remain readable; query constraints enforce the same server rules.
      const found=new Map();
-     for(const unit of me.allowedUnits)for(const field of ['unit','area','unidad']){
+     for(const unit of (Array.isArray(me.allowedUnits)?me.allowedUnits:[]))for(const field of ['unit','area','unidad']){
        const constraints=[where(field,'==',unit)];
        if(!seesAllRecords)constraints.push(or(where('ownerAccountId','==',me.id),where('assignedAccountId','==',me.id)));
        for(const document of (await getDocs(query(collection(db,col),and(...constraints)))).docs)found.set(document.id,document);
      }
-     documents=[...found.values()];
+           for(const depId of (Array.isArray(me.allowedUnitIds)?me.allowedUnitIds:[])){
+        const constraints=[where('departmentId','==',depId)];
+        if(!seesAllRecords)constraints.push(or(where('ownerAccountId','==',me.id),where('assignedAccountId','==',me.id)));
+        for(const document of (await getDocs(query(collection(db,col),and(...constraints)))).docs)found.set(document.id,document);
+      }
+      documents=[...found.values()];
    }else documents=(await getDocs(target)).docs;
    const rows=await Promise.all(documents.map(async d=>{
      const row={...d.data(),id:d.id};
@@ -79,9 +105,9 @@ export async function connectPortal(app,user,perms,database=null){
      }
      return row;
    }));
-   if(['reports','actions','plans'].includes(col)&&!isAdmin&&me.restrictUnits&&Array.isArray(me.allowedUnits)&&me.allowedUnits.length){
-     const allowed=me.allowedUnits.map(u=>String(u).toLowerCase().trim());
-     return rows.filter(r=>{const unit=String(r.unit||r.area||r.unidad||'').toLowerCase().trim();return allowed.includes(unit);});
+   if(['reports','actions','plans'].includes(col)&&!isAdmin&&me.restrictUnits&&((Array.isArray(me.allowedUnits)&&me.allowedUnits.length)||(Array.isArray(me.allowedUnitIds)&&me.allowedUnitIds.length))){
+     const allowed=(Array.isArray(me.allowedUnits)?me.allowedUnits:[]).map(u=>String(u).toLowerCase().trim()),allowedIds=Array.isArray(me.allowedUnitIds)?me.allowedUnitIds:[];
+     return rows.filter(r=>{const unit=String(r.unit||r.area||r.unidad||'').toLowerCase().trim();return allowed.includes(unit)||allowedIds.includes(r.departmentId||departmentOf(r));});
    }
    return rows;
  }
@@ -94,7 +120,7 @@ export async function connectPortal(app,user,perms,database=null){
      const url=new URL(path,location.origin),parts=url.pathname.slice(5).split('/'),[col,id]=parts;
      const method=(init.method||'GET').toUpperCase(),body=init.body?JSON.parse(init.body):{};
      if(col==='me')return response({user:me});
-     if(col==='directory')return response((await currentDirectory()).map(u=>({id:u.id,name:u.name,unit:u.unit||'',role:u.role})));
+     if(col==='directory')return response((await currentDirectory()).map(u=>({id:u.id,name:u.name,unit:u.unit||'',departmentId:u.departmentId||departmentOf(u)||'',role:u.role})));
      if(col==='users'){
        if(!isAdmin)return response({error:'Permiso administrativo requerido.'},403);
        if(method==='GET')return response((await getDocs(collection(db,'profiles'))).docs.map(d=>({...d.data(),id:d.id,isOwner:d.id===principalUid})));
@@ -120,6 +146,10 @@ export async function connectPortal(app,user,perms,database=null){
          try{const account=await createUserWithEmailAndPassword(getAuth(secondary),body.email,body.password);uid=account.user.uid;await signOut(getAuth(secondary));}finally{await deleteApp(secondary);}
        }
        const {password,...fields}=body;
+        if(fields.allowedUnitIds!==undefined){
+          if(!Array.isArray(fields.allowedUnitIds))throw Error('Los departamentos permitidos deben ser una lista.');
+          fields.allowedUnitIds=[...new Set(fields.allowedUnitIds.filter(x=>typeof x==='string'&&x).map(x=>departmentId(x)||x))].slice(0,100);
+        }
        const saved=await runTransaction(db,async tx=>{
          const ref=doc(db,'profiles',uid),snap=await tx.get(ref),prior=snap.exists()?snap.data():null;
          if((body.revision||0)!==(prior?.revision||0))throw Error('CONFLICT');
@@ -129,7 +159,33 @@ export async function connectPortal(app,user,perms,database=null){
        });
        return response(saved);
      }
-     if(col==='notices'&&id&&parts[2]==='read'){
+     if(col==='departments'){
+        if(method==='GET')return response((await getDocs(collection(db,'departments'))).docs.map(d=>({...d.data(),id:d.id})).sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'es')));
+        if(!isAdmin)return response({error:'Permiso administrativo requerido.'},403);
+        if(!['POST','PUT'].includes(method))return response({error:'Método no permitido.'},405);
+        const rawId=String(body.id||''),slug=departmentId(rawId)||normalize(rawId).replace(/\s+/g,'-');
+        const idKey=normalize(slug).replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+        if(!idKey||!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(idKey))throw Error('El identificador debe usar minúsculas, números y guiones.');
+        if(id&&id!==idKey)throw Error('El identificador del catálogo no coincide.');
+        if(!String(body.name||'').trim())throw Error('Completa el nombre del departamento.');
+        if(String(body.name).length>200)throw Error('El nombre es demasiado largo.');
+        const ref=doc(db,'departments',idKey),prior=await getDoc(ref),old=prior.exists()?prior.data():null;
+        if(method==='POST'&&old)throw Error('Ya existe un departamento con ese identificador.');
+        if(method==='PUT'&&!old)throw Error('Departamento no encontrado. Recarga la lista.');
+        const aliases=Array.isArray(body.aliases)?[...new Set(body.aliases.filter(x=>typeof x==='string'&&x.trim()).map(x=>x.trim()))].slice(0,100):[];
+        if(globalThis.SMDepartments?.duplicateAliases){
+          const others=(await getDocs(collection(db,'departments'))).docs.map(d=>({...d.data(),id:d.id})).filter(d=>d.id!==idKey);
+          const duplicate=globalThis.SMDepartments.duplicateAliases([...others,{id:idKey,name:String(body.name).trim(),aliases}]);
+          if(duplicate.length)throw Error('Alias duplicado: '+duplicate[0].alias+'. Ajusta los alias antes de guardar.');
+        }
+        const now=new Date().toISOString(),activo=body.activo===false||body.activo==='false'?false:true;
+        const record=clean({id:idKey,name:String(body.name).trim(),aliases,activo,validFrom:String(body.validFrom||''),validTo:String(body.validTo||''),createdAt:old?.createdAt||now,createdBy:old?.createdBy||me.id,updatedAt:now,updatedBy:me.id});
+        await setDoc(ref,record);
+        const catalog=(await getDocs(collection(db,'departments'))).docs.map(d=>({...d.data(),id:d.id})).filter(d=>d.activo!==false);
+        if(catalog.length&&globalThis.SMDepartments?.setCatalog)globalThis.SMDepartments.setCatalog(catalog);
+        return response(record);
+      }
+      if(col==='notices'&&id&&parts[2]==='read'){
        await setDoc(doc(db,'noticeReads',me.id,'items',id),{at:serverTimestamp()});return response({ok:true});
      }
      if(col==='notices'){
@@ -164,16 +220,50 @@ export async function connectPortal(app,user,perms,database=null){
        await batch.commit();
        return response({count:targets.length});
      }
-     if(['reports','actions','plans'].includes(col)){
+           // FASES 3-8: colecciones aditivas con auditoría inmutable.
+      if(col==='auditTrail'){
+       if(!isAdmin)return response({error:'El historial de auditoría es de solo lectura y administrativo.'},403);
+       if(method!=='GET')return response({error:'Método no permitido.'},405);
+       const rows=(await getDocs(collection(db,'auditTrail'))).docs.map(d=>({...d.data(),id:d.id}));
+       rows.sort((a,b)=>String(b.createdAt?.toMillis?.()||b.createdAt||'').localeCompare(String(a.createdAt?.toMillis?.()||a.createdAt||'')));
+       return response(id?rows.find(row=>row.id===id)||null:rows);
+     }
+     const advancedKinds=['findings','inspectionTemplates','advanceAlerts'];
+      if(advancedKinds.includes(col)){
+        if(method==='GET'){const rows=await list(col);return response(id?rows.find(row=>row.id===id)||null:rows);}
+        if(!['PUT','POST'].includes(method))return response({error:'Método no permitido.'},405);
+        if(!isAdmin&&!(me.permissions.edit_reports||me.permissions.edit_actions||me.permissions.send_notices))throw Error('Sin permiso para esta colección.');
+        const recordId=id||body.id||crypto.randomUUID();
+        if(typeof recordId!=='string'||!recordId||recordId.includes('/'))throw Error('Identificador inválido.');
+        const reference=doc(db,col,recordId);
+        const saved=await runTransaction(db,async tx=>{
+          const prior=await tx.get(reference),old=prior.exists()?prior.data():null;
+          if(col==='findings'&&!old){
+            const key=String(body.dedupeKey||[body.sourceReportId||'',body.checkIndex??'',String(body.findingType||'').trim().toLowerCase()].join('|'));
+            const existing=(await tx.get(collection(db,col))).docs.find(d=>String(d.data().dedupeKey||'')===key);
+            if(existing)throw Error('El hallazgo ya fue registrado para este control.');
+          }
+          const record=clean({...body,id:recordId,ownerAccountId:old?.ownerAccountId||me.id,revision:(old?.revision||0)+1,updated:new Date().toISOString(),updatedBy:me.name});
+          if(col==='advanceAlerts'){
+            if(old?.createdAt)record.createdAt=old.createdAt;
+            else{delete record.createdAt;record.createdAt=serverTimestamp();}
+          }
+          tx.set(reference,record);
+          tx.set(doc(db,'auditTrail',crypto.randomUUID()),{actorUid:me.id,actorName:me.name,event:col+'.'+(old?'update':'create'),targetCollection:col,targetId:recordId,before:old?JSON.stringify(old).slice(0,50000):'',after:JSON.stringify(record).slice(0,50000),createdAt:serverTimestamp()});
+          return record;
+        });
+        return response(saved);
+      }
+if(['reports','actions','plans'].includes(col)){
        if(method==='GET'){const rows=await list(col);return response(id?rows.find(row=>row.id===id)||null:rows);}
               if(method==='DELETE'&&id){
          return response({error:'Los registros y su historial se conservan en la nube; no se eliminan.'},405);
        }
        if(!['PUT','POST'].includes(method))return response({error:'Método no permitido.'},405);
        
-       if(!isAdmin&&me.restrictUnits&&Array.isArray(me.allowedUnits)&&me.allowedUnits.length){
-         const unit=String(body.unit||body.area||body.unidad||'').toLowerCase().trim();
-         if(unit&&!me.allowedUnits.map(u=>String(u).toLowerCase().trim()).includes(unit))throw Error('No tienes permiso para esta unidad/área.');
+       if(!isAdmin&&me.restrictUnits&&((Array.isArray(me.allowedUnits)&&me.allowedUnits.length)||(Array.isArray(me.allowedUnitIds)&&me.allowedUnitIds.length))){
+         const unit=String(body.unit||body.area||body.unidad||'').toLowerCase().trim(),dep=body.departmentId||departmentOf(body)||'';
+         const legacyOk=unit&&(Array.isArray(me.allowedUnits)?me.allowedUnits:[]).map(u=>String(u).toLowerCase().trim()).includes(unit);const idsOk=dep&&(me.allowedUnitIds||[]).includes(dep);if(!legacyOk&&!idsOk)throw Error('No tienes permiso para este departamento/unidad/área.');
        }
        if(!isAdmin&&col==='reports'&&!me.permissions.edit_reports)throw Error('No tienes permiso para editar formatos.');
        if(!isAdmin&&col==='actions'&&!me.permissions.edit_actions)throw Error('No tienes permiso para editar acciones.');
@@ -202,6 +292,8 @@ export async function connectPortal(app,user,perms,database=null){
          if((body.revision||0)!==(old?.revision||0))throw Error('CONFLICT');
          if(!isAdmin&&old&&(!owns(old)||!unitAllowed(old)))throw Error('No tienes acceso a este registro.');
          let record={...body,id:recordId,ownerAccountId:(isAdmin&&body.ownerAccountId)||old?.ownerAccountId||me.id,revision:(old?.revision||0)+1,updated:new Date().toISOString(),updatedBy:me.name};
+          const resolvedDepartment=record.departmentId?(departmentId(record.departmentId)||String(record.departmentId)):departmentOf(record);
+          if(resolvedDepartment)record.departmentId=resolvedDepartment;
          if(!isAdmin){
            if(old?.assignedAccountId)record.assignedAccountId=old.assignedAccountId;else if(col!=='reports')record.assignedAccountId=me.id;else delete record.assignedAccountId;
            if(col==='reports'&&!old)record.supervisor=me.name;
@@ -248,6 +340,9 @@ export async function connectPortal(app,user,perms,database=null){
        if(!isAdmin)return response({error:'Permiso administrativo requerido.'},403);
        const people=await currentDirectory();
        const [reports,actions,plans]=await Promise.all([list('reports'),list('actions'),list('plans')]);
+        const departmentCatalogRows=(await getDocs(collection(db,'departments'))).docs.map(d=>({...d.data(),id:d.id}));
+        if(departmentCatalogRows.length&&globalThis.SMDepartments?.setCatalog)globalThis.SMDepartments.setCatalog(departmentCatalogRows.filter(d=>d.activo!==false));
+        const allRecords=[...reports.map(r=>({...r,_collection:'reports'})),...actions.map(r=>({...r,_collection:'actions'})),...plans.map(r=>({...r,_collection:'plans'}))];
        const nameGroups={}; for(const p of people){const k=normalize(p.name);if(!k)continue;(nameGroups[k]=nameGroups[k]||[]).push({id:p.id,name:p.name,unit:p.unit||''});}
        const homonyms=Object.values(nameGroups).filter(g=>g.length>1);
        const issues=[];
@@ -268,16 +363,24 @@ export async function connectPortal(app,user,perms,database=null){
        check('reports',reports,'ownerAccountId','supervisor');
        check('actions',actions,'assignedAccountId','owner');
        check('plans',plans,'assignedAccountId','person');
+        const grouper=globalThis.SMDepartments?.byDepartment;
+        const byDepartment=grouper?grouper(allRecords):[];
+        const withoutId=globalThis.SMDepartments?.withoutId?globalThis.SMDepartments.withoutId(allRecords):allRecords.filter(r=>!r.departmentId&&(r.department||r.unit||r.area||r.unidad));
+        for(const row of withoutId)issues.push({collection:row._collection||'',id:row.id,label:row.folio||row.person||row.id,type:'departamento_sin_id',detail:'El registro tiene texto de departamento/unidad pero no departmentId; se conserva el texto original.',department:row.department||row.unit||row.area||row.unidad||''});
+        const noDepartment=allRecords.filter(r=>!r.departmentId&&!departmentOf(r));
+        for(const row of noDepartment)issues.push({collection:row._collection||'',id:row.id,label:row.folio||row.person||row.id,type:'sin_departamento',detail:'No se pudo resolver un departamento; el registro se conserva sin asignar.'});
+        const duplicates=globalThis.SMDepartments?.duplicateAliases?globalThis.SMDepartments.duplicateAliases(departmentCatalogRows):[];
+        for(const dup of duplicates)issues.push({collection:'departments',id:'',label:'Catálogo',type:'alias_duplicado',detail:'El alias "'+dup.alias+'" apunta a más de un departamento ('+dup.ids.join(', ')+').',alias:dup.alias,ids:dup.ids});
        let orphanChunks=[];
        try{
          const chunks=await getDocs(collection(db,'evidenceChunks'));
          orphanChunks=chunks.docs.filter(d=>!referencedChunks.has(d.id)).map(d=>({id:d.id,recordCollection:d.data().recordCollection||'',recordId:d.data().recordId||'',ownerAccountId:d.data().ownerAccountId||''})).slice(0,500);
        }catch(e){ issues.push({collection:'evidenceChunks',id:'',label:'evidenceChunks',type:'orphan_scan_unavailable',detail:'No se pudo listar fragmentos para detectar huérfanos: '+(e.message||e)}); }
-       return response({generatedAt:new Date().toISOString(),homonyms,issues,orphanChunks,counts:{reports:reports.length,actions:actions.length,plans:plans.length,issues:issues.length,referencedChunks:referencedChunks.size,orphanChunks:orphanChunks.length}});
+       return response({generatedAt:new Date().toISOString(),homonyms,issues,orphanChunks,byDepartment,departments:departmentCatalogRows,counts:{reports:reports.length,actions:actions.length,plans:plans.length,departments:departmentCatalogRows.length,withoutDepartmentId:withoutId.length,duplicateAliases:duplicates.length,issues:issues.length,referencedChunks:referencedChunks.size,orphanChunks:orphanChunks.length}});
      }
      return response({error:'Operación pendiente de integración.'},404);
    }catch(error){return response({error:error.message},error.message==='CONFLICT'?409:403);}
  };
- return {db,me,directory,users:isAdmin?allProfiles.docs.map(d=>({...d.data(),id:d.id})):[],list,updateName:name=>updateDoc(doc(db,'profiles',me.id),{name})};
+ return {db,me,directory,departments,users:isAdmin?allProfiles.docs.map(d=>({...d.data(),id:d.id})):[],list,updateName:name=>updateDoc(doc(db,'profiles',me.id),{name})};
 }
 

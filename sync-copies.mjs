@@ -4,7 +4,7 @@ import { execSync } from 'node:child_process';
 
 const root = process.cwd();
 const targets = ['docs', 'public'];
-const additionalAssets=['library-page.js'];
+const additionalAssets=['library-page.js','departments.js','departments-ui.js','advanced-core.js','advanced-pdf.js','advanced-ui.js'];
 
 // Allow-list comes from the files already tracked under docs/ (the deployed web assets).
 const sourceList=process.argv.includes('--stdin')?fs.readFileSync(0,'utf8'):execSync('git ls-files docs/', { cwd: root, encoding: 'utf8' });

@@ -1,0 +1,63 @@
+import fs from 'node:fs';
+import assert from 'node:assert/strict';
+import crypto from 'node:crypto';
+import {JSDOM,VirtualConsole} from './.qa/node_modules/jsdom/lib/api.js';
+
+const errors=[],virtualConsole=new VirtualConsole();
+virtualConsole.on('jsdomError',e=>errors.push(e.message));
+const dom=new JSDOM(fs.readFileSync('index.html','utf8'),{url:'https://qa.local/',runScripts:'outside-only',pretendToBeVisual:true,virtualConsole}),w=dom.window;
+w.structuredClone=structuredClone;w.Response=Response;w.Request=Request;w.Headers=Headers;w.crypto.randomUUID=crypto.randomUUID;w.matchMedia=()=>({matches:false});w.confirm=()=>true;w.alert=()=>{};
+w.HTMLDialogElement.prototype.showModal=function(){this.setAttribute('open','')};w.HTMLDialogElement.prototype.close=function(){this.removeAttribute('open')};
+const memory={findings:[],inspectionTemplates:[{id:'general',name:'Supervisión general',checks:['Cumplimiento de controles','Condiciones del área']}],advanceAlerts:[],auditTrail:[],reports:[],actions:[],directory:[{id:'qa-admin',name:'Administrador QA',role:'admin'},{id:'qa-supervisor',name:'Supervisor QA',role:'supervisor'}]};
+w.fetch=async(url,options={})=>{
+  const u=new URL(url,'https://qa.local'),parts=u.pathname.slice(5).split('/').filter(Boolean),[kind,id]=parts;
+  const list=memory[kind]||[];
+  if((options.method||'GET')==='GET')return new Response(JSON.stringify(id?list.find(r=>r.id===id)||null:list),{headers:{'Content-Type':'application/json'}});
+  const body=JSON.parse(options.body||'{}');
+  if(kind==='findings'&&!id&&list.some(r=>r.dedupeKey===body.dedupeKey))return new Response(JSON.stringify({error:'duplicado'}),{status:409,headers:{'Content-Type':'application/json'}});
+  const record={...body,id:id||body.id||'row-'+list.length,revision:1};
+  const index=list.findIndex(r=>r.id===record.id);if(index<0)list.push(record);else list[index]=record;
+  memory[kind]=list;
+  return new Response(JSON.stringify(record),{headers:{'Content-Type':'application/json'}});
+};
+w.AUTH={user:{id:'qa-admin',name:'Administrador QA',role:'admin',permissions:{edit_reports:true,edit_actions:true}}};
+w.SM_DEPARTMENTS=[{id:'seguridad',name:'Seguridad'},{id:'operaciones',name:'Operaciones'}];
+for(const file of ['advanced-core.js','advanced-pdf.js','advanced-ui.js'])w.eval(fs.readFileSync(file,'utf8'));
+const by=id=>w.document.getElementById(id);
+const until=async condition=>{for(let i=0;i<300;i++){if(condition())return;await new Promise(r=>setTimeout(r,10))}throw Error('UI avanzada timeout: '+errors.join('; '))};
+await until(()=>by('advancedDashboardBody')?.querySelectorAll('.advanced-kpi').length===10);
+assert.equal(by('advancedDashboardBody').querySelectorAll('.advanced-kpi').length,10);
+assert(by('advancedDashboardBody').textContent.includes('Cumplimiento mensual'));
+
+by('advancedDashboard').hidden=true;
+w.document.querySelector('[data-view="advancedSupervision"]').click();
+assert.equal(by('advancedSupervision').hidden,false);
+await until(()=>by('advancedChecklist')?.querySelectorAll('select').length===2);
+const check=by('advancedChecklist').querySelector('select');
+assert(check.querySelector('option[value="No cumple"]')||[...check.options].some(o=>o.textContent==='No cumple'));
+const form=by('advancedInspectionForm');
+form.elements.unit.value='Unidad Norte';form.elements.department.value='seguridad';form.elements.area.value='Taller';form.elements.responsible.value='Responsable QA';
+check.value='No cumple';
+form.elements['reason-0'].value='Sin guarda en la prensa';
+form.dispatchEvent(new w.Event('submit',{bubbles:true,cancelable:true}));
+await until(()=>memory.findings.length===1);
+assert.equal(memory.findings[0].risk,'Alto');
+assert(memory.findings[0].dedupeKey.includes('0|no cumple'));
+assert(memory.actions.some(a=>a.sourceFindingId===memory.findings[0].id));
+await until(()=>memory.reports.length===1&&by('advancedSupervisionBody').textContent.includes(memory.reports[0].folio));
+assert(by('advancedSupervisionBody').textContent.includes(memory.findings[0].folio)||by('toast').textContent.includes(memory.findings[0].folio));
+assert(memory.advanceAlerts.length>=1&&memory.advanceAlerts[0].toAccountId==='qa-supervisor');
+
+w.document.querySelector('[data-view="advancedFindings"]').click();
+await until(()=>by('advancedFindingsContent')?.textContent.includes(memory.findings[0].folio));
+assert(by('advancedFindingsContent').textContent.includes('Alto'));
+assert(['Rojo','Amarillo','Verde','Gris'].some(light=>by('advancedFindingsContent').textContent.includes(light)));
+by('advancedToggleKanban').click();
+assert(by('advancedFindingsContent').querySelector('.advanced-kanban'));
+
+w.document.querySelector('[data-view="advancedReports"]').click();
+await until(()=>by('advancedCalendar')?.querySelectorAll('div').length>=7);
+assert(by('advancedReportsBody').textContent.includes('Reprogramación controlada'));
+assert.deepEqual(errors,[]);
+dom.window.close();
+console.log('UI avanzada: 10 KPIs, supervisión con hallazgo vinculado, semáforo, Kanban, calendario y reprogramación: OK');

@@ -152,7 +152,57 @@ function installStore(currentUser, isFirebaseAdmin=false){
     const me=currentUser;
 
     if(path==='me') return json({user:publicUser(me)});
-    if(path==='directory') return json((data.users||[]).filter(x=>x.active!==false).map(x=>({id:x.id,name:x.name,unit:x.unit||'',role:x.role})));
+    if(path==='directory') return json((data.users||[]).filter(x=>x.active!==false).map(x=>({id:x.id,name:x.name,unit:x.unit||'',departmentId:x.departmentId||'',role:x.role})));
+    // FASE 2: catálogo aditivo en modo local. No reescribe registros históricos.
+    if(path==='departments'||path.startsWith('departments/')){
+      const list=Array.isArray(data.departments)?data.departments:[];
+      const depId=path.startsWith('departments/')?path.slice('departments/'.length):'';
+      if(method==='GET')return json(depId?list.find(d=>d.id===depId)||null:list);
+      if(me.role!=='admin'&&!(me.permissions&&me.permissions.departments))return json({error:'Solo el administrador puede gestionar el catálogo.'},403);
+      if(method==='POST'||method==='PUT'){
+        const key=String(body.id||'').trim().toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+        if(!key||!String(body.name||'').trim())return json({error:'Completa el identificador y el nombre.'},400);
+        if(depId&&depId!==key)return json({error:'El identificador no coincide.'},400);
+        const idx=list.findIndex(d=>d.id===key);
+        if(method==='POST'&&idx>=0)return json({error:'Ya existe ese departamento.'},409);
+        if(method==='PUT'&&idx<0)return json({error:'Departamento no encontrado.'},404);
+        const record={id:key,name:String(body.name).trim(),aliases:Array.isArray(body.aliases)?body.aliases.filter(x=>typeof x==='string'&&x.trim()):[],activo:body.activo!==false,validFrom:body.validFrom||'',validTo:body.validTo||'',updated:new Date().toISOString()};
+        if(idx<0)list.unshift(record);else list[idx]={...list[idx],...record};
+        data.departments=list;writeWS(data);
+        if(globalThis.SMDepartments?.setCatalog)globalThis.SMDepartments.setCatalog(list.filter(d=>d.activo!==false));
+        return json(record);
+      }
+    }
+    // FASES 3-8: colecciones aditivas. No reescriben reports/actions/plans.
+    const advancedKinds=['findings','inspectionTemplates','advanceAlerts','auditTrail'];
+    const advancedKind=path.split('/')[0];
+    if(advancedKinds.includes(advancedKind)){
+      const advancedId=path.slice(advancedKind.length).replace(/^\//,'');
+      const list=Array.isArray(data[advancedKind])?data[advancedKind]:[];
+      if(method==='GET'){
+        const visible=advancedKind==='advanceAlerts'&&me.role!=='admin'?list.filter(row=>row.toAccountId===me.id||row.fromAccountId===me.id):list;
+        return json(advancedId?visible.find(row=>row.id===advancedId)||null:visible);
+      }
+      if(advancedKind==='auditTrail')return json({error:'El historial de auditoría es de solo lectura.'},405);
+      const canWrite=me.role==='admin'||!!(me.permissions&&(me.permissions.edit_reports||me.permissions.edit_actions||me.permissions.send_notices));
+      if(!canWrite)return json({error:'Sin permiso para esta colección.'},403);
+      if(!['POST','PUT'].includes(method))return json({error:'Método no permitido.'},405);
+      const recordId=advancedId||body.id||crypto.randomUUID();
+      const existing=list.find(row=>row.id===recordId);
+      if(advancedKind==='findings'&&!existing){
+        const key=String(body.dedupeKey||[body.sourceReportId||'',body.checkIndex??'',String(body.findingType||'').trim().toLowerCase()].join('|'));
+        if(list.some(row=>String(row.dedupeKey||'')===key))return json({error:'El hallazgo ya fue registrado para este control.'},409);
+      }
+      const record={...body,id:recordId,folio:body.folio||'SM-'+advancedKind.slice(0,3).toUpperCase()+'-'+Date.now().toString(36).toUpperCase(),
+        ownerAccountId:existing?.ownerAccountId||me.id,revision:(existing?.revision||0)+1,updated:new Date().toISOString(),updatedBy:me.name};
+      if(advancedKind==='advanceAlerts'){record.createdAt=existing?.createdAt||new Date().toISOString();record.read=body.read!==false;}
+      const idx=list.findIndex(row=>row.id===recordId);if(idx<0)list.unshift(record);else list[idx]=record;
+      data[advancedKind]=list;
+      data.auditTrail=data.auditTrail||[];
+      data.auditTrail.unshift({id:crypto.randomUUID(),actorUid:me.id,actorName:me.name,event:advancedKind+'.'+(existing?'update':'create'),target:{collection:advancedKind,id:recordId},before:existing||null,after:record,createdAt:new Date().toISOString()});
+      writeWS(data);
+      return json(record);
+    }
     if(path==='users' || path.startsWith('users/')){
       if(me.role!=='admin' && !(me.permissions&&me.permissions.users)) return json({error:'Solo el administrador puede gestionar usuarios.'},403);
       // Delete user: DELETE /api/users/:id
@@ -245,7 +295,7 @@ function installStore(currentUser, isFirebaseAdmin=false){
     if(['reports','actions','plans'].includes(collection)){
       data[collection]=data[collection]||[]; const list=data[collection];
       // Read permission: admin sees all; others see own/assigned
-      const unitAllowed=(r)=>{ if(!(me.restrictUnits) || !(Array.isArray(me.allowedUnits)&&me.allowedUnits.length)) return true; const ru=(r.unit||r.area||r.unidad||'').toString().toLowerCase().trim(); if(!ru) return me.role==='admin'; return me.allowedUnits.some(u=>u.toString().toLowerCase().trim()===ru); };
+      const unitAllowed=(r)=>{ if(!me.restrictUnits)return true; const legacy=Array.isArray(me.allowedUnits)?me.allowedUnits:[],ids=Array.isArray(me.allowedUnitIds)?me.allowedUnitIds:[]; if(!legacy.length&&!ids.length)return true; const ru=(r.unit||r.area||r.unidad||'').toString().toLowerCase().trim(); const did=r.departmentId||globalThis.SAFETY?.departmentOf?.(r)||''; if(!ru&&!did)return me.role==='admin'; return legacy.some(u=>u.toString().toLowerCase().trim()===ru)||ids.includes(did); };
       const canReadRec=(r)=>{ if(!unitAllowed(r)) return false; return (me.role==='admin' || (me.permissions&&me.permissions.view_all)) || (collection==='plans' ? r.assignedAccountId===me.id : collection==='actions' ? (r.assignedAccountId===me.id||r.ownerAccountId===me.id) : r.ownerAccountId===me.id); };
       if(method==='GET'){
         if(id){ const rec=list.find(x=>x.id===id); return rec && canReadRec(rec) ? json(rec) : json(null); }
@@ -255,10 +305,12 @@ function installStore(currentUser, isFirebaseAdmin=false){
         const recId=body.id||id||crypto.randomUUID();
         const prev=list.find(x=>x.id===recId);
         const rec={...body,id:recId,revision:((prev&&prev.revision)||0)+1,updated:new Date().toISOString()};
+        if(!rec.departmentId){const resolved=globalThis.SAFETY?.departmentOf?.(rec)||'';if(resolved)rec.departmentId=resolved;}
         // unit restriction enforcement
-        if(me.restrictUnits && Array.isArray(me.allowedUnits) && me.allowedUnits.length && me.role!=='admin' && !(me.permissions&&me.permissions.view_all)){
-          const ru=(rec.unit||rec.area||rec.unidad||'').toString().toLowerCase().trim();
-          if(ru && !me.allowedUnits.some(u=>u.toString().toLowerCase().trim()===ru)) return json({error:'No tienes permiso para esta unidad/área.'},403);
+        if(me.restrictUnits && ((Array.isArray(me.allowedUnits)&&me.allowedUnits.length)||(Array.isArray(me.allowedUnitIds)&&me.allowedUnitIds.length)) && me.role!=='admin' && !(me.permissions&&me.permissions.view_all)){
+          const ru=(rec.unit||rec.area||rec.unidad||'').toString().toLowerCase().trim(),did=rec.departmentId||globalThis.SAFETY?.departmentOf?.(rec)||'';
+          const legacyOk=ru&&me.allowedUnits.some(u=>u.toString().toLowerCase().trim()===ru),idsOk=did&&me.allowedUnitIds.includes(did);
+          if(!legacyOk&&!idsOk) return json({error:'No tienes permiso para este departamento/unidad/área.'},403);
         }
         // edit permission checks
         if(collection==='reports' && !(me.permissions&&me.permissions.edit_reports) && me.role!=='admin') return json({error:'No tienes permiso para editar formatos.'},403);
@@ -277,16 +329,28 @@ function installStore(currentUser, isFirebaseAdmin=false){
 }
 
 const DEFAULT_PERMS={
-  admin:{dashboard:true,reports:true,edit_reports:true,program:true,edit_program:true,actions:true,edit_actions:true,progress:true,team:true,manage_team:true,notices:true,send_notices:true,users:true,view_all:true,assign:true},
-  operator:{dashboard:true,reports:true,edit_reports:true,program:true,edit_program:false,actions:true,edit_actions:true,progress:true,team:false,manage_team:false,notices:true,send_notices:true,users:false,view_all:false,assign:false},
-  supervisor:{dashboard:true,reports:true,edit_reports:true,program:true,edit_program:false,actions:true,edit_actions:true,progress:true,team:true,manage_team:false,notices:true,send_notices:true,users:false,view_all:false,assign:false},
-  member:{dashboard:true,reports:true,edit_reports:true,program:true,edit_program:false,actions:true,edit_actions:true,progress:true,team:false,manage_team:false,notices:true,send_notices:false,users:false,view_all:false,assign:false}
+  admin:{dashboard:true,reports:true,edit_reports:true,program:true,edit_program:true,actions:true,edit_actions:true,progress:true,team:true,manage_team:true,notices:true,send_notices:true,users:true,view_all:true,assign:true,departments:true},
+  operator:{dashboard:true,reports:true,edit_reports:true,program:true,edit_program:false,actions:true,edit_actions:true,progress:true,team:false,manage_team:false,notices:true,send_notices:true,users:false,view_all:false,assign:false,departments:false},
+  supervisor:{dashboard:true,reports:true,edit_reports:true,program:true,edit_program:false,actions:true,edit_actions:true,progress:true,team:true,manage_team:false,notices:true,send_notices:true,users:false,view_all:false,assign:false,departments:false},
+  member:{dashboard:true,reports:true,edit_reports:true,program:true,edit_program:false,actions:true,edit_actions:true,progress:true,team:false,manage_team:false,notices:true,send_notices:false,users:false,view_all:false,assign:false,departments:false}
 };
 function effectivePerms(u){ const base={...(DEFAULT_PERMS[u.role]||DEFAULT_PERMS.member)}; if(u.permissions&&typeof u.permissions==='object'){ for(const k in base){ if(k in u.permissions) base[k]=!!u.permissions[k]; } for(const k in u.permissions){ if(!(k in base)) base[k]=!!u.permissions[k]; } } return base; }
-function publicUser(u){ return {id:u.id,email:u.email,name:u.name,role:u.role,active:u.active!==false,unit:u.unit||'',isOwner:!!u.isOwner,revision:u.revision||0,permissions:effectivePerms(u),allowedUnits:Array.isArray(u.allowedUnits)?u.allowedUnits:(typeof u.allowedUnits==='string'&&u.allowedUnits?u.allowedUnits.split(',').map(s=>s.trim()).filter(Boolean):[]),restrictUnits:!!u.restrictUnits}; }
+function publicUser(u){ return {id:u.id,email:u.email,name:u.name,role:u.role,active:u.active!==false,unit:u.unit||'',isOwner:!!u.isOwner,revision:u.revision||0,permissions:effectivePerms(u),allowedUnits:Array.isArray(u.allowedUnits)?u.allowedUnits:(typeof u.allowedUnits==='string'&&u.allowedUnits?u.allowedUnits.split(',').map(s=>s.trim()).filter(Boolean):[]),restrictUnits:!!u.restrictUnits,allowedUnitIds:Array.isArray(u.allowedUnitIds)?u.allowedUnitIds:[],departmentId:u.departmentId||''}; }
+
+async function installDepartmentCatalog(){
+  let catalog=[];
+  try{
+    if(Array.isArray(globalThis.SM_CLOUD?.departments))catalog=globalThis.SM_CLOUD.departments;
+    else{const response=await fetch('/api/departments',{cache:'no-store'});if(response.ok)catalog=await response.json();}
+    if(Array.isArray(catalog)&&catalog.length&&globalThis.SMDepartments?.setCatalog)globalThis.SMDepartments.setCatalog(catalog);
+  }catch(error){console.warn('Catálogo de departamentos no disponible; se usa el catálogo embebido.',error);}
+  globalThis.SM_DEPARTMENTS=globalThis.SMDepartments?.catalog?.()||catalog;
+  globalThis.SM_DEPARTMENT_CATALOG=catalog;
+  return catalog;
+}
 
 async function loadAppScripts(){
-  const required=['assets/pdf-lib.min.js','formats.js','extended-formats.js','progress-core.js','supervisor.js','workspace-pdf.js','report-pdf.js','workspace.js','accounts-ui.js'];
+  const required=['assets/pdf-lib.min.js','formats.js','departments.js','extended-formats.js','progress-core.js','supervisor.js','workspace-pdf.js','report-pdf.js','workspace.js','accounts-ui.js','departments-ui.js'];
   const optional=['session-tracker.js'];
   for(const src of [...required,...optional]){
     await new Promise((ok,no)=>{const s=document.createElement('script');s.src=src;s.async=false;s.onload=ok;s.onerror=()=>optional.includes(src)?ok():no(new Error('No se pudo cargar '+src));document.body.append(s);});
@@ -305,6 +369,7 @@ async function launch(user){
     globalThis.smStorageKey=k=>k+'-'+user.uid;
     document.body.dataset.role=cloud.me.role;
     await loadAppScripts();
+  await installDepartmentCatalog();
     try{
       const {installNormativeLibrary}=await import('./normative-library.js');
       await installNormativeLibrary();
@@ -351,18 +416,19 @@ async function legacyLaunch(user){
   installStore(me,true);
   globalThis.AUTH={user:me};
   globalThis.smStorageKey=k=>k+'-'+user.uid;
-  globalThis.ACCOUNT_DIRECTORY=(readWS().users||[]).filter(x=>x.active!==false).map(x=>({id:x.id,name:x.name,unit:x.unit||'',role:x.role}));
+  globalThis.ACCOUNT_DIRECTORY=(readWS().users||[]).filter(x=>x.active!==false).map(x=>({id:x.id,name:x.name,unit:x.unit||'',departmentId:x.departmentId||'',role:x.role}));
   globalThis.ACCOUNT_USERS=(readWS().users||[]).map(publicUser);
   globalThis.SM_SCOPE_ACCOUNT='';
   document.body.dataset.role='admin';
   await loadAppScripts();
+  await installDepartmentCatalog();
   by('accessScreen').hidden=true; by('appRoot').hidden=false;
   globalThis.SM_LOCAL_MODE=true;
   document.body.dataset.storage='local';
   const syncEl=by('sync'); if(syncEl){syncEl.textContent='Modo local: datos guardados en este navegador (sin sincronización central)'; syncEl.className='sync local'; syncEl.title='Los datos no se comparten ni sincronizan con otros dispositivos/cuentas desde este modo. Realiza respaldos periódicos.';}
   mountProfile(user);
   try{const {installNormativeLibrary}=await import('./normative-library.js');await installNormativeLibrary();}catch(e){console.warn('Biblioteca normativa no disponible',e);}
-  try{const {createLocalSafetySuiteStore}=await import('./safety-suite-store.js');const {installTrainingSuite}=await import('./training-suite.js');const wsDir=(readWS().users||[]).filter(x=>x.active!==false).map(x=>({id:x.id,name:x.name,unit:x.unit||'',role:x.role}));await installTrainingSuite({store:createLocalSafetySuiteStore(me,{directory:wsDir}),me,directory:wsDir});}catch(e){console.warn('Programa de pláticas no disponible',e);}
+  try{const {createLocalSafetySuiteStore}=await import('./safety-suite-store.js');const {installTrainingSuite}=await import('./training-suite.js');const wsDir=(readWS().users||[]).filter(x=>x.active!==false).map(x=>({id:x.id,name:x.name,unit:x.unit||'',departmentId:x.departmentId||'',role:x.role}));await installTrainingSuite({store:createLocalSafetySuiteStore(me,{directory:wsDir}),me,directory:wsDir});}catch(e){console.warn('Programa de pláticas no disponible',e);}
   try{globalThis.SM_SESSION_TRACKER?.start(me);}catch{}
   document.querySelector('.sign-out')?.addEventListener('click',e=>{e.preventDefault(); try{localStorage.removeItem('sm-local-session');}catch{} localSessionUser=null; signOut(auth);});
   setTimeout(()=>toast('Modo local: los datos se guardan solo en este navegador y no se sincronizan con otros equipos. Descarga respaldos periódicos.'),1200);
@@ -376,18 +442,19 @@ async function launchLocal(user){
   globalThis.AUTH={user:publicUser(me)};
   globalThis.smStorageKey=k=>k+'-'+user.id;
   const ws=readWS();
-  globalThis.ACCOUNT_DIRECTORY=(ws.users||[]).filter(x=>x.active!==false).map(x=>({id:x.id,name:x.name,unit:x.unit||'',role:x.role}));
+  globalThis.ACCOUNT_DIRECTORY=(ws.users||[]).filter(x=>x.active!==false).map(x=>({id:x.id,name:x.name,unit:x.unit||'',departmentId:x.departmentId||'',role:x.role}));
   globalThis.ACCOUNT_USERS = (me.permissions&&me.permissions.users) ? (ws.users||[]).map(publicUser) : [];
   globalThis.SM_SCOPE_ACCOUNT = (me.permissions&&me.permissions.view_all) ? '' : me.id;
   document.body.dataset.role=me.role||'member';
   await loadAppScripts();
+  await installDepartmentCatalog();
   by('accessScreen').hidden=true; by('appRoot').hidden=false;
   globalThis.SM_LOCAL_MODE=true;
   document.body.dataset.storage='local';
   const syncEl=by('sync'); if(syncEl){syncEl.textContent='Modo local: datos guardados en este navegador (sin sincronización central)'; syncEl.className='sync local'; syncEl.title='Los datos no se comparten ni sincronizan con otros dispositivos/cuentas desde este modo. Realiza respaldos periódicos.';}
   document.querySelector('.sign-out')?.addEventListener('click',e=>{e.preventDefault();try{localStorage.removeItem('sm-local-session');}catch{}localSessionUser=null;location.reload();});
   try{const {installNormativeLibrary}=await import('./normative-library.js');await installNormativeLibrary();}catch(e){console.warn('Biblioteca normativa no disponible',e);}
-  try{const {createLocalSafetySuiteStore}=await import('./safety-suite-store.js');const {installTrainingSuite}=await import('./training-suite.js');const wsDir=(readWS().users||[]).filter(x=>x.active!==false).map(x=>({id:x.id,name:x.name,unit:x.unit||'',role:x.role}));await installTrainingSuite({store:createLocalSafetySuiteStore(me,{directory:wsDir}),me,directory:wsDir});}catch(e){console.warn('Programa de pláticas no disponible',e);}
+  try{const {createLocalSafetySuiteStore}=await import('./safety-suite-store.js');const {installTrainingSuite}=await import('./training-suite.js');const wsDir=(readWS().users||[]).filter(x=>x.active!==false).map(x=>({id:x.id,name:x.name,unit:x.unit||'',departmentId:x.departmentId||'',role:x.role}));await installTrainingSuite({store:createLocalSafetySuiteStore(me,{directory:wsDir}),me,directory:wsDir});}catch(e){console.warn('Programa de pláticas no disponible',e);}
   try{globalThis.SM_SESSION_TRACKER?.start(me);}catch{toast('No se pudo guardar el tiempo de sesión. Verifica el almacenamiento del navegador.');}
   setTimeout(()=>toast('Modo local: los datos se guardan solo en este navegador y no se sincronizan con otros equipos. Descarga respaldos periódicos.'),1200);
 }

@@ -55,6 +55,7 @@ service cloud.firestore {
       allow get: if administrator() || activeOperator() || (request.auth != null && request.auth.uid == uid);
       allow list: if administrator() || activeOperator();
       allow create, update: if administrator()
+        && validDepartmentFields(request.resource.data)
         && request.resource.data.role in ['member', 'operator', 'supervisor', 'admin']
         && request.resource.data.active is bool
         && (uid != get(/databases/$(database)/documents/security/authority).data.administratorUid
@@ -77,15 +78,29 @@ service cloud.firestore {
       let profile = get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data;
       return activeOperator() && profile.get('permissions', {}).get('view_all', false) == true;
     }
+    // FASES 3-8: permisos nuevos requieren concesión explícita; no heredan el
+    // valor por defecto del helper histórico canEdit().
+    function canEditAdvanced(key) {
+      let profile = get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data;
+      return activeOperator() && profile.get('permissions', {}).get(key, false) == true;
+    }
     function sessionOwner() {
       return administrator() || activeOperator();
     }
     function allowedUnit(data) {
       let profile = get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data;
-      return !profile.get('restrictUnits', false) || profile.get('allowedUnits', []).size() == 0
-        || data.get('unit', '') in profile.get('allowedUnits', [])
-        || data.get('area', '') in profile.get('allowedUnits', [])
-        || data.get('unidad', '') in profile.get('allowedUnits', []);
+      let legacy = profile.get('allowedUnits', []);
+      let ids = profile.get('allowedUnitIds', []);
+      return !profile.get('restrictUnits', false) || (legacy.size() == 0 && ids.size() == 0)
+        || data.get('unit', '') in legacy
+        || data.get('area', '') in legacy
+        || data.get('unidad', '') in legacy
+        || (ids.size() > 0 && data.get('departmentId', '') in ids);
+    }
+    // FASE 2: campos nuevos opcionales. Los campos históricos siguen siendo válidos.
+    function validDepartmentFields(data) {
+      return (!('departmentId' in data) || data.departmentId is string)
+        && (!('allowedUnitIds' in data) || data.allowedUnitIds is list);
     }
     function readOperation(kind) {
       return activeOperator() && get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data.get('permissions', {}).get(kind, true) == true;
@@ -131,7 +146,8 @@ service cloud.firestore {
         && (!('targets' in data) || data.targets is map);
     }
     function validRecordWrite(kind, data) {
-      return (kind != 'actions' || validActionWrite(data))
+      return validDepartmentFields(data)
+        && (kind != 'actions' || validActionWrite(data))
         && (kind != 'reports' || validReportWrite(data))
         && (kind != 'plans' || validPlanWrite(data));
     }
@@ -271,6 +287,7 @@ service cloud.firestore {
         && data.place is string && data.place.size() > 0
         && data.instructorId is string && data.instructorId.size() > 0
         && data.assignedAccountId == data.instructorId
+        && validDepartmentFields(data)
         && exists(/databases/$(database)/documents/talk_topics/$(data.topicId));
     }
     function validTalkSession() {
@@ -291,6 +308,7 @@ service cloud.firestore {
       return data.state in ['Pendiente de evaluar','Cumple, con evidencia revisada','No cumple','No aplica, con justificación','Información insuficiente']
         && data.department is string && data.department.size() > 0
         && data.responsibleId is string && data.responsibleId.size() > 0
+        && validDepartmentFields(data)
         && get(/databases/$(database)/documents/standard_requirements/$(data.requirementId)).data.versionId == data.versionId
         && (data.state != 'No aplica, con justificación' || (data.applicabilityJustification is string && data.applicabilityJustification.size() > 0));
     }
@@ -378,6 +396,83 @@ service cloud.firestore {
       allow update: if suitePermission('nom_assess') && (administrator() || owns(resource.data)) && suiteUpdate() && validComplianceAssessment()
         && reviewedCompliance(assessmentId);
       allow delete: if false;
+    }
+    // FASE 2: catálogo aditivo de departamentos. Solo administradores pueden editarlo;
+    // ningún registro histórico se reescribe al crear o actualizar el catálogo.
+    match /departments/{docId} {
+      allow read: if suiteMember();
+      allow create, update: if administrator()
+        && validDepartmentFields(request.resource.data)
+        && request.resource.data.keys().hasOnly(['id','name','aliases','activo','validFrom','validTo','createdAt','updatedAt','createdBy','updatedBy','notes'])
+        && request.resource.data.id is string
+        && request.resource.data.id.size() > 0
+        && request.resource.data.id.size() <= 80
+        && request.resource.data.id.matches('^[a-z0-9]+(-[a-z0-9]+)*$')
+        && request.resource.data.id == docId
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.name.size() <= 200
+        && (!('aliases' in request.resource.data) || (request.resource.data.aliases is list && request.resource.data.aliases.size() <= 100))
+        && (!('activo' in request.resource.data) || request.resource.data.activo is bool)
+        && (!('validFrom' in request.resource.data) || (request.resource.data.validFrom is string && request.resource.data.validFrom.size() <= 20))
+        && (!('validTo' in request.resource.data) || (request.resource.data.validTo is string && request.resource.data.validTo.size() <= 20));
+      allow delete: if false;
+    }
+    // FASES 3-8: hallazgos, plantillas, alertas internas y auditoría inmutable.
+    match /findings/{findingId} {
+      allow get: if administrator() || (suiteMember() && allowedUnit(resource.data) && (canViewAll() || owns(resource.data)));
+      allow list: if administrator() || (suiteMember() && canViewAll());
+      allow create: if suiteMember()
+        && (administrator() || canEditAdvanced('edit_reports'))
+        && allowedUnit(request.resource.data)
+        && request.resource.data.ownerAccountId == request.auth.uid
+        && request.resource.data.folio is string
+        && request.resource.data.dedupeKey is string
+        && request.resource.data.risk in ['Crítico','Alto','Medio','Bajo']
+        && request.resource.data.status in ['Abierto','En proceso','Por verificar','Cerrado','Cancelado']
+        && request.resource.data.revision == 1;
+      allow update: if validDepartmentFields(request.resource.data)
+        && request.resource.data.revision == resource.data.revision + 1
+        && (administrator() || (suiteMember()
+          && (canEditAdvanced('edit_reports') || canEditAdvanced('edit_actions'))
+          && owns(resource.data) && allowedUnit(resource.data) && allowedUnit(request.resource.data)
+          && request.resource.data.get('ownerAccountId', '') == resource.data.get('ownerAccountId', '')
+         && request.resource.data.get('assignedAccountId', '') == resource.data.get('assignedAccountId', '')
+         && request.resource.data.status in ['Abierto','En proceso','Por verificar','Cerrado','Cancelado']));
+      allow delete: if false;
+    }
+    match /inspectionTemplates/{templateId} {
+      allow read: if suiteMember();
+      allow create, update: if (administrator() || canEditAdvanced('edit_reports'))
+        && request.resource.data.keys().hasOnly(['id','name','description','type','checks','active','createdAt','updatedAt','createdBy','updatedBy'])
+        && request.resource.data.name is string
+        && request.resource.data.checks is list
+        && request.resource.data.active is bool;
+      allow delete: if false;
+    }
+    match /advanceAlerts/{alertId} {
+      allow get: if administrator() || (suiteMember() && resource.data.toAccountId == request.auth.uid);
+      allow list: if administrator() || (suiteMember() && resource.data.toAccountId == request.auth.uid);
+      allow create: if suiteMember()
+        && request.resource.data.toAccountId is string
+        && request.resource.data.event is string
+        && request.resource.data.text is string
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.read == false;
+      allow update: if administrator() || (suiteMember()
+        && resource.data.toAccountId == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read','readAt'])
+        && request.resource.data.read is bool);
+      allow delete: if false;
+    }
+    match /auditTrail/{entryId} {
+      allow read: if administrator();
+      allow create: if request.auth != null
+        && request.resource.data.actorUid == request.auth.uid
+        && request.resource.data.event is string
+        && request.resource.data.targetCollection in ['findings','inspectionTemplates','advanceAlerts','reports','actions']
+        && request.resource.data.createdAt == request.time;
+      allow update, delete: if false;
     }
     match /{document=**} {
       allow read, write: if false;

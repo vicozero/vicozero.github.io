@@ -176,3 +176,73 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   .fields>label{min-width:0;}
   dialog form{min-width:0;}
 }
+
+/* ============================================================
+   FASES 3-8 Â· MÃ³dulos aditivos de supervisiÃ³n, hallazgos y KPIs
+   ============================================================ */
+.advanced-head{margin:4px 0 18px}
+.advanced-head .eyebrow{color:var(--gold);font-size:10px;letter-spacing:.14em;font-weight:800}
+.advanced-head h2{margin:6px 0 4px;font-size:20px;letter-spacing:-.01em;color:var(--ink)}
+.advanced-head p{margin:0;color:var(--muted);font-size:12px}
+.advanced-filters,.advanced-toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:end;margin-bottom:16px;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--surface-soft)}
+.advanced-filters label,.advanced-toolbar label{display:flex;flex-direction:column;gap:4px;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.advanced-filters input,.advanced-filters select,.advanced-toolbar input,.advanced-toolbar select{padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font-size:12px}
+.advanced-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px}
+.advanced-kpi{padding:14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);box-shadow:var(--shadow-card)}
+.advanced-kpi small{display:block;color:var(--muted);font-size:10px;letter-spacing:.08em;text-transform:uppercase;font-weight:700}
+.advanced-kpi strong{display:block;margin-top:6px;font-size:25px;color:var(--ink)}
+.advanced-kpi.critical{border-color:#b94a48;background:#b94a480d}
+.advanced-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px;margin-bottom:16px}
+.advanced-panel{padding:16px;border:1px solid var(--line);border-radius:12px;background:var(--surface);box-shadow:var(--shadow-card);margin-bottom:14px;min-width:0}
+.advanced-panel h3,.advanced-panel h4{margin:0 0 12px;color:var(--ink);font-size:13px;letter-spacing:.04em}
+.advanced-panel h4{margin-top:16px}
+.advanced-panel p{color:var(--muted);font-size:12px}
+.advanced-bars{display:flex;flex-direction:column;gap:8px}
+.advanced-bar{display:grid;grid-template-columns:110px 1fr 42px;gap:8px;align-items:center;font-size:11px;color:var(--muted)}
+.advanced-bar i{display:block;height:9px;border-radius:99px;background:var(--gold);min-width:2px}
+.advanced-bar b{text-align:right;color:var(--ink)}
+.advanced-table-wrap{overflow:auto;max-width:100%}
+.advanced-table-wrap table{width:100%;border-collapse:collapse;font-size:11px;min-width:620px}
+.advanced-table-wrap th,.advanced-table-wrap td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+.advanced-table-wrap th{color:var(--muted);font-size:10px;letter-spacing:.06em;text-transform:uppercase}
+.link-button{border:0;background:none;color:var(--gold);cursor:pointer;font-weight:700;padding:0}
+.advanced-sub{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.advanced-sub span{font-size:10px;padding:2px 6px;border-radius:99px;background:var(--surface-soft);color:var(--muted)}
+.advanced-alerts{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;font-size:11px}
+.advanced-alerts li{padding:8px 10px;border-left:3px solid var(--gold);background:var(--surface-soft);border-radius:0 8px 8px 0}
+.advanced-alerts small{display:block;color:var(--muted)}
+.advanced-form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:14px}
+.advanced-form-grid label,.advanced-panel>label{display:flex;flex-direction:column;gap:4px;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.advanced-form-grid input,.advanced-form-grid select,.advanced-panel textarea,.advanced-panel input[type=text],.advanced-panel input[type=date],.advanced-panel input[type=time]{padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font-size:12px;text-transform:none;letter-spacing:normal}
+.advanced-check{display:grid;grid-template-columns:1fr 130px 1fr;gap:8px;align-items:center;margin-bottom:8px;font-size:11px}
+.advanced-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.advanced-photos{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.advanced-photos span{font-size:10px;padding:4px 8px;border-radius:99px;background:var(--surface-soft)}
+.advanced-photos button{border:0;background:none;cursor:pointer;color:#b94a48}
+.advanced-kanban{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+.advanced-kanban>div{padding:10px;border-radius:12px;background:var(--surface-soft)}
+.advanced-card{padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--surface);margin-bottom:8px;font-size:11px}
+.advanced-card p{margin:6px 0}
+.advanced-card small{color:var(--muted)}
+.risk-critical{border-left:4px solid #b94a48!important}
+.risk-CrÃ­tico{color:#b94a48;font-weight:800}
+.light-Rojo{color:#b94a48;font-weight:800}
+.light-Amarillo{color:#b8860b;font-weight:800}
+.light-Verde{color:#2e7d52;font-weight:800}
+.light-Gris{color:var(--muted)}
+.advanced-calendar{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;font-size:9px}
+.advanced-calendar.week{grid-template-columns:repeat(7,minmax(0,1fr))}
+.advanced-calendar>div{min-height:64px;padding:4px;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.advanced-calendar>div.outside{opacity:.4}
+.advanced-calendar b{display:block;margin-bottom:3px;color:var(--muted)}
+.advanced-calendar span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:2px}
+@media(max-width:800px){
+  .advanced-filters,.advanced-toolbar{align-items:stretch;flex-direction:column}
+  .advanced-check{grid-template-columns:1fr}
+  .advanced-calendar>div{min-height:48px}
+  .advanced-kpi strong{font-size:20px}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}
+}
+

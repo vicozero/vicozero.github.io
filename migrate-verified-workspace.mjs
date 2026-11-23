@@ -36,6 +36,8 @@ if(!owner)throw Error('Falta propietario en el respaldo.');
 await createAndCheck('security/authority',{administratorUid:mapping.get(owner.id),updatedAt:backup.generatedAt});
 for(const u of backup.data.users){const {passwordHash,...profile}=u;await createAndCheck('profiles/'+mapping.get(u.id),{...profile,id:mapping.get(u.id),legacyId:u.id});}
 for(const n of backup.data.notices)await createAndCheck('notices/'+n.id,{...n,fromAccountId:mapping.get(n.fromAccountId)||n.fromAccountId,toAccountId:mapping.get(n.toAccountId)||n.toAccountId});
+const departmentKeys=['id','name','aliases','activo','validFrom','validTo','createdAt','updatedAt','createdBy','updatedBy','notes'];
+for(const dep of (Array.isArray(backup.data.departments)?backup.data.departments:[])){const safe=Object.fromEntries(departmentKeys.filter(k=>k in dep).map(k=>[k,dep[k]]));await createAndCheck('departments/'+dep.id,safe);}
 if(backup.data.reports.length||backup.data.actions.length||backup.data.plans.length)throw Error('Este paso requiere el importador de registros y evidencias para colecciones no vacías.');
-const result={status:'accounts-and-notices-reconciled',sha256:check.sha256,counts:check.counts,newAccountsRequiringPasswordSetup:pending.length};
+const result={status:'accounts-and-notices-reconciled',sha256:check.sha256,counts:check.counts,departmentsImported:Array.isArray(backup.data.departments)?backup.data.departments.length:0,newAccountsRequiringPasswordSetup:pending.length};
 fs.writeFileSync(dir+'/result.json',JSON.stringify(result,null,2));console.log(JSON.stringify(result,null,2));

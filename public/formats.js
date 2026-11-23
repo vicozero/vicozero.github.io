@@ -38,7 +38,20 @@ globalThis.SAFETY={
 {id:'training',name:'Capacitacion',icon:'TRN',group:'training',target:4,description:'Administra cursos, asistencia, evaluaciones y constancias.',fields:[['course','Curso / temario','text',1],['topic','Temario detallado','textarea'],['date','Fecha de capacitacion','date',1],['instructor','Instructor','text',1],['instructorType','Tipo de instructor','select',['Interno','Externo']],['company','Empresa del instructor'],['position','Puesto del instructor'],['hours','Horas de capacitacion','number',1],['validity','Vigencia (meses)','number'],['evaluation','Evaluacion aplicada','select',['Si','No']],['certificate','Constancia emitida','select',['Si','No']],['department','Departamento','text']],table:{key:'attendees',title:'Lista de asistencia',columns:[['employee','Numero de nomina'],['person','Nombre completo'],['department','Departamento / contratista'],['position','Puesto / funcion'],['signature','Nombre de conformidad (no firma digital)'],['score','Calificacion'],['status','Estado','select',['Aprobado','Reprobado','Pendiente']]]}},
 ],
  equipment:['Oxicorte: mariposas','Oxicorte: conexiones','Oxicorte: mangueras','Oxicorte: manómetros','Oxicorte: soplete','Oxicorte: extintor','Cilindros: sujeción','Cilindros: capuchón','Cilindros: almacenamiento','Soldadura: zapatas','Soldadura: cable positivo','Soldadura: porta electrodo','Soldadura: cable de tierra','Soldadura: pinza de tierra','Soldadura: carcasa'],
- groups:[['inspection','Inspección de áreas',5],['leadership','Liderazgo visible',6],['pst','Evaluación de PST',3],['unsafe','Actos y condiciones',6],['talk','Plática de 5 minutos',5],['epp','Inspección de EPP',5],['veo','Verificación de Estándares Operacionales',5],['observation','Observaciones preventivas',6],['incident','Incidentes y accidentes',3],['training','Capacitacion',4]]
+ groups:[['inspection','Inspección de áreas',5],['leadership','Liderazgo visible',6],['pst','Evaluación de PST',3],['unsafe','Actos y condiciones',6],['talk','Plática de 5 minutos',5],['epp','Inspección de EPP',5],['veo','Verificación de Estándares Operacionales',5],['observation','Observaciones preventivas',6],['incident','Incidentes y accidentes',3],['training','Capacitacion',4]],
+  // FASE 2: catálogo aditivo. Los campos department/unit/area/unidad se conservan como espejo.
+  departments:[
+    {id:'mina',name:'Mina',aliases:['mina','minas','subterránea','subterranea','obra minera'],activo:true},
+    {id:'mantenimiento-mecanico',name:'Mantenimiento Mecánico',aliases:['mantenimiento mecanico','mantenimiento','mecánico','mecanico','taller','taller de mantenimiento'],activo:true},
+    {id:'mantenimiento-electrico',name:'Mantenimiento Eléctrico',aliases:['mantenimiento electrico','eléctrico','electrico','instalaciones electricas','instalaciones eléctricas'],activo:true},
+    {id:'planta-beneficio',name:'Planta de Beneficio',aliases:['planta','planta de beneficio','beneficio','inspeccion planta','inspección planta'],activo:true},
+    {id:'almacen',name:'Almacén',aliases:['almacen','almacén'],activo:true},
+    {id:'transporte',name:'Transporte',aliases:['transporte'],activo:true},
+    {id:'seguridad-industrial',name:'Seguridad Industrial',aliases:['seguridad industrial','seguridad','ssma','hse'],activo:true},
+    {id:'medio-ambiente',name:'Medio Ambiente',aliases:['medio ambiente','ambiente'],activo:true},
+    {id:'servicios-generales',name:'Servicios Generales',aliases:['servicios generales','servicios'],activo:true},
+    {id:'contratistas',name:'Contratistas',aliases:['contratistas','contratista','empresas contratistas'],activo:true}
+  ]
 };
 
 // A format ID identifies existing records. Keep its most complete definition once.
@@ -95,3 +108,14 @@ SAFETY.validateOperationalReport=function(r){
  }
  return '';
 };
+
+// FASE 2: resolución de departamentos. Aditivo: no altera department/unit/area/unidad.
+SAFETY.departmentNormalize=function(value){return String(value??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().replace(/\s+/g,' ').toLowerCase()};
+SAFETY.departmentId=function(value){
+  const key=SAFETY.departmentNormalize(value);
+  if(!key)return '';
+  const found=(SAFETY.departments||[]).find(d=>d.activo!==false&&(SAFETY.departmentNormalize(d.id)===key||SAFETY.departmentNormalize(d.name)===key||(d.aliases||[]).some(a=>SAFETY.departmentNormalize(a)===key)));
+  return found?.id||'';
+};
+SAFETY.departmentOf=function(record){return record&&typeof record==='object'?SAFETY.departmentId(record.departmentId||record.department||record.unit||record.area||record.unidad||''):''};
+SAFETY.departmentName=function(value){const key=SAFETY.departmentId(value);return key?((SAFETY.departments||[]).find(d=>d.id===key)?.name||key):String(value||'').trim()};

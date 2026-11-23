@@ -1,4 +1,4 @@
-import assert from 'node:assert/strict';import fs from 'node:fs';import vm from 'node:vm';import crypto from 'node:crypto';import {createRequire} from 'node:module';
+import assert from 'node:assert/strict';import fs from 'node:fs';import vm from 'node:vm';import crypto from 'node:crypto';
 vm.runInThisContext(fs.readFileSync('formats.js','utf8'));vm.runInThisContext(fs.readFileSync('progress-core.js','utf8'));
 const P=SMProgress,period='2026-11',targets=Object.fromEntries(P.groups.map(([g,,t])=>[g,t]));
 const plans=[{id:'plan-a',person:'Ana García',unit:'Unidad Norte',department:'Seguridad',period,kpi:'2',targets,revision:0},{id:'plan-b',person:'Luis de ejemplo',unit:'Unidad Centro',department:'Operaciones',period,kpi:'1',targets:{...targets,talk:0,epp:0},revision:0}];
@@ -21,5 +21,5 @@ assert.equal((await call('actions/action-b',{...action,id:'action-b'},'https://o
 assert.equal((await call('plans/plan-a',plans[0])).status,200);assert.equal((await call('plans/plan-c',{...plans[0],id:'plan-c',person:'ANA GARCIA'})).status,409);
 assert.equal((await(await call('plans')).json()).length,1);assert.equal((await(await call('actions')).json()).length,1);assert.equal((await(await call('reports')).json()).length,0);
 console.log('OK: métricas, normalización de responsables, límites de cumplimiento, borradores, corte mensual, filtros, arrastre de vencidos, guardado, conflictos, verificación, historial y separación de datos.');
-const require=createRequire('C:/Users/Dell/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/entry.js');globalThis.PDFLib=require('pdf-lib');vm.runInThisContext(fs.readFileSync('workspace-pdf.js','utf8'));
+globalThis.self=globalThis;vm.runInThisContext(fs.readFileSync('assets/pdf-lib.min.js','utf8'));vm.runInThisContext(fs.readFileSync('workspace-pdf.js','utf8'));
 fs.mkdirSync('output/pdf',{recursive:true});const bytes=await generateWorkspacePDF(rows,{mode:'matrix',period,logoBytes:fs.readFileSync('assets/sierra-madre.png'),example:true});fs.writeFileSync('output/pdf/Sierra-Madre-ejemplo-avances.pdf',bytes);const doc=await PDFLib.PDFDocument.load(bytes);assert.equal(doc.getPageCount(),1);console.log('OK: PDF de matriz generado y reabierto.');

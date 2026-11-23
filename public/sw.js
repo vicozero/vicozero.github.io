@@ -1,5 +1,5 @@
 /* Sierra Madre Seguridad Operativa - Service Worker (PWA) */
-const CACHE_NAME = 'sm-seguridad-v13';
+const CACHE_NAME = 'sm-seguridad-v15';
 const APP_SHELL = [
   '/',
   '/index.html',
@@ -19,6 +19,8 @@ const APP_SHELL = [
   '/supervisor.js',
   '/workspace.js',
   '/progress-core.js',
+  '/departments.js',
+  '/departments-ui.js',
   '/normative-library.js',
   '/library-page.js',
   '/normative-catalog.json',
@@ -28,6 +30,9 @@ const APP_SHELL = [
   '/safety-suite-store.js',
   '/safety-talk-topics.json',
   '/integration.js',
+  '/advanced-core.js',
+  '/advanced-pdf.js',
+  '/advanced-ui.js',
   '/phase3-ui.js',
   '/formats.js',
   '/extended-formats.js',
